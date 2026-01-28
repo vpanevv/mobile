@@ -75,7 +75,7 @@ struct WelcomeView: View { // Define the WelcomeView struct conforming to the Vi
     }
 }
 
-#Preview {
+#Preview { // Preview provider for the WelcomeView
     NavigationStack {
         WelcomeView()
     }
