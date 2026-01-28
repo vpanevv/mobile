@@ -6,23 +6,27 @@
 //
 
 import SwiftUI
+// import the SwiftUI
+// This is the welcome view for the VolleyTracker app.
 
-struct WelcomeView: View {
-    var body: some View {
-        ZStack {
+struct WelcomeView: View { // Define the WelcomeView struct conforming to the View protocol
+    
+    var body: some View { // Define the body property of the view
+        ZStack { // Use a ZStack to layer views on top of each other
             // 1) Background image
-            Image("volleyball")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-                .blur(radius: 6)
+            Image("volleyball") // Load the background image named "volleyball"
+                .resizable() // Make the image resizable
+                .scaledToFill() // Scale the image to fill the screen
+                .ignoresSafeArea() // Ignore safe area to cover the entire screen
+                .blur(radius: 4)
 
             // 2) Dark overlay за да изпъква текстът
             LinearGradient(
                 colors: [
                     .black.opacity(0.55),
                     .black.opacity(0.35),
-                    .black.opacity(0.65)
+                    .black.opacity(0.65),
+                    .black.opacity(0.85)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -44,6 +48,8 @@ struct WelcomeView: View {
                     .padding(.vertical, 10)
                     .background(.black.opacity(0.35))
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .colorInvert()
+                    
 
                 Spacer()
 
@@ -54,7 +60,7 @@ struct WelcomeView: View {
                         Text("Get Started")
                             .font(.system(size: 18, weight: .semibold))
                         Image(systemName: "arrow.right")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.system(size: 20, weight: .semibold))
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
