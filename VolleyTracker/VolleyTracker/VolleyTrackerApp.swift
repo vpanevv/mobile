@@ -1,32 +1,42 @@
+//import SwiftUI
+//import SwiftData
 //
-//  VolleyTrackerApp.swift
-//  VolleyTracker
+//@main
+//struct VolleyTrackerApp: App {
+//    private var container: ModelContainer = {
+//        let schema = Schema([
+//            Coach.self,
+//            AppSettings.self
+//        ])
 //
-//  Created by Vladimir Panev on 27/01/2026.
+//        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 //
+//        do {
+//            return try ModelContainer(for: schema, configurations: [configuration])
+//        } catch {
+//            fatalError("Failed to create ModelContainer: \(error)")
+//        }
+//    }()
+//
+//    var body: some Scene {
+//        WindowGroup {
+//            ContentView()
+//        }
+//        .modelContainer(container)
+//    }
+//}
+
 
 import SwiftUI
 import SwiftData
 
 @main
 struct VolleyTrackerApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
-
     var body: some Scene {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(sharedModelContainer)
+        // ✅ тук казваме кои @Model типове съществуват в базата
+        .modelContainer(for: [Coach.self, AppSettings.self])
     }
 }
