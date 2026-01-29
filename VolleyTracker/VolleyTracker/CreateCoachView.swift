@@ -16,24 +16,24 @@ struct CreateCoachView: View {
     var body: some View {
         ZStack {
             // Background image (same as WelcomeView)
-            Image("volleyball")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-                // a bit nicer blur + contrast
-                .overlay(.ultraThinMaterial)
-                .overlay(
-                    LinearGradient(
-                        colors: [
-                            .black.opacity(0.55),
-                            .black.opacity(0.20),
-                            .black.opacity(0.55)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .ignoresSafeArea()
-                )
+            Image("volleyball") // Load the background image named "volleyball"
+                .resizable() // Make the image resizable
+                .scaledToFill() // Scale the image to fill the screen
+                .ignoresSafeArea() // Ignore safe area to cover the entire screen
+                .blur(radius: 4)
+
+            // 2) Dark overlay за да изпъква текстът
+            LinearGradient(
+                colors: [
+                    .black.opacity(0.55),
+                    .black.opacity(0.35),
+                    .black.opacity(0.65),
+                    .black.opacity(0.85)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
 
             VStack(spacing: 16) {
                 Spacer()
@@ -52,8 +52,14 @@ struct CreateCoachView: View {
             }
             .padding(.horizontal, 18)
         }
-        .navigationTitle("Coach")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("VolleyTracker")
+                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .foregroundColor(.white) // <-- set the color you want
+            }
+        }
         .onAppear {
             // приятен UX: курсора директно в полето
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
@@ -70,10 +76,13 @@ struct CreateCoachView: View {
                 .multilineTextAlignment(.center)
 
             Text("Enter your name to start adding groups and players.")
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(.white.opacity(0.85))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 10)
+                .font(.system(size: 17, weight: .medium))
+                .foregroundStyle(.white.opacity(0.90))
+                .padding(.horizontal, 28)
+                .padding(.vertical, 10)
+                .background(.black.opacity(0.35))
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .colorInvert()
         }
         .padding(.top, 12)
     }
