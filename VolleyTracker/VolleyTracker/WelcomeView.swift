@@ -57,17 +57,21 @@ struct WelcomeView: View { // Define the WelcomeView struct conforming to the Vi
                     CreateCoachView()
                 } label: {
                     HStack(spacing: 10) {
-                        Text("Get Started")
-                            .font(.system(size: 18, weight: .semibold))
-                        Image(systemName: "arrow.right")
-                            .font(.system(size: 20, weight: .semibold))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.blue)
-                .padding(.horizontal, 24)
+                           Text("Get Started")
+                               .font(.system(size: 18, weight: .semibold))
+
+                           Image(systemName: "arrow.right")
+                               .font(.system(size: 18, weight: .semibold))
+                       }
+                       .foregroundStyle(.white)
+                       .padding(.horizontal, 28)
+                       .padding(.vertical, 14)
+                       .background(
+                           Capsule()
+                               .fill(Color.blue)
+                               .shadow(color: .black.opacity(0.25), radius: 10, y: 6)
+                       )
+                   }
 
                 Spacer().frame(height: 30)
             }
