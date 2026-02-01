@@ -5,6 +5,8 @@
 //  Created by Vladimir Panev on 01/02/2026.
 //
 
+//TODO: Debug the save groups issue
+
 import SwiftUI
 import SwiftData
 

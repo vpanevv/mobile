@@ -36,20 +36,14 @@ struct CreateCoachView: View {
             .ignoresSafeArea()
 
             VStack(spacing: 16) {
-                Spacer()
-
                 header
 
                 coachCard
+                    .frame(maxWidth: 370)          // ограничава ширината (на iPhone няма да пречи)
+                    .padding(.top, 6)
 
-                Spacer()
-                Spacer()
-
-                NavigationLink("", isActive: $goToGroups) {
-                    HelloCoachView()
-                }
-                .hidden()
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             .padding(.horizontal, 18)
         }
         .navigationBarTitleDisplayMode(.inline)
