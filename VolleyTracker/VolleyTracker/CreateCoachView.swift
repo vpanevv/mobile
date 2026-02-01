@@ -46,7 +46,7 @@ struct CreateCoachView: View {
                 Spacer()
 
                 NavigationLink("", isActive: $goToGroups) {
-                    GroupsView()
+                    HelloCoachView()
                 }
                 .hidden()
             }
