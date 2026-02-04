@@ -56,22 +56,22 @@ struct WelcomeView: View { // Define the WelcomeView struct conforming to the Vi
                 NavigationLink {
                     CreateCoachView()
                 } label: {
-                    HStack(spacing: 10) {
-                           Text("Get Started")
-                               .font(.system(size: 18, weight: .semibold))
+                    HStack(spacing: 12) {
+                        Text("Get Started")
+                            .font(.system(size: 20, weight: .semibold, design: .rounded))
 
-                           Image(systemName: "arrow.right")
-                               .font(.system(size: 18, weight: .semibold))
-                       }
-                       .foregroundStyle(.white)
-                       .padding(.horizontal, 28)
-                       .padding(.vertical, 14)
-                       .background(
-                           Capsule()
-                               .fill(Color.blue)
-                               .shadow(color: .black.opacity(0.25), radius: 10, y: 6)
-                       )
-                   }
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 20, weight: .semibold))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 36)
+                    .padding(.vertical, 16)
+                    .background(
+                        Capsule()
+                            .fill(Color.blue)
+                            .shadow(color: .black.opacity(0.30), radius: 10, y: 6)
+                    )
+                }
 
                 Spacer().frame(height: 30)
             }
