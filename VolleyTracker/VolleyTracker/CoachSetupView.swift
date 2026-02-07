@@ -1,26 +1,26 @@
 import SwiftUI
+import SwiftData
 
 struct CoachSetupView: View {
+
+    @Environment(\.modelContext) private var modelContext
 
     @State private var coachName = ""
     @State private var clubName = ""
 
     private var canCreate: Bool {
-        !coachName.isEmpty && !clubName.isEmpty
+        !coachName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        !clubName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     var body: some View {
-
         ZStack {
-
-            // Background Image
             Image("volleyball")
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
-                .blur(radius: 5)
+                .blur(radius: 20)
 
-            // Color depth overlay (not grey anymore)
             LinearGradient(
                 colors: [
                     Color.black.opacity(0.35),
@@ -33,10 +33,8 @@ struct CoachSetupView: View {
             .ignoresSafeArea()
 
             VStack {
-
                 Spacer(minLength: 70)
 
-                // TITLE GLASS CARD
                 VStack(spacing: 6) {
                     Text("Coach Setup")
                         .font(.system(size: 30, weight: .bold, design: .rounded))
@@ -44,7 +42,7 @@ struct CoachSetupView: View {
 
                     Text("Enter your details to create your team space.")
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(.black.opacity(0.85))
+                        .foregroundStyle(.white.opacity(0.85))
                         .multilineTextAlignment(.center)
                 }
                 .padding(.horizontal, 26)
@@ -59,15 +57,12 @@ struct CoachSetupView: View {
 
                 Spacer().frame(height: 28)
 
-                // FORM CARD (NOT FULL WIDTH)
                 VStack(spacing: 16) {
-
                     textField("Coach name", text: $coachName)
                     textField("Club", text: $clubName)
 
-                    // CREATE BUTTON
                     Button {
-
+                        createCoach()
                     } label: {
                         Text("Create")
                             .font(.system(size: 18, weight: .semibold, design: .rounded))
@@ -75,28 +70,23 @@ struct CoachSetupView: View {
                             .padding(.horizontal, 40)
                             .padding(.vertical, 14)
                             .background(
-                                Capsule()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: canCreate
-                                            ? [Color.orange, Color.orange.opacity(0.8)]
-                                            : [Color.gray.opacity(0.5), Color.gray.opacity(0.4)],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
+                                Capsule().fill(
+                                    LinearGradient(
+                                        colors: canCreate
+                                        ? [Color.orange, Color.orange.opacity(0.8)]
+                                        : [Color.gray.opacity(0.5), Color.gray.opacity(0.4)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
                                     )
+                                )
                             )
                     }
                     .disabled(!canCreate)
                     .shadow(color: canCreate ? Color.orange.opacity(0.35) : .clear, radius: 12, y: 8)
-
                 }
                 .padding(24)
-                .frame(maxWidth: 380) // 👈 IMPORTANT (not full width)
-                .background(
-                    RoundedRectangle(cornerRadius: 28)
-                        .fill(.ultraThinMaterial)
-                )
+                .frame(maxWidth: 420)
+                .background(RoundedRectangle(cornerRadius: 28).fill(.ultraThinMaterial))
                 .overlay(
                     RoundedRectangle(cornerRadius: 28)
                         .stroke(Color.white.opacity(0.15), lineWidth: 1)
@@ -110,27 +100,25 @@ struct CoachSetupView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    // MARK: - TextField Style
+    private func createCoach() {
+        guard canCreate else { return }
+
+        let coach = Coach(
+            name: coachName.trimmingCharacters(in: .whitespacesAndNewlines),
+            club: clubName.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+
+        modelContext.insert(coach)
+        // RootView ще “усети” новия coach и ще смени екрана към Dashboard автоматично.
+    }
 
     private func textField(_ title: String, text: Binding<String>) -> some View {
         TextField(title, text: text)
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color.black.opacity(0.12))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(Color.white.opacity(0.18))
-            )
+            .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.12)))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.white.opacity(0.18)))
             .foregroundStyle(.white)
             .tint(.white)
-    }
-}
-
-#Preview {
-    NavigationStack {
-        CoachSetupView()
     }
 }
