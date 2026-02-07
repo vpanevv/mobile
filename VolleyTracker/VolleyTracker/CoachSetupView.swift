@@ -19,7 +19,7 @@ struct CoachSetupView: View {
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
-                .blur(radius: 20)
+                .blur(radius: 5)
 
             LinearGradient(
                 colors: [
