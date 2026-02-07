@@ -16,6 +16,8 @@ struct GroupsView: View {
 
     @State private var showCreateGroup = false
     @State private var editingGroup: Group?
+    @State private var deletingGroup: Group?
+    @State private var showDeleteConfirm = false
 
     init(coach: Coach) {
         self.coach = coach
@@ -111,10 +113,11 @@ struct GroupsView: View {
                         ForEach(groups) { group in
                             GroupRowView(group: group)
                                 .listRowBackground(Color.clear)
-                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
 
                                     Button(role: .destructive) {
-                                        delete(group)
+                                        deletingGroup = group
+                                        showDeleteConfirm = true
                                     } label: {
                                         Label("Delete", systemImage: "trash")
                                     }
@@ -155,12 +158,36 @@ struct GroupsView: View {
             .presentationDetents([.medium])
             .presentationDragIndicator(.visible)
         }
+        
         .sheet(item: $editingGroup) { group in
             EditGroupSheet(group: group) { newName in
                 rename(group, to: newName)
             }
             .presentationDetents([.medium])
             .presentationDragIndicator(.visible)
+        }
+        
+        .confirmationDialog(
+            deletingGroup != nil
+                ? "Delete \"\(deletingGroup!.name)\"?"
+                : "Delete group?",
+            isPresented: $showDeleteConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                if let group = deletingGroup {
+                    delete(group)
+                }
+                deletingGroup = nil
+            }
+
+            Button("Cancel", role: .cancel) {
+                deletingGroup = nil
+            }
+        } message: {
+            if let group = deletingGroup {
+                Text("This will delete \"\(group.name)\" and all its players.")
+            }
         }
     }
 
