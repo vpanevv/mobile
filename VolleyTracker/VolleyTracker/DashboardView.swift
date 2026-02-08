@@ -1,88 +1,126 @@
 import SwiftUI
 import SwiftData
 
-struct DashboardView: View {
+struct GroupsView: View {
     let coach: Coach
+
+    @Environment(\.modelContext) private var modelContext
+    @Query private var groups: [Group]
+
+    @State private var showAddGroup = false
+    @State private var showDeleteConfirm = false
+    @State private var groupToDelete: Group?
 
     private var dateText: String {
         let formatter = DateFormatter()
         formatter.locale = .current
-        formatter.dateStyle = .full   // Saturday, February 7, 2026 (ще е на езика на устройството)
+        formatter.dateStyle = .full
         formatter.timeStyle = .none
         return formatter.string(from: Date())
     }
 
+    init(coach: Coach) {
+        self.coach = coach
+        _groups = Query(filter: #Predicate<Group> { $0.coach == coach })
+    }
+
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Image("volleyball")
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
-                    .blur(radius: 5)
+        ZStack {
+            Image("volleyball")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+                .blur(radius: 5)
 
-                Color.black.opacity(0.35)
-                    .ignoresSafeArea()
+            Color.black.opacity(0.35)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
 
-                VStack(spacing: 18) {
+            VStack(spacing: 14) {
 
-                    // Top date
-                    Text(dateText)
-                        .font(.system(size: 20, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.85))
-                        .padding(.top, 18)
+                Text(dateText)
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.85))
+                    .padding(.top, 12)
 
+                Text("Groups")
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+
+                if groups.isEmpty {
                     Spacer()
-
-                    // Center content
-                    VStack(spacing: 10) {
-                        Text("Welcome coach \(coach.name)")
-                            .font(.system(size: 30, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
-                            .multilineTextAlignment(.center)
-
-                        Text("Ready for today's practice?")
-                            .font(.system(size: 17, weight: .medium, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.85))
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding(.horizontal, 26)
-                    .padding(.vertical, 20)
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 24)
-                            .stroke(Color.white.opacity(0.18), lineWidth: 1)
-                    )
-                    .shadow(color: .black.opacity(0.25), radius: 18, y: 10)
-
-                    // Groups button
-                    NavigationLink {
-                        GroupsView(coach: coach)
-                    } label: {
-                        Text("Groups")
-                            .font(.system(size: 18, weight: .semibold, design: .rounded))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 44)
-                            .padding(.vertical, 14)
-                            .background(
-                                Capsule().fill(
-                                    LinearGradient(
-                                        colors: [Color.orange, Color.orange.opacity(0.8)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                            )
-                    }
-                    .shadow(color: Color.orange.opacity(0.35), radius: 12, y: 8)
-                    .padding(.top, 6)
-
+                    Text("No groups yet")
+                        .foregroundStyle(.white.opacity(0.8))
                     Spacer()
+                } else {
+                    List {
+                        ForEach(groups) { group in
+                            NavigationLink {
+                                PlayersView(group: group)
+                            } label: {
+                                GroupRowView(group: group)
+                            }
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .buttonStyle(.plain)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+
+                                Button {
+                                    groupToDelete = group
+                                    showDeleteConfirm = true
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                                .role(.destructive)
+
+                                Button {
+                                    // edit logic ако имаш
+                                } label: {
+                                    Label("Edit", systemImage: "pencil")
+                                }
+                                .tint(.blue)
+                            }
+                        }
+                    }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
                 }
-                .padding()
             }
-            .navigationBarBackButtonHidden(true)
+            .padding()
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    // back идва от NavigationStack
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .foregroundStyle(.white)
+                }
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showAddGroup = true
+                } label: {
+                    Image(systemName: "plus")
+                        .foregroundStyle(.white)
+                }
+            }
+        }
+        .confirmationDialog(
+            "Delete group?",
+            isPresented: $showDeleteConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                if let groupToDelete {
+                    modelContext.delete(groupToDelete)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+        .sheet(isPresented: $showAddGroup) {
+            AddGroupView(coach: coach)
         }
     }
 }
