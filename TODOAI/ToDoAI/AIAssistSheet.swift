@@ -8,45 +8,165 @@ struct AISuggestedTask: Identifiable {
 
 enum AIPlanner {
     static func suggestions(for focus: String, userName: String, now: Date = .now) -> [AISuggestedTask] {
-        let cleaned = focus
-            .replacingOccurrences(of: "\n", with: ",")
-            .replacingOccurrences(of: " and ", with: ",")
+        let fragments = actionableFragments(from: focus)
+        let tasks = fragments
+            .compactMap(taskTitle(from:))
+            .uniqued()
 
-        let fragments = cleaned
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-
-        var suggestions: [AISuggestedTask] = []
-
-        for (index, fragment) in fragments.prefix(3).enumerated() {
-            let priority = [TaskPriority.high, .important, .quick][min(index, 2)]
-            let normalized = fragment.prefix(1).uppercased() + fragment.dropFirst()
-            suggestions.append(AISuggestedTask(title: normalized, priority: priority))
-
-            if priority == .high {
-                suggestions.append(
-                    AISuggestedTask(
-                        title: "Finish the most important part of \(fragment.lowercased())",
-                        priority: .important
-                    )
-                )
-            }
-        }
-
-        if suggestions.isEmpty {
+        if tasks.isEmpty {
             let hour = Calendar.autoupdatingCurrent.component(.hour, from: now)
             let warmupTitle = hour < 12 ? "Set the top 3 wins for the morning" : "Reset the plan for the rest of the day"
 
-            suggestions = [
+            return [
                 AISuggestedTask(title: "\(warmupTitle), \(userName)", priority: .high),
                 AISuggestedTask(title: "Clear one small task in under 10 minutes", priority: .quick),
                 AISuggestedTask(title: "Review progress before the day ends", priority: .important),
             ]
         }
 
-        var uniqueTitles = Set<String>()
-        return suggestions.filter { uniqueTitles.insert($0.title).inserted }
+        return tasks.prefix(3).enumerated().map { index, task in
+            AISuggestedTask(title: task, priority: [TaskPriority.high, .important, .quick][min(index, 2)])
+        }
+    }
+
+    private static func actionableFragments(from focus: String) -> [String] {
+        var text = focus.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let separators = ["\n", ",", ";", " then ", " after that ", " also ", " plus ", " and "]
+        for separator in separators {
+            text = text.replacingOccurrences(of: separator, with: "|")
+        }
+
+        return text
+            .split(separator: "|")
+            .map { sanitizeFragment(String($0)) }
+            .filter { !$0.isEmpty }
+    }
+
+    private static func sanitizeFragment(_ fragment: String) -> String {
+        var text = fragment.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters))
+
+        let prefixes = [
+            "today i have to ",
+            "today i need to ",
+            "today i want to ",
+            "tonight i have to ",
+            "tonight i need to ",
+            "tonight i want to ",
+            "i have to ",
+            "i need to ",
+            "i want to ",
+            "i should ",
+            "i must ",
+            "help me ",
+            "can you help me ",
+            "please ",
+        ]
+
+        var removedPrefix = true
+        while removedPrefix {
+            removedPrefix = false
+            for prefix in prefixes where text.hasPrefix(prefix) {
+                text.removeFirst(prefix.count)
+                text = text.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters))
+                removedPrefix = true
+            }
+        }
+
+        return text
+    }
+
+    private static func taskTitle(from fragment: String) -> String? {
+        guard !fragment.isEmpty else { return nil }
+
+        if let videoTask = videoTask(from: fragment) {
+            return videoTask
+        }
+
+        if containsAny(["email", "emails", "message", "messages", "inbox"], in: fragment) {
+            return "Reply to messages"
+        }
+
+        if containsAny(["workout", "exercise", "gym", "run"], in: fragment) {
+            return "Do a workout"
+        }
+
+        if let task = taskWithPrefix("finish ", action: "Finish", in: fragment) {
+            return task
+        }
+
+        if let task = taskWithPrefix("review ", action: "Review", in: fragment) {
+            return task
+        }
+
+        if let task = taskWithPrefix("prepare ", action: "Prepare", in: fragment) {
+            return task
+        }
+
+        if let task = taskWithPrefix("practice ", action: "Practice", in: fragment) {
+            return task
+        }
+
+        if let task = taskWithPrefix("watch ", action: "Watch", in: fragment) {
+            return task
+        }
+
+        return sentenceCase(fragment)
+    }
+
+    private static func videoTask(from fragment: String) -> String? {
+        guard containsAny(["video", "videos", "film", "films", "highlights"], in: fragment) else { return nil }
+
+        let target: String
+        if let forRange = fragment.range(of: "for ") {
+            target = cleanTarget(String(fragment[forRange.upperBound...]))
+        } else if fragment.contains("volleyball") {
+            target = "the volleyball game"
+        } else {
+            target = ""
+        }
+
+        if !target.isEmpty {
+            return "Watch videos for \(target)"
+        }
+
+        return "Watch videos related to your plan"
+    }
+
+    private static func taskWithPrefix(_ prefix: String, action: String, in fragment: String) -> String? {
+        guard fragment.hasPrefix(prefix) else { return nil }
+        let target = cleanTarget(String(fragment.dropFirst(prefix.count)))
+        guard !target.isEmpty else { return nil }
+        return "\(action) \(target)"
+    }
+
+    private static func cleanTarget(_ target: String) -> String {
+        var text = target.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters))
+
+        let stopTokens = [" with ", " using ", " by ", " tonight", " today", " tomorrow"]
+        for token in stopTokens {
+            if let range = text.range(of: token) {
+                text = String(text[..<range.lowerBound])
+            }
+        }
+
+        return text.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters))
+    }
+
+    private static func containsAny(_ values: [String], in text: String) -> Bool {
+        values.contains { text.contains($0) }
+    }
+
+    private static func sentenceCase(_ text: String) -> String {
+        guard let first = text.first else { return text }
+        return first.uppercased() + text.dropFirst()
+    }
+}
+
+private extension Array where Element: Hashable {
+    func uniqued() -> [Element] {
+        var seen = Set<Element>()
+        return filter { seen.insert($0).inserted }
     }
 }
 
