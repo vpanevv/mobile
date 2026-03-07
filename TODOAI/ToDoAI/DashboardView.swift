@@ -89,15 +89,7 @@ struct DashboardView: View {
                             .foregroundStyle(.yellow)
                     }
 
-                    HStack(alignment: .lastTextBaseline, spacing: 10) {
-                        Image(systemName: "clock.fill")
-                            .foregroundStyle(.white.opacity(0.82))
-
-                        Text(context.date.formatted(.dateTime.hour().minute().second()))
-                            .font(.system(size: 34, weight: .semibold, design: .rounded))
-                            .monospacedDigit()
-                            .foregroundStyle(.white)
-                    }
+                    LiveClockHeader()
 
                     HStack(spacing: 12) {
                         statPill(title: "Open", value: "\(todayOpenTasks.count)", tint: .cyan, symbol: "waveform.path.ecg")
@@ -340,11 +332,11 @@ struct DashboardView: View {
 
         switch hour {
         case 5..<12:
-            return "Good morning \(profile.name), ready for the day?"
+            return "Good morning, \(profile.name), ready for the day?"
         case 12..<18:
-            return "Good afternoon \(profile.name)"
+            return "Good afternoon, \(profile.name)"
         default:
-            return "Good evening \(profile.name)"
+            return "Good evening, \(profile.name)"
         }
     }
 }
