@@ -120,3 +120,27 @@ struct PriorityBadge: View {
             .background(priority.tint.opacity(0.12), in: Capsule())
     }
 }
+
+struct LiveClockHeader: View {
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            VStack(spacing: 8) {
+                Text(context.date.formatted(.dateTime.weekday(.wide).day().month(.wide).year()))
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.white.opacity(0.82))
+                    .multilineTextAlignment(.center)
+
+                HStack(alignment: .lastTextBaseline, spacing: 10) {
+                    Image(systemName: "clock.fill")
+                        .foregroundStyle(.white.opacity(0.82))
+
+                    Text(context.date.formatted(.dateTime.hour().minute().second()))
+                        .font(.system(size: 34, weight: .semibold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(.white)
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+    }
+}

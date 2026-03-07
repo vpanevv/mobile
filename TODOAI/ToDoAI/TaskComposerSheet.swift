@@ -11,10 +11,16 @@ struct TaskComposerSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 18) {
+                LiveClockHeader()
+
+                Spacer(minLength: 0)
+
                 GlassCard {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Create a task for today")
                             .font(.title3.weight(.bold))
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .multilineTextAlignment(.center)
 
                         TextField("Task title", text: $title, axis: .vertical)
                             .textInputAutocapitalization(.sentences)
@@ -27,23 +33,41 @@ struct TaskComposerSheet: View {
                             Text("Priority")
                                 .font(.headline)
 
-                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 130), spacing: 12)], spacing: 12) {
+                            VStack(spacing: 12) {
                                 ForEach(TaskPriority.allCases) { priority in
                                     Button {
                                         selectedPriority = priority
                                     } label: {
-                                        HStack {
+                                        HStack(spacing: 14) {
                                             Image(systemName: priority.symbolName)
+                                                .font(.headline)
+                                                .frame(width: 28)
+
                                             Text(priority.title)
+                                                .font(.headline.weight(.semibold))
+
+                                            Spacer()
+
+                                            if selectedPriority == priority {
+                                                Image(systemName: "checkmark.circle.fill")
+                                                    .font(.title3)
+                                            }
                                         }
-                                        .font(.subheadline.weight(.semibold))
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 16)
                                         .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 12)
-                                        .foregroundStyle(selectedPriority == priority ? .black : priority.tint)
+                                        .foregroundStyle(selectedPriority == priority ? .black : .white)
                                         .background(
-                                            (selectedPriority == priority ? Color.white : priority.tint.opacity(0.12)),
-                                            in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                                .fill(selectedPriority == priority ? Color.white : priority.tint.opacity(0.28))
                                         )
+                                        .overlay {
+                                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                                .stroke(
+                                                    selectedPriority == priority ? Color.white : priority.tint.opacity(0.9),
+                                                    lineWidth: 1.2
+                                                )
+                                        }
                                     }
                                     .buttonStyle(.plain)
                                 }
@@ -53,7 +77,7 @@ struct TaskComposerSheet: View {
                 }
 
                 Button(action: createTask) {
-                    Text("Save Task")
+                    Text("Create Task")
                         .font(.headline.weight(.semibold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
@@ -64,7 +88,7 @@ struct TaskComposerSheet: View {
                 .disabled(trimmedTitle.isEmpty)
                 .opacity(trimmedTitle.isEmpty ? 0.5 : 1)
 
-                Spacer()
+                Spacer(minLength: 0)
             }
             .padding(20)
             .background(AppBackground())
