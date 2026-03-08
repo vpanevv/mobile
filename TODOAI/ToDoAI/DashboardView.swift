@@ -6,6 +6,7 @@ struct DashboardView: View {
     @State private var showingTaskComposer = false
     @State private var showingAIAssist = false
     @State private var pendingDeleteTask: TodoTask?
+    @State private var vanishingTaskIDs: Set<UUID> = []
 
     let profile: UserProfile
 
@@ -81,10 +82,6 @@ struct DashboardView: View {
                             Text(greetingText(for: context.date))
                                 .font(.system(size: 28, weight: .bold, design: .rounded))
                                 .foregroundStyle(.white)
-
-                            Text(context.date.formatted(.dateTime.weekday(.wide).day().month(.wide).year()))
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(.white.opacity(0.82))
                         }
 
                         Spacer()
@@ -108,9 +105,7 @@ struct DashboardView: View {
 
     private var actionsRow: some View {
         HStack(spacing: 14) {
-            actionButton(title: "New Task", systemName: "plus") {
-                showingTaskComposer = true
-            }
+            createTaskButton
 
             actionButton(title: "AI Assist", systemName: "sparkles", isPrimaryAI: true) {
                 showingAIAssist = true
@@ -195,6 +190,7 @@ struct DashboardView: View {
                         TaskRow(
                             task: task,
                             allowsDelete: allowsDelete,
+                            isVanishing: vanishingTaskIDs.contains(task.id),
                             onToggle: {
                                 toggleCompletion(for: task)
                             },
@@ -296,6 +292,45 @@ struct DashboardView: View {
         }
     }
 
+    private var createTaskButton: some View {
+        Button {
+            showingTaskComposer = true
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "plus.circle.fill")
+                    .font(.headline.weight(.black))
+                    .foregroundStyle(.white)
+
+                Text("Create New Task")
+                    .font(.headline.weight(.bold))
+                    .foregroundStyle(.white)
+
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 15)
+            .frame(maxWidth: .infinity)
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.08, green: 0.20, blue: 0.36),
+                        Color(red: 0.08, green: 0.44, blue: 0.58),
+                        Color(red: 0.18, green: 0.72, blue: 0.78),
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ),
+                in: RoundedRectangle(cornerRadius: 24, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(Color.white.opacity(0.22), lineWidth: 1)
+            }
+            .shadow(color: Color.cyan.opacity(0.28), radius: 20, y: 10)
+        }
+        .buttonStyle(.plain)
+    }
+
     private var todayOpenTasks: [TodoTask] {
         store.tasks
             .filter { calendar.isDate($0.scheduledDay, inSameDayAs: todayStart) && !$0.isCompleted }
@@ -382,6 +417,23 @@ struct DashboardView: View {
     }
 
     private func toggleCompletion(for task: TodoTask) {
+        guard !vanishingTaskIDs.contains(task.id) else { return }
+
+        if !task.isCompleted {
+            withAnimation(.easeInOut(duration: 0.34)) {
+                vanishingTaskIDs.insert(task.id)
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.32) {
+                store.toggleCompletion(for: task.id)
+
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
+                    vanishingTaskIDs.remove(task.id)
+                }
+            }
+            return
+        }
+
         withAnimation(.spring(response: 0.35, dampingFraction: 0.86)) {
             store.toggleCompletion(for: task.id)
         }
@@ -514,6 +566,7 @@ struct DashboardView: View {
 private struct TaskRow: View {
     let task: TodoTask
     let allowsDelete: Bool
+    let isVanishing: Bool
     let onToggle: () -> Void
     let onRequestDelete: () -> Void
 
@@ -552,6 +605,26 @@ private struct TaskRow: View {
         }
         .padding(14)
         .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay {
+            if isVanishing {
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.22),
+                                Color.cyan.opacity(0.14),
+                                .clear,
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+            }
+        }
+        .opacity(isVanishing ? 0 : 1)
+        .scaleEffect(isVanishing ? 0.92 : 1, anchor: .leading)
+        .blur(radius: isVanishing ? 10 : 0)
+        .offset(x: isVanishing ? 34 : 0, y: isVanishing ? -6 : 0)
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             if allowsDelete {
                 Button(role: .destructive, action: onRequestDelete) {
@@ -559,6 +632,7 @@ private struct TaskRow: View {
                 }
             }
         }
+        .animation(.easeInOut(duration: 0.34), value: isVanishing)
     }
 }
 
