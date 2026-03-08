@@ -124,20 +124,77 @@ struct PriorityBadge: View {
 struct LiveClockHeader: View {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
-            VStack(spacing: 8) {
-                Text(context.date.formatted(.dateTime.weekday(.wide).day().month(.wide).year()))
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.white.opacity(0.82))
-                    .multilineTextAlignment(.center)
+            let time = context.date.timeIntervalSinceReferenceDate
+
+            VStack(spacing: 10) {
+                Label {
+                    Text(context.date.formatted(.dateTime.weekday(.wide).day().month(.wide).year()))
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [
+                                    Color.cyan.opacity(0.96),
+                                    Color.white.opacity(0.92),
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                } icon: {
+                    Image(systemName: "calendar")
+                        .foregroundStyle(Color.cyan.opacity(0.88))
+                }
 
                 HStack(alignment: .lastTextBaseline, spacing: 10) {
-                    Image(systemName: "clock.fill")
-                        .foregroundStyle(.white.opacity(0.82))
+                    Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                        .font(.headline.weight(.black))
+                        .foregroundStyle(Color.white.opacity(0.92))
 
                     Text(context.date.formatted(.dateTime.hour().minute().second()))
-                        .font(.system(size: 34, weight: .semibold, design: .rounded))
+                        .font(.system(size: 36, weight: .black, design: .rounded))
                         .monospacedDigit()
-                        .foregroundStyle(.white)
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [
+                                    Color.white,
+                                    Color.cyan,
+                                    Color.mint.opacity(0.95),
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                }
+                .padding(.horizontal, 18)
+                .padding(.vertical, 14)
+                .background(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.14),
+                            Color.cyan.opacity(0.08),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    in: Capsule()
+                )
+                .overlay {
+                    Capsule()
+                        .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                }
+                .shadow(color: Color.cyan.opacity(0.16), radius: 18, y: 8)
+
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(Color.cyan.opacity(0.95))
+                        .frame(width: 8, height: 8)
+                        .scaleEffect(0.86 + abs(sin(time * 1.8)) * 0.4)
+
+                    Text("Live Focus Sync")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.white.opacity(0.66))
+                        .textCase(.uppercase)
+                        .tracking(1.1)
                 }
             }
             .frame(maxWidth: .infinity)
