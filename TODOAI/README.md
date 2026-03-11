@@ -1,3 +1,5 @@
+# TODO: App icon and Test flight launch 
+
 # TODOAI
 
 TODOAI is an AI-first daily planner built in SwiftUI for iPhone and iPad.
