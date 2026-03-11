@@ -229,7 +229,7 @@ private struct AILogoMark: View {
                 .frame(width: 220, height: 220)
                 .scaleEffect(isAnimating ? 1.05 : 0.94)
 
-            RoundedRectangle(cornerRadius: 34, style: .continuous)
+            RoundedRectangle(cornerRadius: 36, style: .continuous)
                 .fill(
                     LinearGradient(
                         colors: [
@@ -241,31 +241,53 @@ private struct AILogoMark: View {
                         endPoint: .bottomTrailing
                     )
                 )
-                .frame(width: 126, height: 126)
+                .frame(width: 132, height: 132)
                 .overlay {
-                    RoundedRectangle(cornerRadius: 34, style: .continuous)
+                    RoundedRectangle(cornerRadius: 36, style: .continuous)
                         .stroke(Color.white.opacity(0.7), lineWidth: 1.2)
                 }
                 .shadow(color: Color.cyan.opacity(0.3), radius: 22, y: 14)
                 .rotationEffect(.degrees(isAnimating ? 8 : -8))
                 .animation(.easeInOut(duration: 4.2).repeatForever(autoreverses: true), value: isAnimating)
 
-            Image(systemName: "brain.head.profile")
-                .font(.system(size: 44, weight: .black))
-                .foregroundStyle(Color.black.opacity(0.8))
+            VStack(spacing: 14) {
+                HStack(spacing: 12) {
+                    checklistPill(width: 54, isCompleted: true)
+                    Capsule()
+                        .fill(Color.black.opacity(0.18))
+                        .frame(width: 34, height: 9)
+                }
 
-            ForEach(0..<3, id: \.self) { index in
-                Circle()
-                    .fill(index == 1 ? Color.white : Color.cyan)
-                    .frame(width: 10, height: 10)
-                    .offset(x: index == 0 ? -66 : (index == 1 ? 0 : 66), y: 0)
+                HStack(spacing: 12) {
+                    checklistPill(width: 40, isCompleted: true)
+                    Capsule()
+                        .fill(Color.black.opacity(0.18))
+                        .frame(width: 48, height: 9)
+                }
 
-                Capsule()
-                    .fill(Color.white.opacity(0.72))
-                    .frame(width: 54, height: 2)
-                    .offset(x: index == 0 ? -33 : 33, y: 0)
-                    .opacity(index == 1 ? 0 : 1)
+                HStack(spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color.black.opacity(0.82))
+                            .frame(width: 28, height: 28)
+
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 14, weight: .black))
+                            .foregroundStyle(.white)
+                    }
+
+                    Capsule()
+                        .fill(Color.cyan.opacity(0.95))
+                        .frame(width: 60, height: 10)
+                        .overlay(alignment: .trailing) {
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 10, height: 10)
+                                .offset(x: 4)
+                        }
+                }
             }
+            .foregroundStyle(Color.black.opacity(0.84))
 
             ForEach(0..<6, id: \.self) { index in
                 Image(systemName: index.isMultiple(of: 2) ? "sparkle" : "circle.fill")
@@ -280,5 +302,23 @@ private struct AILogoMark: View {
             }
         }
         .frame(width: 240, height: 240)
+    }
+
+    private func checklistPill(width: CGFloat, isCompleted: Bool) -> some View {
+        HStack(spacing: 8) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(isCompleted ? Color.black.opacity(0.82) : Color.white.opacity(0.7))
+                    .frame(width: 28, height: 28)
+
+                Image(systemName: isCompleted ? "checkmark" : "circle")
+                    .font(.system(size: 13, weight: .black))
+                    .foregroundStyle(isCompleted ? .white : Color.black.opacity(0.45))
+            }
+
+            Capsule()
+                .fill(Color.black.opacity(0.18))
+                .frame(width: width, height: 9)
+        }
     }
 }

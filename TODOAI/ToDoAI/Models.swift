@@ -169,6 +169,11 @@ final class AppStore: ObservableObject {
         persist()
     }
 
+    func deleteCompletedTasks() {
+        tasks.removeAll(where: { $0.isCompleted })
+        persist()
+    }
+
     private func load() {
         do {
             let folderURL = persistenceURL.deletingLastPathComponent()

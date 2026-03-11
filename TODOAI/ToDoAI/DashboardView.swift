@@ -5,6 +5,7 @@ struct DashboardView: View {
 
     @State private var showingTaskComposer = false
     @State private var showingAIAssist = false
+    @State private var showingCompletedTasks = false
     @State private var pendingDeleteTask: TodoTask?
     @State private var vanishingTaskIDs: Set<UUID> = []
 
@@ -17,11 +18,7 @@ struct DashboardView: View {
             VStack(spacing: 18) {
                 heroCard
                 actionsRow
-                taskSection(
-                    title: "Today",
-                    tasks: todayOpenTasks,
-                    emptyMessage: "No active tasks yet. Add one to shape your day."
-                )
+                todayTaskSection
 
                 if !yesterdayCarryOverTasks.isEmpty {
                     taskSection(
@@ -43,6 +40,11 @@ struct DashboardView: View {
         }
         .sheet(isPresented: $showingAIAssist) {
             AIAssistSheet(userName: profile.name, onAdd: addSuggestedTasks)
+        }
+        .fullScreenCover(isPresented: $showingCompletedTasks) {
+            CompletedTasksView(tasks: allCompletedTasks) {
+                showingCompletedTasks = false
+            }
         }
         .confirmationDialog(
             "Delete task?",
@@ -111,6 +113,7 @@ struct DashboardView: View {
                 showingAIAssist = true
             }
         }
+        .padding(.bottom, 6)
     }
 
     private var summaryCard: some View {
@@ -153,11 +156,27 @@ struct DashboardView: View {
                     .padding(16)
                     .background(Color.white.opacity(0.42), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
                 } else {
-                    VStack(spacing: 12) {
-                        ForEach(completedTodayTasks) { task in
-                            SummaryTaskRow(task: task)
+                    Button {
+                        showingCompletedTasks = true
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "checklist.checked")
+                                .font(.headline.weight(.bold))
+
+                            Text("View completed tasks")
+                                .font(.headline.weight(.bold))
+
+                            Spacer()
+
+                            Image(systemName: "arrow.right.circle.fill")
+                                .font(.title3.weight(.bold))
                         }
+                        .foregroundStyle(Color.black.opacity(0.82))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 15)
+                        .background(Color.white.opacity(0.42), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
                     }
+                    .buttonStyle(.plain)
                 }
             }
             .padding(22)
@@ -167,6 +186,56 @@ struct DashboardView: View {
                     .stroke(Color.white.opacity(0.38), lineWidth: 1.2)
             }
             .shadow(color: Color.yellow.opacity(0.18), radius: 24, y: 12)
+        }
+    }
+
+    private var todayTaskSection: some View {
+        TimelineView(.animation) { timeline in
+            let time = timeline.date.timeIntervalSinceReferenceDate
+
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    Text("Today")
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(Color.black.opacity(0.88))
+
+                    Spacer()
+
+                    Text(todayOpenTasks.isEmpty ? "Clear board" : "\(todayOpenTasks.count) active")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color.black.opacity(0.56))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.white.opacity(0.36), in: Capsule())
+                }
+
+                if todayOpenTasks.isEmpty {
+                    Text("No active tasks yet. Add one to shape your day.")
+                        .foregroundStyle(Color.black.opacity(0.62))
+                } else {
+                    ForEach(todayOpenTasks) { task in
+                        TaskRow(
+                            task: task,
+                            allowsDelete: false,
+                            isVanishing: vanishingTaskIDs.contains(task.id),
+                            usesDarkText: true,
+                            onToggle: {
+                                toggleCompletion(for: task)
+                            },
+                            onRequestDelete: {}
+                        )
+                    }
+                }
+            }
+            .padding(22)
+            .background(todayCardBackground(time: time))
+            .overlay {
+                RoundedRectangle(cornerRadius: 30, style: .continuous)
+                    .stroke(Color.white.opacity(0.34), lineWidth: 1.2)
+            }
+            .shadow(color: Color.orange.opacity(0.16), radius: 22, y: 12)
+            .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+            .padding(.top, 2)
         }
     }
 
@@ -191,6 +260,7 @@ struct DashboardView: View {
                             task: task,
                             allowsDelete: allowsDelete,
                             isVanishing: vanishingTaskIDs.contains(task.id),
+                            usesDarkText: false,
                             onToggle: {
                                 toggleCompletion(for: task)
                             },
@@ -296,19 +366,10 @@ struct DashboardView: View {
         Button {
             showingTaskComposer = true
         } label: {
-            HStack(spacing: 10) {
-                Image(systemName: "plus.circle.fill")
-                    .font(.headline.weight(.black))
-                    .foregroundStyle(.white)
-
-                Text("Create New Task")
-                    .font(.headline.weight(.bold))
-                    .foregroundStyle(.white)
-
-                Spacer()
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 15)
+            Label("Create New Task", systemImage: "plus.circle.fill")
+                .font(.headline.weight(.semibold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 15)
             .frame(maxWidth: .infinity)
             .background(
                 LinearGradient(
@@ -320,15 +381,16 @@ struct DashboardView: View {
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ),
-                in: RoundedRectangle(cornerRadius: 24, style: .continuous)
+                in: RoundedRectangle(cornerRadius: 22, style: .continuous)
             )
             .overlay {
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .stroke(Color.white.opacity(0.22), lineWidth: 1)
             }
             .shadow(color: Color.cyan.opacity(0.28), radius: 20, y: 10)
         }
         .buttonStyle(.plain)
+        .foregroundStyle(.white)
     }
 
     private var todayOpenTasks: [TodoTask] {
@@ -349,6 +411,12 @@ struct DashboardView: View {
                 guard let completedAt = $0.completedAt else { return false }
                 return calendar.isDate(completedAt, inSameDayAs: todayStart)
             }
+            .sorted { ($0.completedAt ?? .distantPast) > ($1.completedAt ?? .distantPast) }
+    }
+
+    private var allCompletedTasks: [TodoTask] {
+        store.tasks
+            .filter(\.isCompleted)
             .sorted { ($0.completedAt ?? .distantPast) > ($1.completedAt ?? .distantPast) }
     }
 
@@ -561,12 +629,42 @@ struct DashboardView: View {
                 .offset(x: 120 + sin(time * 0.28) * 16, y: 110 + cos(time * 0.22) * 14)
         }
     }
+
+    private func todayCardBackground(time: TimeInterval) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 1.0, green: 0.86, blue: 0.62),
+                            Color(red: 1.0, green: 0.76, blue: 0.44),
+                            Color(red: 1.0, green: 0.94, blue: 0.82),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+            Circle()
+                .fill(Color.white.opacity(0.34))
+                .frame(width: 200, height: 200)
+                .blur(radius: 16)
+                .offset(x: -120 + cos(time * 0.38) * 10, y: -110 + sin(time * 0.22) * 12)
+
+            Circle()
+                .fill(Color.orange.opacity(0.18))
+                .frame(width: 240, height: 240)
+                .blur(radius: 22)
+                .offset(x: 130 + sin(time * 0.26) * 12, y: 120 + cos(time * 0.20) * 10)
+        }
+    }
 }
 
 private struct TaskRow: View {
     let task: TodoTask
     let allowsDelete: Bool
     let isVanishing: Bool
+    let usesDarkText: Bool
     let onToggle: () -> Void
     let onRequestDelete: () -> Void
 
@@ -575,17 +673,17 @@ private struct TaskRow: View {
             Button(action: onToggle) {
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.title3.weight(.semibold))
-                    .foregroundStyle(task.isCompleted ? .green : .white.opacity(0.85))
+                    .foregroundStyle(task.isCompleted ? .green : primaryColor.opacity(0.85))
                     .frame(width: 34, height: 34)
-                    .background(Color.white.opacity(task.isCompleted ? 0.18 : 0.08), in: Circle())
+                    .background(buttonBackgroundColor, in: Circle())
             }
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 8) {
                 Text(task.title)
                     .font(.body.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .strikethrough(task.isCompleted, color: .white.opacity(0.8))
+                    .foregroundStyle(primaryColor)
+                    .strikethrough(task.isCompleted, color: primaryColor.opacity(0.8))
 
                 HStack(spacing: 8) {
                     PriorityBadge(priority: task.priority)
@@ -604,7 +702,7 @@ private struct TaskRow: View {
             Spacer()
         }
         .padding(14)
-        .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .background(cardBackgroundColor, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay {
             if isVanishing {
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
@@ -634,41 +732,16 @@ private struct TaskRow: View {
         }
         .animation(.easeInOut(duration: 0.34), value: isVanishing)
     }
-}
 
-private struct SummaryTaskRow: View {
-    let task: TodoTask
+    private var primaryColor: Color {
+        usesDarkText ? Color.black.opacity(0.82) : .white
+    }
 
-    var body: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(Color.white.opacity(0.62))
-                    .frame(width: 42, height: 42)
+    private var cardBackgroundColor: Color {
+        usesDarkText ? Color.white.opacity(0.34) : Color.white.opacity(0.08)
+    }
 
-                Image(systemName: "checkmark")
-                    .font(.headline.weight(.black))
-                    .foregroundStyle(Color.green.opacity(0.85))
-            }
-
-            VStack(alignment: .leading, spacing: 5) {
-                Text(task.title)
-                    .font(.body.weight(.bold))
-                    .foregroundStyle(Color.black.opacity(0.84))
-
-                Text("Completed \(task.completedAt?.formatted(date: .omitted, time: .shortened) ?? "")")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.black.opacity(0.55))
-            }
-
-            Spacer()
-
-            Image(systemName: "sparkles")
-                .font(.headline.weight(.bold))
-                .foregroundStyle(Color.orange.opacity(0.8))
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background(Color.white.opacity(0.42), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+    private var buttonBackgroundColor: Color {
+        usesDarkText ? Color.white.opacity(task.isCompleted ? 0.52 : 0.26) : Color.white.opacity(task.isCompleted ? 0.18 : 0.08)
     }
 }
