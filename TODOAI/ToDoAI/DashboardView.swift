@@ -3,8 +3,7 @@ import SwiftUI
 struct DashboardView: View {
     @EnvironmentObject private var store: AppStore
 
-    @State private var showingTaskComposer = false
-    @State private var showingAIAssist = false
+    @State private var activeSheet: ActiveSheet?
     @State private var showingCompletedTasks = false
     @State private var pendingDeleteTask: TodoTask?
     @State private var vanishingTaskIDs: Set<UUID> = []
@@ -35,11 +34,13 @@ struct DashboardView: View {
             .padding(.top, 20)
             .padding(.bottom, 36)
         }
-        .sheet(isPresented: $showingTaskComposer) {
-            TaskComposerSheet(onCreate: createTask)
-        }
-        .sheet(isPresented: $showingAIAssist) {
-            AIAssistSheet(userName: profile.name, onAdd: addSuggestedTasks)
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .taskComposer:
+                TaskComposerSheet(onCreate: createTask)
+            case .aiAssist:
+                AIAssistSheet(userName: profile.name, onAdd: addSuggestedTasks)
+            }
         }
         .fullScreenCover(isPresented: $showingCompletedTasks) {
             CompletedTasksView(tasks: allCompletedTasks) {
@@ -106,13 +107,12 @@ struct DashboardView: View {
     }
 
     private var actionsRow: some View {
-        HStack(spacing: 14) {
-            createTaskButton
-
+        HStack {
             actionButton(title: "AI Assist", systemName: "sparkles", isPrimaryAI: true) {
-                showingAIAssist = true
+                activeSheet = .aiAssist
             }
         }
+        .frame(maxWidth: .infinity)
         .padding(.bottom, 6)
     }
 
@@ -201,12 +201,31 @@ struct DashboardView: View {
 
                     Spacer()
 
-                    Text(todayOpenTasks.isEmpty ? "Clear board" : "\(todayOpenTasks.count) active")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(Color.black.opacity(0.56))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.white.opacity(0.36), in: Capsule())
+                    HStack(spacing: 8) {
+                        Button {
+                            activeSheet = .taskComposer
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "plus")
+                                    .font(.caption.weight(.black))
+
+                                Text("Create task")
+                                    .font(.caption.weight(.bold))
+                            }
+                            .foregroundStyle(Color.black.opacity(0.78))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color.white.opacity(0.52), in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+
+                        Text(todayOpenTasks.isEmpty ? "Clear board" : "\(todayOpenTasks.count) active")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(Color.black.opacity(0.56))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color.white.opacity(0.36), in: Capsule())
+                    }
                 }
 
                 if todayOpenTasks.isEmpty {
@@ -360,37 +379,6 @@ struct DashboardView: View {
                 }
             }
         }
-    }
-
-    private var createTaskButton: some View {
-        Button {
-            showingTaskComposer = true
-        } label: {
-            Label("Create New Task", systemImage: "plus.circle.fill")
-                .font(.headline.weight(.semibold))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 15)
-            .frame(maxWidth: .infinity)
-            .background(
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.08, green: 0.20, blue: 0.36),
-                        Color(red: 0.08, green: 0.44, blue: 0.58),
-                        Color(red: 0.18, green: 0.72, blue: 0.78),
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ),
-                in: RoundedRectangle(cornerRadius: 22, style: .continuous)
-            )
-            .overlay {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(Color.white.opacity(0.22), lineWidth: 1)
-            }
-            .shadow(color: Color.cyan.opacity(0.28), radius: 20, y: 10)
-        }
-        .buttonStyle(.plain)
-        .foregroundStyle(.white)
     }
 
     private var todayOpenTasks: [TodoTask] {
@@ -656,6 +644,20 @@ struct DashboardView: View {
                 .frame(width: 240, height: 240)
                 .blur(radius: 22)
                 .offset(x: 130 + sin(time * 0.26) * 12, y: 120 + cos(time * 0.20) * 10)
+        }
+    }
+}
+
+private enum ActiveSheet: Identifiable {
+    case taskComposer
+    case aiAssist
+
+    var id: Int {
+        switch self {
+        case .taskComposer:
+            0
+        case .aiAssist:
+            1
         }
     }
 }

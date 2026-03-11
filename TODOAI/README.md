@@ -1,51 +1,90 @@
 # TODOAI
 
-TODOAI is a focused SwiftUI productivity app for iPhone and iPad that helps users plan today with a clean dashboard, manual task creation, and AI-assisted task breakdowns.
+TODOAI is an AI-first daily planner built in SwiftUI for iPhone and iPad.
 
-## What the app does
+It is designed for one thing: helping a user open the app, understand the day fast, and turn vague intentions into tasks they can actually finish.
 
-- Creates tasks for today with visible priorities: `High`, `Important`, `Quick`, and `Steady`
-- Shows a live clock and a daily overview on the home screen
-- Lets users generate task ideas from natural language with **AI Task Assist**
-- Stores profile and task data locally so the app works without account setup
+## Why it is different
 
-## AI in the app
+Most to-do apps feel like storage.
+TODOAI is built to feel like momentum.
 
-AI is a core part of the product direction, not a label added on top.
+- A cinematic intro screen makes the product feel like a focused tool, not a template app
+- The dashboard gives the user a live sense of progress, urgency, carry-over, and completed wins
+- AI Assist helps turn messy thoughts into cleaner actionable tasks
+- The UI is intentionally polished to make daily planning feel rewarding
 
-The current AI Task Assist flow takes a user prompt such as:
+## What users get
 
-`Tonight I have to prepare for the volleyball game with some videos`
+- A branded AI-style home intro with animated visuals
+- A dashboard with greeting, live clock, task stats, and a stronger “Today” focus area
+- Manual task creation directly from the main workflow
+- AI-assisted task generation for faster planning
+- Swipe-to-delete for yesterday carry-over tasks with confirmation
+- A celebratory daily summary section
+- A separate completed tasks view with bulk clear support
+- Local persistence with no account required
 
-and converts it into a smaller, actionable task such as:
+## Core product flow
 
-`Watch videos for the volleyball game`
+1. Open TODOAI
+2. Enter the experience through the intro screen
+3. Review today’s focus and current rhythm
+4. Create a task manually or use AI Assist
+5. Complete tasks and watch the dashboard respond visually
+6. Review completed tasks and clean them up when needed
 
-The goal is simple: turn vague plans into concrete tasks a user can actually complete today.
+## AI Assist direction
 
-## Current product experience
+The AI layer is meant to reduce friction, not add complexity.
 
-- `Home`
-  Daily greeting, live clock, today’s task list, carry-over tasks, and summary
-- `New Task`
-  Centered task composer with a clearer vertical priority picker
-- `AI Task Assist`
-  Centered assist flow with AI-generated task suggestions from user intent
+Instead of asking users to perfectly phrase every task, TODOAI can take rough intent like:
 
-## Tech stack
+`I need to get ready for tomorrow's client meeting`
+
+and help transform it into clearer next actions such as:
+
+- `Review meeting notes`
+- `Prepare key talking points`
+- `Send follow-up agenda`
+
+The goal is practical AI: faster clarity, less planning drag.
+
+## Product feel
+
+TODOAI is being shaped around:
+
+- Immediate clarity
+- High visual polish
+- Small dopamine hits from progress
+- Lightweight local-first usage
+- AI as a useful partner in daily planning
+
+## Tech
 
 - Swift
 - SwiftUI
 - Local JSON persistence
-- Xcode project-based iOS app structure
+- Xcode project app structure
 
-## Project status
+## Why someone should try it
 
-The app currently focuses on:
+If you want a task app that feels more modern, more visual, and more assistive than a plain checklist, TODOAI is the pitch:
 
-- Strong visual polish for the core flows
-- Fast task entry
-- Better AI-generated task phrasing
-- A lightweight local-first experience
+- open fast
+- understand the day immediately
+- create tasks quickly
+- let AI help when your thoughts are messy
+- feel progress as you move through the day
 
-Next steps can expand the AI behavior further, add smarter task grouping, and introduce richer planning logic.
+## Status
+
+The current version already includes the core branded experience and daily planning loop.
+
+Next iterations can push further into:
+
+- smarter AI task grouping
+- richer daily planning suggestions
+- recurring routines
+- better personalization
+- deeper completion insights
