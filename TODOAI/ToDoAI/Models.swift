@@ -71,10 +71,12 @@ enum TaskSource: String, Codable {
 struct UserProfile: Codable, Equatable {
     var name: String
     var createdAt: Date
+    var photoData: Data?
 
-    init(name: String, createdAt: Date = .now) {
+    init(name: String, createdAt: Date = .now, photoData: Data? = nil) {
         self.name = name
         self.createdAt = createdAt
+        self.photoData = photoData
     }
 }
 
@@ -147,8 +149,16 @@ final class AppStore: ObservableObject {
         load()
     }
 
-    func saveProfile(name: String) {
-        profile = UserProfile(name: name)
+    func saveProfile(name: String, photoData: Data? = nil) {
+        let existingCreatedAt = profile?.createdAt ?? .now
+        let resolvedPhotoData = photoData ?? profile?.photoData
+        profile = UserProfile(name: name, createdAt: existingCreatedAt, photoData: resolvedPhotoData)
+        persist()
+    }
+
+    func updateProfile(name: String, photoData: Data?) {
+        let existingCreatedAt = profile?.createdAt ?? .now
+        profile = UserProfile(name: name, createdAt: existingCreatedAt, photoData: photoData)
         persist()
     }
 

@@ -5,6 +5,7 @@ struct DashboardView: View {
 
     @State private var activeSheet: ActiveSheet?
     @State private var showingCompletedTasks = false
+    @State private var showingProfile = false
     @State private var pendingDeleteTask: TodoTask?
     @State private var vanishingTaskIDs: Set<UUID> = []
 
@@ -47,6 +48,9 @@ struct DashboardView: View {
                 showingCompletedTasks = false
             }
         }
+        .fullScreenCover(isPresented: $showingProfile) {
+            ProfileView(profile: profile)
+        }
         .confirmationDialog(
             "Delete task?",
             isPresented: Binding(
@@ -78,31 +82,183 @@ struct DashboardView: View {
 
     private var heroCard: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
-            GlassCard {
-                VStack(alignment: .leading, spacing: 18) {
-                    HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(greetingText(for: context.date))
-                                .font(.system(size: 28, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white)
+            VStack(alignment: .leading, spacing: 18) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(greetingText(for: context.date))
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundStyle(Color.black.opacity(0.88))
+                    }
+
+                    Spacer()
+
+                    Button {
+                        showingProfile = true
+                    } label: {
+                        HStack(spacing: 12) {
+                            VStack(alignment: .trailing, spacing: 5) {
+                                Text(profile.name)
+                                    .font(.subheadline.weight(.bold))
+                                    .foregroundStyle(Color.black.opacity(0.82))
+
+                                Text("Profile")
+                                    .font(.caption2.weight(.bold))
+                                    .foregroundStyle(Color.black.opacity(0.48))
+                                    .textCase(.uppercase)
+                                    .tracking(1)
+                            }
+
+                            ProfileAvatarView(
+                                name: profile.name,
+                                photoData: profile.photoData,
+                                size: 52,
+                                accentColor: .cyan
+                            )
+                            .overlay(alignment: .bottomTrailing) {
+                                Circle()
+                                    .fill(Color.black.opacity(0.9))
+                                    .frame(width: 16, height: 16)
+                                    .overlay {
+                                        Image(systemName: "sparkles")
+                                            .font(.system(size: 8, weight: .black))
+                                            .foregroundStyle(.white)
+                                    }
+                            }
                         }
-
-                        Spacer()
-
-                        Image(systemName: "sparkles")
-                            .font(.title2.weight(.semibold))
-                            .foregroundStyle(.yellow)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .background(Color.black.opacity(0.05), in: Capsule())
+                        .overlay {
+                            Capsule()
+                                .stroke(Color.black.opacity(0.08), lineWidth: 1)
+                        }
                     }
+                    .buttonStyle(.plain)
+                }
 
-                    LiveClockHeader()
+                heroClockHeader
 
-                    HStack(spacing: 12) {
-                        statPill(title: "Open", value: "\(todayOpenTasks.count)", tint: .cyan, symbol: "waveform.path.ecg")
-                        statPill(title: "Carry-over", value: "\(yesterdayCarryOverTasks.count)", tint: .orange, symbol: "arrow.trianglehead.clockwise")
-                        statPill(title: "Done today", value: "\(completedTodayTasks.count)", tint: .green, symbol: "checkmark.seal.fill")
-                    }
+                HStack(spacing: 12) {
+                    statPill(title: "Open", value: "\(todayOpenTasks.count)", tint: .cyan, symbol: "waveform.path.ecg", usesDarkText: true)
+                    statPill(title: "Carry-over", value: "\(yesterdayCarryOverTasks.count)", tint: .orange, symbol: "arrow.trianglehead.clockwise", usesDarkText: true)
+                    statPill(title: "Done today", value: "\(completedTodayTasks.count)", tint: .green, symbol: "checkmark.seal.fill", usesDarkText: true)
                 }
             }
+            .padding(22)
+            .background(heroBackground)
+            .overlay {
+                RoundedRectangle(cornerRadius: 30, style: .continuous)
+                    .stroke(Color.white.opacity(0.72), lineWidth: 1.2)
+            }
+            .shadow(color: Color.white.opacity(0.28), radius: 18, y: 8)
+        }
+    }
+
+    private var heroClockHeader: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let time = context.date.timeIntervalSinceReferenceDate
+
+            VStack(spacing: 10) {
+                Label {
+                    Text(context.date.formatted(.dateTime.weekday(.wide).day().month(.wide).year()))
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [
+                                    Color.cyan.opacity(0.96),
+                                    Color.blue.opacity(0.82),
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                } icon: {
+                    Image(systemName: "calendar")
+                        .foregroundStyle(Color.cyan.opacity(0.88))
+                }
+
+                HStack(alignment: .lastTextBaseline, spacing: 10) {
+                    Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                        .font(.headline.weight(.black))
+                        .foregroundStyle(Color.black.opacity(0.84))
+
+                    Text(context.date.formatted(.dateTime.hour().minute().second()))
+                        .font(.system(size: 36, weight: .black, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [
+                                    Color.black.opacity(0.92),
+                                    Color.cyan.opacity(0.96),
+                                    Color.blue.opacity(0.74),
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                }
+                .padding(.horizontal, 18)
+                .padding(.vertical, 14)
+                .background(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.92),
+                            Color.cyan.opacity(0.12),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    in: Capsule()
+                )
+                .overlay {
+                    Capsule()
+                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
+                }
+                .shadow(color: Color.cyan.opacity(0.12), radius: 16, y: 8)
+
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(Color.cyan.opacity(0.95))
+                        .frame(width: 8, height: 8)
+                        .scaleEffect(0.86 + abs(sin(time * 1.8)) * 0.4)
+
+                    Text("Live Focus Sync")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color.black.opacity(0.52))
+                        .textCase(.uppercase)
+                        .tracking(1.1)
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    private var heroBackground: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.99, green: 1.0, blue: 1.0),
+                            Color(red: 0.89, green: 0.97, blue: 0.99),
+                            Color(red: 0.97, green: 0.98, blue: 1.0),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+            Circle()
+                .fill(Color.cyan.opacity(0.16))
+                .frame(width: 180, height: 180)
+                .blur(radius: 18)
+                .offset(x: -120, y: -90)
+
+            Circle()
+                .fill(Color.blue.opacity(0.12))
+                .frame(width: 220, height: 220)
+                .blur(radius: 22)
+                .offset(x: 110, y: 80)
         }
     }
 
@@ -293,7 +449,7 @@ struct DashboardView: View {
         }
     }
 
-    private func statPill(title: String, value: String, tint: Color, symbol: String) -> some View {
+    private func statPill(title: String, value: String, tint: Color, symbol: String, usesDarkText: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Image(systemName: symbol)
@@ -305,11 +461,11 @@ struct DashboardView: View {
 
             Text(value)
                 .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(usesDarkText ? Color.black.opacity(0.86) : .white)
 
             Text(title)
                 .font(.caption.weight(.medium))
-                .foregroundStyle(.white.opacity(0.74))
+                .foregroundStyle(usesDarkText ? Color.black.opacity(0.58) : .white.opacity(0.74))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 14)
@@ -317,8 +473,8 @@ struct DashboardView: View {
         .background(
             LinearGradient(
                 colors: [
-                    tint.opacity(0.22),
-                    Color.white.opacity(0.08),
+                    tint.opacity(usesDarkText ? 0.18 : 0.22),
+                    Color.white.opacity(usesDarkText ? 0.42 : 0.08),
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -327,7 +483,7 @@ struct DashboardView: View {
         )
         .overlay {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(tint.opacity(0.22), lineWidth: 1)
+                .stroke(tint.opacity(usesDarkText ? 0.18 : 0.22), lineWidth: 1)
         }
     }
 

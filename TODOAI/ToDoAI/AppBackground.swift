@@ -122,6 +122,13 @@ struct PriorityBadge: View {
 }
 
 struct LiveClockHeader: View {
+    enum Style {
+        case defaultDark
+        case contrastOnLight
+    }
+
+    var style: Style = .defaultDark
+
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let time = context.date.timeIntervalSinceReferenceDate
@@ -132,34 +139,27 @@ struct LiveClockHeader: View {
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [
-                                    Color.cyan.opacity(0.96),
-                                    Color.white.opacity(0.92),
-                                ],
+                                colors: dateGradientColors,
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
                         )
                 } icon: {
                     Image(systemName: "calendar")
-                        .foregroundStyle(Color.cyan.opacity(0.88))
+                        .foregroundStyle(calendarIconColor)
                 }
 
                 HStack(alignment: .lastTextBaseline, spacing: 10) {
                     Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
                         .font(.headline.weight(.black))
-                        .foregroundStyle(Color.white.opacity(0.92))
+                        .foregroundStyle(clockIconColor)
 
                     Text(context.date.formatted(.dateTime.hour().minute().second()))
                         .font(.system(size: 36, weight: .black, design: .rounded))
                         .monospacedDigit()
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [
-                                    Color.white,
-                                    Color.cyan,
-                                    Color.mint.opacity(0.95),
-                                ],
+                                colors: clockGradientColors,
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
@@ -169,10 +169,7 @@ struct LiveClockHeader: View {
                 .padding(.vertical, 14)
                 .background(
                     LinearGradient(
-                        colors: [
-                            Color.white.opacity(0.14),
-                            Color.cyan.opacity(0.08),
-                        ],
+                        colors: capsuleBackgroundColors,
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),
@@ -180,9 +177,9 @@ struct LiveClockHeader: View {
                 )
                 .overlay {
                     Capsule()
-                        .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                        .stroke(capsuleStrokeColor, lineWidth: 1)
                 }
-                .shadow(color: Color.cyan.opacity(0.16), radius: 18, y: 8)
+                .shadow(color: capsuleShadowColor, radius: 18, y: 8)
 
                 HStack(spacing: 8) {
                     Circle()
@@ -192,12 +189,84 @@ struct LiveClockHeader: View {
 
                     Text("Live Focus Sync")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(.white.opacity(0.66))
+                        .foregroundStyle(syncLabelColor)
                         .textCase(.uppercase)
                         .tracking(1.1)
                 }
             }
             .frame(maxWidth: .infinity)
+        }
+    }
+
+    private var dateGradientColors: [Color] {
+        switch style {
+        case .defaultDark:
+            [Color.cyan.opacity(0.96), Color.white.opacity(0.92)]
+        case .contrastOnLight:
+            [Color.cyan.opacity(0.96), Color.blue.opacity(0.82)]
+        }
+    }
+
+    private var calendarIconColor: Color {
+        switch style {
+        case .defaultDark:
+            Color.cyan.opacity(0.88)
+        case .contrastOnLight:
+            Color.cyan.opacity(0.92)
+        }
+    }
+
+    private var clockIconColor: Color {
+        switch style {
+        case .defaultDark:
+            Color.white.opacity(0.92)
+        case .contrastOnLight:
+            Color.black.opacity(0.84)
+        }
+    }
+
+    private var clockGradientColors: [Color] {
+        switch style {
+        case .defaultDark:
+            [Color.white, Color.cyan, Color.mint.opacity(0.95)]
+        case .contrastOnLight:
+            [Color.black.opacity(0.92), Color.cyan.opacity(0.96), Color.blue.opacity(0.74)]
+        }
+    }
+
+    private var capsuleBackgroundColors: [Color] {
+        switch style {
+        case .defaultDark:
+            [Color.white.opacity(0.14), Color.cyan.opacity(0.08)]
+        case .contrastOnLight:
+            [Color.white.opacity(0.92), Color.cyan.opacity(0.12)]
+        }
+    }
+
+    private var capsuleStrokeColor: Color {
+        switch style {
+        case .defaultDark:
+            Color.white.opacity(0.18)
+        case .contrastOnLight:
+            Color.black.opacity(0.08)
+        }
+    }
+
+    private var capsuleShadowColor: Color {
+        switch style {
+        case .defaultDark:
+            Color.cyan.opacity(0.16)
+        case .contrastOnLight:
+            Color.cyan.opacity(0.12)
+        }
+    }
+
+    private var syncLabelColor: Color {
+        switch style {
+        case .defaultDark:
+            .white.opacity(0.66)
+        case .contrastOnLight:
+            Color.black.opacity(0.52)
         }
     }
 }
