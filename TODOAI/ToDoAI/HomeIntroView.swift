@@ -11,73 +11,91 @@ struct HomeIntroView: View {
         ZStack {
             IntroBackground()
 
-            VStack(spacing: 28) {
-                Spacer()
+            VStack(spacing: 0) {
+                Spacer(minLength: 32)
 
-                AILogoMark(isAnimating: pulse)
-                    .scaleEffect(logoIsVisible ? 1 : 0.72)
-                    .opacity(logoIsVisible ? 1 : 0)
-                    .rotationEffect(.degrees(logoIsVisible ? 0 : -12))
+                VStack(spacing: 28) {
+                    AILogoMark(isAnimating: pulse)
+                        .scaleEffect(logoIsVisible ? 1 : 0.72)
+                        .opacity(logoIsVisible ? 1 : 0)
+                        .rotationEffect(.degrees(logoIsVisible ? 0 : -12))
 
-                VStack(spacing: 12) {
-                    Text("TODO AI")
-                        .font(.system(size: 42, weight: .black, design: .rounded))
-                        .tracking(4)
-                        .foregroundStyle(.white)
+                    VStack(spacing: 12) {
+                        Text("TODO AI")
+                            .font(.system(size: 42, weight: .black, design: .rounded))
+                            .tracking(4)
+                            .foregroundStyle(.white)
 
-                    Text("Sharper focus. Smarter momentum. A cleaner start to the day.")
-                        .font(.headline.weight(.medium))
-                        .foregroundStyle(.white.opacity(0.72))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
-                }
-                .offset(y: contentIsVisible ? 0 : 26)
-                .opacity(contentIsVisible ? 1 : 0)
-
-                Button(action: onContinue) {
-                    HStack(spacing: 12) {
-                        Text("LET'S GO")
-                            .font(.headline.weight(.black))
-                            .tracking(1.4)
-
-                        Image(systemName: "arrow.right")
-                            .font(.headline.weight(.black))
+                        Text("Plan smarter. Achieve more.")
+                            .font(.headline.weight(.medium))
+                            .foregroundStyle(.white.opacity(0.72))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
                     }
-                    .foregroundStyle(Color.black)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 18)
-                    .background(
-                        LinearGradient(
-                            colors: [
-                                Color.white,
-                                Color(red: 0.67, green: 0.98, blue: 0.96),
-                                Color(red: 0.42, green: 0.95, blue: 0.99),
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        ),
-                        in: Capsule()
-                    )
-                    .overlay {
-                        Capsule()
-                            .stroke(Color.white.opacity(0.65), lineWidth: 1.2)
-                    }
-                    .shadow(color: Color.cyan.opacity(0.42), radius: 22, y: 12)
-                }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 28)
-                .offset(y: contentIsVisible ? 0 : 30)
-                .opacity(contentIsVisible ? 1 : 0)
-
-                Text("Your AI-powered daily planner")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.5))
-                    .textCase(.uppercase)
-                    .tracking(1.2)
-                    .padding(.top, 6)
+                    .offset(y: contentIsVisible ? 0 : 26)
                     .opacity(contentIsVisible ? 1 : 0)
 
+                    Button(action: onContinue) {
+                        HStack(spacing: 12) {
+                            Text("START YOUR DAY")
+                                .font(.headline.weight(.black))
+                                .tracking(1.4)
+
+                            Image(systemName: "arrow.right")
+                                .font(.headline.weight(.black))
+                        }
+                        .foregroundStyle(Color.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 18)
+                        .background(
+                            LinearGradient(
+                                colors: [
+                                    Color.white,
+                                    Color(red: 0.67, green: 0.98, blue: 0.96),
+                                    Color(red: 0.42, green: 0.95, blue: 0.99),
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            ),
+                            in: Capsule()
+                        )
+                        .overlay {
+                            Capsule()
+                                .stroke(Color.white.opacity(0.65), lineWidth: 1.2)
+                        }
+                        .shadow(color: Color.cyan.opacity(0.42), radius: 22, y: 12)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 28)
+                    .offset(y: contentIsVisible ? 0 : 30)
+                    .opacity(contentIsVisible ? 1 : 0)
+
+                    Text("Your AI-powered daily buddy")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .textCase(.uppercase)
+                        .tracking(1.2)
+                        .opacity(contentIsVisible ? 1 : 0)
+                }
+
                 Spacer()
+
+                Text("v1.0")
+                    .font(.system(size: 54, weight: .black, design: .rounded))
+                    .tracking(2.4)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.92),
+                                Color.cyan.opacity(0.95),
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .shadow(color: Color.cyan.opacity(0.35), radius: 18, y: 6)
+                    .padding(.bottom, 10)
+                    .opacity(contentIsVisible ? 1 : 0)
             }
             .padding(.vertical, 44)
         }
@@ -217,108 +235,144 @@ private struct AILogoMark: View {
                 .fill(
                     RadialGradient(
                         colors: [
-                            Color.white.opacity(0.34),
-                            Color.cyan.opacity(0.08),
+                            Color.white.opacity(0.24),
+                            Color.cyan.opacity(0.14),
                             .clear,
                         ],
                         center: .center,
                         startRadius: 0,
-                        endRadius: 110
+                        endRadius: 124
                     )
                 )
-                .frame(width: 220, height: 220)
-                .scaleEffect(isAnimating ? 1.05 : 0.94)
+                .frame(width: 260, height: 260)
+                .scaleEffect(isAnimating ? 1.06 : 0.95)
 
-            RoundedRectangle(cornerRadius: 36, style: .continuous)
+            Circle()
+                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                .frame(width: 208, height: 208)
+                .rotationEffect(.degrees(isAnimating ? 360 : 0))
+                .animation(.linear(duration: 18).repeatForever(autoreverses: false), value: isAnimating)
+
+            Circle()
+                .trim(from: 0.08, to: 0.92)
+                .stroke(
+                    AngularGradient(
+                        colors: [
+                            Color.cyan.opacity(0.1),
+                            Color.white.opacity(0.95),
+                            Color.cyan.opacity(0.8),
+                            Color.white.opacity(0.1),
+                        ],
+                        center: .center
+                    ),
+                    style: StrokeStyle(lineWidth: 6, lineCap: .round)
+                )
+                .frame(width: 176, height: 176)
+                .rotationEffect(.degrees(isAnimating ? -360 : 0))
+                .animation(.linear(duration: 20).repeatForever(autoreverses: false), value: isAnimating)
+
+            RoundedRectangle(cornerRadius: 38, style: .continuous)
                 .fill(
                     LinearGradient(
                         colors: [
-                            Color.white.opacity(0.88),
-                            Color(red: 0.76, green: 0.99, blue: 0.96),
-                            Color(red: 0.58, green: 0.86, blue: 1.0),
+                            Color(red: 0.10, green: 0.13, blue: 0.24),
+                            Color(red: 0.05, green: 0.08, blue: 0.16),
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
-                .frame(width: 132, height: 132)
+                .frame(width: 148, height: 148)
                 .overlay {
-                    RoundedRectangle(cornerRadius: 36, style: .continuous)
-                        .stroke(Color.white.opacity(0.7), lineWidth: 1.2)
+                    RoundedRectangle(cornerRadius: 38, style: .continuous)
+                        .stroke(Color.white.opacity(0.18), lineWidth: 1.2)
                 }
-                .shadow(color: Color.cyan.opacity(0.3), radius: 22, y: 14)
-                .rotationEffect(.degrees(isAnimating ? 8 : -8))
-                .animation(.easeInOut(duration: 4.2).repeatForever(autoreverses: true), value: isAnimating)
+                .shadow(color: Color.cyan.opacity(0.24), radius: 24, y: 14)
 
             VStack(spacing: 14) {
-                HStack(spacing: 12) {
-                    checklistPill(width: 54, isCompleted: true)
-                    Capsule()
-                        .fill(Color.black.opacity(0.18))
-                        .frame(width: 34, height: 9)
-                }
+                HStack(spacing: 14) {
+                    chipNode
 
-                HStack(spacing: 12) {
-                    checklistPill(width: 40, isCompleted: true)
-                    Capsule()
-                        .fill(Color.black.opacity(0.18))
-                        .frame(width: 48, height: 9)
-                }
-
-                HStack(spacing: 12) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color.black.opacity(0.82))
-                            .frame(width: 28, height: 28)
-
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 14, weight: .black))
-                            .foregroundStyle(.white)
+                    VStack(alignment: .leading, spacing: 8) {
+                        taskRow(width: 54, isCompleted: true)
+                        taskRow(width: 40, isCompleted: true)
                     }
+                }
 
-                    Capsule()
-                        .fill(Color.cyan.opacity(0.95))
-                        .frame(width: 60, height: 10)
-                        .overlay(alignment: .trailing) {
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 10, height: 10)
-                                .offset(x: 4)
-                        }
+                HStack(spacing: 12) {
+                    taskRow(width: 64, isCompleted: false)
+
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 16, weight: .black))
+                        .foregroundStyle(Color.cyan)
+                        .frame(width: 30, height: 30)
+                        .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
             }
-            .foregroundStyle(Color.black.opacity(0.84))
 
-            ForEach(0..<6, id: \.self) { index in
-                Image(systemName: index.isMultiple(of: 2) ? "sparkle" : "circle.fill")
-                    .font(.system(size: index.isMultiple(of: 2) ? 16 : 6, weight: .bold))
-                    .foregroundStyle(index.isMultiple(of: 2) ? Color.white.opacity(0.78) : Color.cyan.opacity(0.72))
-                    .offset(
-                        x: CGFloat(cos(Double(index) * .pi / 3) * 92),
-                        y: CGFloat(sin(Double(index) * .pi / 3) * 92)
-                    )
-                    .rotationEffect(.degrees(isAnimating ? 360 : 0))
-                    .animation(.linear(duration: 16).repeatForever(autoreverses: false), value: isAnimating)
+            ForEach(0..<4, id: \.self) { index in
+                connectionDot(angle: Double(index) * 90, active: index.isMultiple(of: 2))
             }
         }
-        .frame(width: 240, height: 240)
+        .frame(width: 280, height: 280)
     }
 
-    private func checklistPill(width: CGFloat, isCompleted: Bool) -> some View {
+    private var chipNode: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.cyan.opacity(0.95),
+                            Color(red: 0.31, green: 0.59, blue: 1.00),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 58, height: 58)
+
+            Image(systemName: "brain.head.profile")
+                .font(.system(size: 24, weight: .black))
+                .foregroundStyle(Color.black.opacity(0.84))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+        }
+    }
+
+    private func taskRow(width: CGFloat, isCompleted: Bool) -> some View {
         HStack(spacing: 8) {
             ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(isCompleted ? Color.black.opacity(0.82) : Color.white.opacity(0.7))
-                    .frame(width: 28, height: 28)
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(isCompleted ? Color.cyan.opacity(0.95) : Color.white.opacity(0.14))
+                    .frame(width: 24, height: 24)
 
                 Image(systemName: isCompleted ? "checkmark" : "circle")
-                    .font(.system(size: 13, weight: .black))
-                    .foregroundStyle(isCompleted ? .white : Color.black.opacity(0.45))
+                    .font(.system(size: 11, weight: .black))
+                    .foregroundStyle(isCompleted ? Color.black.opacity(0.82) : .white.opacity(0.72))
             }
 
             Capsule()
-                .fill(Color.black.opacity(0.18))
-                .frame(width: width, height: 9)
+                .fill(isCompleted ? Color.white.opacity(0.72) : Color.white.opacity(0.22))
+                .frame(width: width, height: 8)
         }
+    }
+
+    private func connectionDot(angle: Double, active: Bool) -> some View {
+        let radians = angle * .pi / 180
+
+        return Circle()
+            .fill(active ? Color.cyan.opacity(0.92) : Color.white.opacity(0.55))
+            .frame(width: active ? 12 : 8, height: active ? 12 : 8)
+            .overlay {
+                Circle()
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+            }
+            .offset(
+                x: cos(radians) * 108,
+                y: sin(radians) * 108
+            )
     }
 }
