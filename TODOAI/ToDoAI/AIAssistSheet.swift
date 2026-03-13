@@ -184,112 +184,100 @@ struct AIAssistSheet: View {
             GeometryReader { proxy in
                 ScrollView {
                     VStack(spacing: 18) {
-                        LiveClockHeader()
+                        sheetHeader
 
                         Spacer(minLength: suggestions.isEmpty ? 0 : 8)
 
-                        GlassCard {
-                            VStack(alignment: .leading, spacing: 14) {
-                                Text("AI Task Assist")
-                                    .font(.title3.weight(.bold))
-                                    .foregroundStyle(.white)
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                                    .multilineTextAlignment(.center)
+                        VStack(alignment: .leading, spacing: 14) {
+                            Text("AI Task Assist")
+                                .font(.title3.weight(.bold))
+                                .foregroundStyle(Color.black.opacity(0.86))
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .multilineTextAlignment(.center)
 
-                                Text("Describe your day or goal, and ToDoAI will break it into tasks for today.")
-                                    .foregroundStyle(.white.opacity(0.78))
-                                    .multilineTextAlignment(.center)
+                            Text("Describe your day or goal, and ToDoAI will break it into tasks for today.")
+                                .foregroundStyle(Color.black.opacity(0.64))
+                                .multilineTextAlignment(.center)
 
-                                TextField(
-                                    "Example: finish the client proposal, answer messages, and go for a workout",
-                                    text: $focus,
-                                    axis: .vertical
-                                )
-                                .lineLimit(3...6)
-                                .textInputAutocapitalization(.sentences)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 14)
-                                .background(
-                                    LinearGradient(
-                                        colors: [
-                                            Color.white.opacity(0.24),
-                                            Color.cyan.opacity(0.18),
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    in: RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                )
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                        .stroke(Color.white.opacity(0.24), lineWidth: 1)
-                                }
-                                .foregroundStyle(.white)
-
-                                Button(action: generateSuggestions) {
-                                    Label("Generate Suggestions", systemImage: "sparkles")
-                                        .font(.headline.weight(.semibold))
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 14)
-                                }
-                                .buttonStyle(.plain)
-                                .foregroundStyle(.black)
-                                .background(
-                                    LinearGradient(
-                                        colors: [
-                                            Color.yellow,
-                                            Color(red: 1.0, green: 0.79, blue: 0.24),
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    in: RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                )
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                        .stroke(Color.white.opacity(0.38), lineWidth: 1)
-                                }
-                                .shadow(color: Color.yellow.opacity(0.30), radius: 18, y: 8)
+                            TextField(
+                                "Example: finish the client proposal, answer messages, and go for a workout",
+                                text: $focus,
+                                axis: .vertical
+                            )
+                            .lineLimit(3...6)
+                            .textInputAutocapitalization(.sentences)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 14)
+                            .background(Color.white.opacity(0.6), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                    .stroke(Color.black.opacity(0.08), lineWidth: 1)
                             }
+                            .foregroundStyle(Color.black.opacity(0.84))
+
+                            Button(action: generateSuggestions) {
+                                Label("Generate Suggestions", systemImage: "sparkles")
+                                    .font(.headline.weight(.semibold))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(.black)
+                            .background(
+                                LinearGradient(
+                                    colors: [
+                                        Color.white,
+                                        Color(red: 0.86, green: 0.97, blue: 0.99),
+                                        Color(red: 0.77, green: 0.93, blue: 1.0),
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            )
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                    .stroke(Color.black.opacity(0.08), lineWidth: 1)
+                            }
+                            .shadow(color: Color.cyan.opacity(0.18), radius: 16, y: 8)
                         }
-                        .background(
-                            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [
-                                            Color.cyan.opacity(0.18),
-                                            Color.blue.opacity(0.14),
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                        )
+                        .padding(22)
+                        .background(sheetCardBackground)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                                .stroke(Color.white.opacity(0.72), lineWidth: 1.2)
+                        }
+                        .shadow(color: Color.white.opacity(0.24), radius: 18, y: 8)
 
                         if !suggestions.isEmpty {
-                            GlassCard {
-                                VStack(alignment: .leading, spacing: 14) {
-                                    Text("Suggested tasks")
-                                        .font(.headline.weight(.bold))
-                                        .foregroundStyle(.white)
+                            VStack(alignment: .leading, spacing: 14) {
+                                Text("Suggested tasks")
+                                    .font(.headline.weight(.bold))
+                                    .foregroundStyle(Color.black.opacity(0.84))
 
-                                    ForEach(suggestions) { suggestion in
-                                        HStack(alignment: .top, spacing: 12) {
-                                            Image(systemName: "sparkles")
-                                                .foregroundStyle(.yellow)
+                                ForEach(suggestions) { suggestion in
+                                    HStack(alignment: .top, spacing: 12) {
+                                        Image(systemName: "sparkles")
+                                            .foregroundStyle(.cyan)
 
-                                            VStack(alignment: .leading, spacing: 6) {
-                                                Text(suggestion.title)
-                                                    .font(.body.weight(.medium))
-                                                    .foregroundStyle(.white)
-                                                PriorityBadge(priority: suggestion.priority)
-                                            }
-
-                                            Spacer()
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            Text(suggestion.title)
+                                                .font(.body.weight(.medium))
+                                                .foregroundStyle(Color.black.opacity(0.84))
+                                            PriorityBadge(priority: suggestion.priority)
                                         }
+
+                                        Spacer()
                                     }
                                 }
                             }
+                            .padding(22)
+                            .background(sheetCardBackground)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 30, style: .continuous)
+                                    .stroke(Color.white.opacity(0.72), lineWidth: 1.2)
+                            }
+                            .shadow(color: Color.white.opacity(0.24), radius: 18, y: 8)
 
                             Button(action: addSuggestedTasks) {
                                 Text("Add All for Today")
@@ -299,7 +287,22 @@ struct AIAssistSheet: View {
                             }
                             .buttonStyle(.plain)
                             .foregroundStyle(.black)
-                            .background(Color.white, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                            .background(
+                                LinearGradient(
+                                    colors: [
+                                        Color.white,
+                                        Color(red: 0.86, green: 0.97, blue: 0.99),
+                                        Color(red: 0.77, green: 0.93, blue: 1.0),
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                in: RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            )
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                    .stroke(Color.black.opacity(0.08), lineWidth: 1)
+                            }
                         }
 
                         Spacer(minLength: 0)
@@ -327,5 +330,51 @@ struct AIAssistSheet: View {
         guard !suggestions.isEmpty else { return }
         onAdd(suggestions)
         dismiss()
+    }
+
+    private var sheetHeader: some View {
+        VStack(spacing: 10) {
+            Label("AI Planner", systemImage: "sparkles")
+                .font(.headline.weight(.bold))
+                .foregroundStyle(Color.black.opacity(0.84))
+
+            LiveClockHeader(style: .contrastOnLight)
+        }
+        .padding(22)
+        .background(sheetCardBackground)
+        .overlay {
+            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                .stroke(Color.white.opacity(0.72), lineWidth: 1.2)
+        }
+        .shadow(color: Color.white.opacity(0.24), radius: 18, y: 8)
+    }
+
+    private var sheetCardBackground: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.99, green: 1.0, blue: 1.0),
+                            Color(red: 0.89, green: 0.97, blue: 0.99),
+                            Color(red: 0.97, green: 0.98, blue: 1.0),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+            Circle()
+                .fill(Color.cyan.opacity(0.16))
+                .frame(width: 180, height: 180)
+                .blur(radius: 18)
+                .offset(x: -120, y: -90)
+
+            Circle()
+                .fill(Color.blue.opacity(0.12))
+                .frame(width: 220, height: 220)
+                .blur(radius: 22)
+                .offset(x: 110, y: 80)
+        }
     }
 }
