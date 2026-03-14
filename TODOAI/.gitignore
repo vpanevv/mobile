@@ -12,3 +12,9 @@ build/
 .build/
 Packages/
 Package.resolved
+
+# Backend local state and secrets
+backend/node_modules/
+backend/.env
+backend/.cache/
+backend/keys/

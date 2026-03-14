@@ -39,21 +39,35 @@ enum AISuggestionService {
         for focus: String,
         userName: String,
         mode: AIMode,
+        entitlementProof: SmartAISubscriptionStore.SmartAIEntitlementProof? = nil,
         now: Date = .now
     ) async throws -> [AISuggestedTask] {
         switch mode {
         case .quick:
             return AIPlanner.suggestions(for: focus, userName: userName, now: now)
         case .smart:
-            return try await SmartAIProxyClient().suggestions(for: focus, userName: userName, now: now)
+            return try await SmartAIProxyClient().suggestions(
+                for: focus,
+                userName: userName,
+                entitlementProof: entitlementProof,
+                now: now
+            )
         }
     }
 }
 
 struct SmartAIProxyClient {
-    func suggestions(for focus: String, userName: String, now: Date = .now) async throws -> [AISuggestedTask] {
+    func suggestions(
+        for focus: String,
+        userName: String,
+        entitlementProof: SmartAISubscriptionStore.SmartAIEntitlementProof?,
+        now: Date = .now
+    ) async throws -> [AISuggestedTask] {
         guard let proxyURL = AppConfiguration.smartAIProxyURL else {
             throw SmartAIProxyError.missingProxyURL
+        }
+        guard let entitlementProof else {
+            throw SmartAIProxyError.missingEntitlementProof
         }
 
         var request = URLRequest(url: proxyURL)
@@ -65,7 +79,13 @@ struct SmartAIProxyClient {
                 note: focus,
                 userName: userName,
                 requestedAt: now,
-                maxTasks: 5
+                maxTasks: 5,
+                entitlement: .init(
+                    signedTransactionInfo: entitlementProof.signedTransactionInfo,
+                    transactionId: entitlementProof.transactionId,
+                    originalTransactionId: entitlementProof.originalTransactionId,
+                    appAccountToken: entitlementProof.appAccountToken
+                )
             )
         )
 
@@ -102,6 +122,14 @@ private struct SmartAIProxyRequest: Encodable {
     let userName: String
     let requestedAt: Date
     let maxTasks: Int
+    let entitlement: Entitlement
+
+    struct Entitlement: Encodable {
+        let signedTransactionInfo: String
+        let transactionId: String
+        let originalTransactionId: String
+        let appAccountToken: String
+    }
 }
 
 private struct SmartAIProxyResponse: Decodable {
@@ -115,6 +143,7 @@ private struct SmartAIProxyResponse: Decodable {
 
 private enum SmartAIProxyError: LocalizedError {
     case missingProxyURL
+    case missingEntitlementProof
     case invalidResponse
     case serverError(String)
     case emptySuggestions
@@ -123,6 +152,8 @@ private enum SmartAIProxyError: LocalizedError {
         switch self {
         case .missingProxyURL:
             return "Smart AI proxy URL is missing in Info.plist."
+        case .missingEntitlementProof:
+            return "Smart AI subscription proof is not available."
         case .invalidResponse:
             return "Smart AI proxy returned an invalid response."
         case .serverError(let message):

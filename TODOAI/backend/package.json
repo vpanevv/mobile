@@ -1,0 +1,13 @@
+{
+  "name": "todoai-smart-ai-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@apple/app-store-server-library": "^1.4.0"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node --check server.mjs"
+  }
+}

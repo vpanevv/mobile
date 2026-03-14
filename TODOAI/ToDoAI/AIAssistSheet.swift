@@ -518,10 +518,12 @@ struct AIAssistSheet: View {
 
         Task {
             do {
+                let entitlementProof = selectedMode == .smart ? try await subscriptions.currentEntitlementProof() : nil
                 let generated = try await AISuggestionService.suggestions(
                     for: trimmedFocus,
                     userName: userName,
-                    mode: selectedMode
+                    mode: selectedMode,
+                    entitlementProof: entitlementProof
                 )
 
                 await MainActor.run {
