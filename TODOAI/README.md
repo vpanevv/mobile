@@ -67,6 +67,45 @@ TODOAI is being shaped around:
 - Local JSON persistence
 - Xcode project app structure
 
+## Smart AI backend
+
+Smart AI should never call OpenAI directly from the iOS app.
+The app is now wired to call your own backend proxy instead.
+
+Configure this key in [Info.plist](/Users/panev/panev-ios/mobile/TODOAI/ToDoAI/Info.plist):
+
+- `TODOAI_SMART_AI_PROXY_URL`
+
+Expected request body from the app:
+
+```json
+{
+  "note": "Today I have an important volleyball game and a birthday party tonight",
+  "userName": "Pavel",
+  "requestedAt": "2026-03-14T08:00:00Z",
+  "maxTasks": 5
+}
+```
+
+Expected response body from your backend:
+
+```json
+{
+  "tasks": [
+    { "title": "Pack volleyball gear", "priority": "high" },
+    { "title": "Volleyball game", "priority": "important" },
+    { "title": "Birthday party tonight", "priority": "quick" }
+  ]
+}
+```
+
+Backend responsibilities:
+
+- Verify the user has Smart AI access
+- Call OpenAI with the server-side API key
+- Enforce short structured task output
+- Return only sanitized task titles and priorities
+
 ## Why someone should try it
 
 If you want a task app that feels more modern, more visual, and more assistive than a plain checklist, TODOAI is the pitch:

@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict/>
+<dict>
+	<key>TODOAI_SMART_AI_PROXY_URL</key>
+	<string></string>
+	<key>TODOAI_SMART_AI_PRODUCT_ID</key>
+	<string>todoai.smartai.monthly</string>
+</dict>
 </plist>
