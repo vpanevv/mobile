@@ -11,8 +11,11 @@ final class SmartAISubscriptionStore: ObservableObject {
     @Published private(set) var statusMessage: String?
 
     private var updatesTask: Task<Void, Never>?
+    private let appAccountToken: UUID
+    private let userDefaults = UserDefaults.standard
 
     init() {
+        self.appAccountToken = Self.loadOrCreateAppAccountToken()
         updatesTask = observeTransactions()
 
         Task {
@@ -39,7 +42,7 @@ final class SmartAISubscriptionStore: ObservableObject {
         statusMessage = nil
 
         do {
-            let result = try await product.purchase()
+            let result = try await product.purchase(options: [.appAccountToken(appAccountToken)])
 
             switch result {
             case .success(let verification):
@@ -80,6 +83,27 @@ final class SmartAISubscriptionStore: ObservableObject {
             purchaseState = .failed
             statusMessage = error.localizedDescription
         }
+    }
+
+    func currentEntitlementProof() async throws -> SmartAIEntitlementProof {
+        for await result in Transaction.currentEntitlements {
+            let transaction = try verify(result)
+            guard transaction.productID == AppConfiguration.smartAIProductID else { continue }
+            guard transaction.revocationDate == nil else { continue }
+
+            if let expirationDate = transaction.expirationDate, expirationDate < .now {
+                continue
+            }
+
+            return SmartAIEntitlementProof(
+                signedTransactionInfo: result.jwsRepresentation,
+                transactionId: String(transaction.id),
+                originalTransactionId: String(transaction.originalID),
+                appAccountToken: transaction.appAccountToken?.uuidString ?? appAccountToken.uuidString
+            )
+        }
+
+        throw StoreError.missingEntitlementProof
     }
 
     private func loadProducts() async {
@@ -145,6 +169,13 @@ final class SmartAISubscriptionStore: ObservableObject {
 }
 
 extension SmartAISubscriptionStore {
+    struct SmartAIEntitlementProof {
+        let signedTransactionInfo: String
+        let transactionId: String
+        let originalTransactionId: String
+        let appAccountToken: String
+    }
+
     enum PurchaseState {
         case idle
         case purchasing
@@ -156,12 +187,30 @@ extension SmartAISubscriptionStore {
 
     enum StoreError: LocalizedError {
         case failedVerification
+        case missingEntitlementProof
 
         var errorDescription: String? {
             switch self {
             case .failedVerification:
                 return "The App Store could not verify this transaction."
+            case .missingEntitlementProof:
+                return "Smart AI entitlement proof is not available for this account."
             }
         }
+    }
+}
+
+private extension SmartAISubscriptionStore {
+    static func loadOrCreateAppAccountToken() -> UUID {
+        let defaults = UserDefaults.standard
+        let key = "todoai.smartAI.appAccountToken"
+
+        if let existing = defaults.string(forKey: key), let uuid = UUID(uuidString: existing) {
+            return uuid
+        }
+
+        let newUUID = UUID()
+        defaults.set(newUUID.uuidString, forKey: key)
+        return newUUID
     }
 }

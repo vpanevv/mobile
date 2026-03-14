@@ -83,7 +83,13 @@ Expected request body from the app:
   "note": "Today I have an important volleyball game and a birthday party tonight",
   "userName": "Pavel",
   "requestedAt": "2026-03-14T08:00:00Z",
-  "maxTasks": 5
+  "maxTasks": 5,
+  "entitlement": {
+    "signedTransactionInfo": "eyJhbGciOiJFUzI1NiIs...",
+    "transactionId": "2000001234567890",
+    "originalTransactionId": "2000001234500000",
+    "appAccountToken": "E0EAA4A2-DB58-4E67-B6B8-60D1305B0D96"
+  }
 }
 ```
 
@@ -102,6 +108,7 @@ Expected response body from your backend:
 Backend responsibilities:
 
 - Verify the user has Smart AI access
+- Verify the Apple-signed StoreKit entitlement and current App Store subscription status
 - Call OpenAI with the server-side API key
 - Enforce short structured task output
 - Return only sanitized task titles and priorities
