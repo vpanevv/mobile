@@ -203,6 +203,13 @@ Layer 2: App Store server status verification
 - it confirms there is still an active Smart AI subscription for that purchase
 - it only accepts statuses that still represent service access
 
+Request-budget protections:
+
+- Smart AI input is capped at 1000 characters
+- each verified user gets 4 Smart AI generations per day
+- the quota key is the verified `appAccountToken` from the entitlement proof
+- OpenAI output size is capped server-side with a response token limit
+
 This is much harder to abuse than client-only gating because an attacker now needs both:
 
 - a valid Apple-signed entitlement

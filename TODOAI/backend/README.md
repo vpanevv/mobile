@@ -80,6 +80,23 @@ The backend only grants access when:
 - the entitlement is not revoked or expired
 - Apple reports an active or grace-period subscription for that original transaction
 
+## Request protection
+
+Before the backend calls OpenAI, it also enforces:
+
+- max input length: 1000 characters
+- daily Smart AI quota: 4 requests per user per day
+- user identity for quota tracking: the verified `appAccountToken` from the Apple-signed entitlement
+- max OpenAI response size: capped with `max_output_tokens`
+
+If the input exceeds 1000 characters, the backend returns HTTP `400` with:
+
+- `Input too long. Maximum allowed length is 1000 characters.`
+
+If the user has already generated 4 Smart AI plans that day, the backend returns HTTP `429` with:
+
+- `Daily Smart AI limit reached. You can generate up to 4 Smart AI plans per day.`
+
 ## Production note
 
 `TODOAI_SUBSCRIPTION_BYPASS=true` should only be used during local development.

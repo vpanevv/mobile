@@ -23,6 +23,10 @@ const appAppleId = process.env.TODOAI_APPLE_APP_ID ? Number(process.env.TODOAI_A
 const appStoreIssuerId = process.env.TODOAI_APPSTORE_ISSUER_ID || "";
 const appStoreKeyId = process.env.TODOAI_APPSTORE_KEY_ID || "";
 const appStorePrivateKey = loadAppStorePrivateKey();
+const maxInputLength = 1000;
+const dailySmartAILimit = 4;
+const maxResponseTokens = 220;
+const usageStorePath = path.join(process.cwd(), "backend", ".cache", "smart-ai-usage.json");
 
 let verifierPromise;
 let appStoreClientPromise;
@@ -67,6 +71,18 @@ const server = http.createServer(async (req, res) => {
       const authorized = await authorizeSmartAIRequest(body);
       if (!authorized.ok) {
         sendJSON(res, authorized.statusCode, { error: authorized.message });
+        return;
+      }
+
+      const inputValidationError = validateInputLength(body.note);
+      if (inputValidationError) {
+        sendJSON(res, 400, { error: inputValidationError });
+        return;
+      }
+
+      const usageResult = consumeDailySmartAIQuota(authorized.userId);
+      if (!usageResult.ok) {
+        sendJSON(res, usageResult.statusCode, { error: usageResult.message });
         return;
       }
 
@@ -164,12 +180,21 @@ function validateSuggestionRequest(body) {
   return null;
 }
 
+function validateInputLength(note) {
+  if (Array.from(note || "").length > maxInputLength) {
+    return "Input too long. Maximum allowed length is 1000 characters.";
+  }
+
+  return null;
+}
+
 async function authorizeSmartAIRequest(body) {
   if (bypassSubscriptionCheck) {
     return {
       ok: true,
       statusCode: 200,
-      message: "Subscription bypass is enabled."
+      message: "Subscription bypass is enabled.",
+      userId: body.entitlement.appAccountToken
     };
   }
 
@@ -234,7 +259,8 @@ async function authorizeSmartAIRequest(body) {
     return {
       ok: true,
       statusCode: 200,
-      message: "Verified active Smart AI entitlement."
+      message: "Verified active Smart AI entitlement.",
+      userId: body.entitlement.appAccountToken
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Entitlement verification failed.";
@@ -317,6 +343,7 @@ async function fetchSmartAISuggestions(body) {
 
   const requestBody = {
     model: openAIModel,
+    max_output_tokens: maxResponseTokens,
     input: [
       {
         role: "system",
@@ -476,6 +503,95 @@ function normalizePriority(value) {
   }
 
   return "important";
+}
+
+function consumeDailySmartAIQuota(userId) {
+  const date = currentUsageDate();
+  const usageEntries = loadUsageEntries();
+  const existingEntry = usageEntries.find((entry) => entry.userId === userId && entry.date === date);
+
+  if (existingEntry && existingEntry.smartAiCallsCount >= dailySmartAILimit) {
+    return {
+      ok: false,
+      statusCode: 429,
+      message: "Daily Smart AI limit reached. You can generate up to 4 Smart AI plans per day."
+    };
+  }
+
+  if (existingEntry) {
+    existingEntry.smartAiCallsCount += 1;
+  } else {
+    usageEntries.push({
+      userId,
+      date,
+      smartAiCallsCount: 1
+    });
+  }
+
+  saveUsageEntries(usageEntries);
+  return {
+    ok: true,
+    statusCode: 200,
+    message: "Smart AI quota available."
+  };
+}
+
+function loadUsageEntries() {
+  ensureUsageStoreDirectory();
+
+  if (!fs.existsSync(usageStorePath)) {
+    return [];
+  }
+
+  try {
+    const raw = fs.readFileSync(usageStorePath, "utf8");
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed.filter(isUsageEntry);
+  } catch {
+    return [];
+  }
+}
+
+function saveUsageEntries(entries) {
+  ensureUsageStoreDirectory();
+
+  const retainedEntries = entries.filter((entry) => isUsageEntry(entry) && isRecentUsageDate(entry.date));
+  fs.writeFileSync(usageStorePath, JSON.stringify(retainedEntries, null, 2));
+}
+
+function ensureUsageStoreDirectory() {
+  fs.mkdirSync(path.dirname(usageStorePath), { recursive: true });
+}
+
+function currentUsageDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function isRecentUsageDate(value) {
+  if (typeof value !== "string") {
+    return false;
+  }
+
+  const parsed = Date.parse(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(parsed)) {
+    return false;
+  }
+
+  return parsed >= Date.now() - 1000 * 60 * 60 * 24 * 7;
+}
+
+function isUsageEntry(value) {
+  return (
+    value &&
+    typeof value.userId === "string" &&
+    typeof value.date === "string" &&
+    Number.isInteger(value.smartAiCallsCount) &&
+    value.smartAiCallsCount >= 0
+  );
 }
 
 async function createSignedDataVerifier() {

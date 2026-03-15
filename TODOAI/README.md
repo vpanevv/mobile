@@ -109,6 +109,7 @@ Backend responsibilities:
 
 - Verify the user has Smart AI access
 - Verify the Apple-signed StoreKit entitlement and current App Store subscription status
+- Enforce Smart AI request limits before any OpenAI call
 - Call OpenAI with the server-side API key
 - Enforce short structured task output
 - Return only sanitized task titles and priorities
