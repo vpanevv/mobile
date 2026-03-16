@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CompletedTasksView: View {
     @EnvironmentObject private var store: AppStore
+    @EnvironmentObject private var appearanceStore: AppearanceStore
 
     let tasks: [TodoTask]
     let onBack: () -> Void
@@ -20,15 +21,15 @@ struct CompletedTasksView: View {
                         VStack(alignment: .leading, spacing: 14) {
                             Text("Completed Tasks")
                                 .font(.title2.weight(.bold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(primaryTextColor)
 
                             Text(tasks.isEmpty ? "No completed tasks yet." : "A full record of every task you finished.")
                                 .font(.subheadline.weight(.medium))
-                                .foregroundStyle(.white.opacity(0.74))
+                                .foregroundStyle(secondaryTextColor)
 
                             if tasks.isEmpty {
                                 Text("Finish a task from the dashboard and it will show up here.")
-                                    .foregroundStyle(.white.opacity(0.68))
+                                    .foregroundStyle(secondaryTextColor)
                                     .padding(.top, 4)
                             } else {
                                 ForEach(tasks) { task in
@@ -68,13 +69,13 @@ struct CompletedTasksView: View {
                     Text("Back")
                         .font(.headline.weight(.bold))
                 }
-                .foregroundStyle(.white)
+                .foregroundStyle(headerPrimaryColor)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .background(Color.white.opacity(0.10), in: Capsule())
+                .background(headerButtonBackgroundColor, in: Capsule())
                 .overlay {
                     Capsule()
-                        .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                        .stroke(headerButtonStrokeColor, lineWidth: 1)
                 }
             }
             .buttonStyle(.plain)
@@ -107,10 +108,10 @@ struct CompletedTasksView: View {
 
                 Text("\(tasks.count) done")
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(.white.opacity(0.72))
+                    .foregroundStyle(secondaryTextColor)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
-                    .background(Color.white.opacity(0.10), in: Capsule())
+                    .background(headerButtonBackgroundColor, in: Capsule())
             }
         }
     }
@@ -119,7 +120,7 @@ struct CompletedTasksView: View {
         HStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .fill(Color.white.opacity(0.14))
+                    .fill(rowIconBackgroundColor)
                     .frame(width: 42, height: 42)
 
                 Image(systemName: "checkmark")
@@ -130,11 +131,11 @@ struct CompletedTasksView: View {
             VStack(alignment: .leading, spacing: 5) {
                 Text(task.title)
                     .font(.body.weight(.bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(primaryTextColor)
 
                 Text(completedTaskSubtitle(for: task))
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.58))
+                    .foregroundStyle(secondaryTextColor)
             }
 
             Spacer()
@@ -143,7 +144,35 @@ struct CompletedTasksView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .background(rowBackgroundColor, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+
+    private var primaryTextColor: Color {
+        appearanceStore.appearance.isDark ? .white : Color.black.opacity(0.86)
+    }
+
+    private var secondaryTextColor: Color {
+        appearanceStore.appearance.isDark ? .white.opacity(0.72) : Color.black.opacity(0.58)
+    }
+
+    private var headerPrimaryColor: Color {
+        appearanceStore.appearance.isDark ? .white : Color.black.opacity(0.82)
+    }
+
+    private var headerButtonBackgroundColor: Color {
+        appearanceStore.appearance.isDark ? Color.white.opacity(0.10) : Color.white.opacity(0.7)
+    }
+
+    private var headerButtonStrokeColor: Color {
+        appearanceStore.appearance.isDark ? Color.white.opacity(0.18) : Color.black.opacity(0.08)
+    }
+
+    private var rowIconBackgroundColor: Color {
+        appearanceStore.appearance.isDark ? Color.white.opacity(0.14) : Color.black.opacity(0.08)
+    }
+
+    private var rowBackgroundColor: Color {
+        appearanceStore.appearance.isDark ? Color.white.opacity(0.08) : Color.white.opacity(0.78)
     }
 
     private func completedTaskSubtitle(for task: TodoTask) -> String {

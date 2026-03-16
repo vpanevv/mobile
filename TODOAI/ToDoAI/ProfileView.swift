@@ -12,6 +12,7 @@ private typealias PlatformImage = NSImage
 struct ProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var store: AppStore
+    @EnvironmentObject private var appearanceStore: AppearanceStore
 
     @State private var name: String
     @State private var selectedPhotoItem: PhotosPickerItem?
@@ -57,9 +58,9 @@ struct ProfileView: View {
             } label: {
                 Image(systemName: "chevron.left")
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(topBarPrimaryColor)
                     .frame(width: 44, height: 44)
-                    .background(Color.white.opacity(0.1), in: Circle())
+                    .background(topBarButtonBackground, in: Circle())
             }
             .buttonStyle(.plain)
 
@@ -68,11 +69,11 @@ struct ProfileView: View {
             VStack(spacing: 4) {
                 Text("Profile")
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(topBarPrimaryColor)
 
                 Text("AI identity hub")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.58))
+                    .foregroundStyle(topBarSecondaryColor)
                     .textCase(.uppercase)
                     .tracking(1.1)
             }
@@ -82,10 +83,10 @@ struct ProfileView: View {
             Button(action: saveProfile) {
                 Text("Save")
                     .font(.subheadline.weight(.bold))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(saveButtonTextColor)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 11)
-                    .background(Color.white, in: Capsule())
+                    .background(saveButtonBackgroundColor, in: Capsule())
             }
             .buttonStyle(.plain)
             .disabled(trimmedName.isEmpty)
@@ -193,6 +194,45 @@ struct ProfileView: View {
                 .buttonStyle(.plain)
             }
 
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Appearance")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Color.black.opacity(0.56))
+                    .textCase(.uppercase)
+                    .tracking(1.1)
+
+                HStack(spacing: 10) {
+                    ForEach(AppAppearance.allCases, id: \.rawValue) { appearance in
+                        Button {
+                            appearanceStore.appearance = appearance
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: appearance.symbolName)
+                                    .font(.subheadline.weight(.bold))
+
+                                Text(appearance.title)
+                                    .font(.subheadline.weight(.bold))
+                            }
+                            .foregroundStyle(appearanceStore.appearance == appearance ? Color.black.opacity(0.84) : Color.black.opacity(0.62))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(
+                                appearanceStore.appearance == appearance ? Color.white.opacity(0.9) : Color.white.opacity(0.44),
+                                in: RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            )
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                    .stroke(
+                                        appearanceStore.appearance == appearance ? Color.black.opacity(0.1) : Color.black.opacity(0.05),
+                                        lineWidth: 1
+                                    )
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+
             HStack(spacing: 12) {
                 profileFact(symbol: "sparkles", title: "Style", value: "AI-ready")
                 profileFact(symbol: "checklist.checked", title: "Planner", value: "Synced")
@@ -212,7 +252,7 @@ struct ProfileView: View {
     private var footerNote: some View {
         Text("A sharp profile keeps your AI planner feeling personal without adding friction.")
             .font(.footnote.weight(.medium))
-            .foregroundStyle(.white.opacity(0.66))
+            .foregroundStyle(topBarSecondaryColor)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 24)
     }
@@ -260,6 +300,26 @@ struct ProfileView: View {
 
     private var trimmedName: String {
         name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var topBarPrimaryColor: Color {
+        appearanceStore.appearance.isDark ? .white : Color.black.opacity(0.84)
+    }
+
+    private var topBarSecondaryColor: Color {
+        appearanceStore.appearance.isDark ? .white.opacity(0.66) : Color.black.opacity(0.56)
+    }
+
+    private var topBarButtonBackground: Color {
+        appearanceStore.appearance.isDark ? Color.white.opacity(0.1) : Color.white.opacity(0.72)
+    }
+
+    private var saveButtonBackgroundColor: Color {
+        appearanceStore.appearance.isDark ? .white : Color.black.opacity(0.9)
+    }
+
+    private var saveButtonTextColor: Color {
+        appearanceStore.appearance.isDark ? .black : .white
     }
 
     private func profileFact(symbol: String, title: String, value: String) -> some View {
