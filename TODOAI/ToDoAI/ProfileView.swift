@@ -94,47 +94,59 @@ struct ProfileView: View {
     }
 
     private var profileHero: some View {
-        GlassCard {
-            VStack(spacing: 18) {
-                ProfileAvatarView(
-                    name: trimmedName.isEmpty ? name : trimmedName,
-                    photoData: photoData,
-                    size: 128,
-                    accentColor: .cyan
-                )
-                .overlay(alignment: .bottomTrailing) {
-                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                        Image(systemName: "camera.fill")
-                            .font(.headline.weight(.bold))
-                            .foregroundStyle(.black)
-                            .frame(width: 40, height: 40)
-                            .background(
-                                LinearGradient(
-                                    colors: [Color.white, Color.cyan.opacity(0.85)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                in: Circle()
-                            )
-                    }
-                    .buttonStyle(.plain)
-                    .offset(x: 6, y: 6)
+        VStack(spacing: 18) {
+            ProfileAvatarView(
+                name: trimmedName.isEmpty ? name : trimmedName,
+                photoData: photoData,
+                size: 112,
+                accentColor: .cyan
+            )
+            .overlay(alignment: .bottomTrailing) {
+                PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                    Image(systemName: "camera.fill")
+                        .font(.headline.weight(.bold))
+                        .foregroundStyle(.black)
+                        .frame(width: 38, height: 38)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.white, Color.cyan.opacity(0.82)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            in: Circle()
+                        )
+                        .overlay {
+                            Circle()
+                                .stroke(Color.black.opacity(0.08), lineWidth: 1)
+                        }
                 }
-
-                VStack(spacing: 8) {
-                    Text(trimmedName.isEmpty ? "Your AI Daily Buddy" : trimmedName)
-                        .font(.system(size: 30, weight: .black, design: .rounded))
-                        .foregroundStyle(.white)
-                        .multilineTextAlignment(.center)
-
-                    Text(isLoadingPhoto ? "Syncing profile picture..." : "Your planner identity travels with every task and every AI suggestion.")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.white.opacity(0.72))
-                        .multilineTextAlignment(.center)
-                }
+                .buttonStyle(.plain)
+                .offset(x: 4, y: 4)
             }
-            .frame(maxWidth: .infinity)
+
+            VStack(spacing: 8) {
+                Text(trimmedName.isEmpty ? "Your AI Daily Buddy" : trimmedName)
+                    .font(.system(size: 28, weight: .black, design: .rounded))
+                    .foregroundStyle(Color.black.opacity(0.88))
+                    .multilineTextAlignment(.center)
+
+                Text(isLoadingPhoto ? "Syncing profile picture..." : "Your planner identity powers every AI suggestion, every dashboard detail, and every task you move through today.")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Color.black.opacity(0.62))
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 22)
+        .background(profileCardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 34, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 34, style: .continuous)
+                .stroke(Color.white.opacity(0.58), lineWidth: 1.1)
+        }
+        .shadow(color: Color.cyan.opacity(0.2), radius: 24, y: 12)
     }
 
     private var editorCard: some View {
@@ -189,9 +201,10 @@ struct ProfileView: View {
         }
         .padding(22)
         .background(profileEditorBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 34, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .stroke(Color.white.opacity(0.34), lineWidth: 1.1)
+            RoundedRectangle(cornerRadius: 34, style: .continuous)
+                .stroke(Color.white.opacity(0.44), lineWidth: 1.1)
         }
         .shadow(color: Color.cyan.opacity(0.18), radius: 22, y: 12)
     }
@@ -205,6 +218,35 @@ struct ProfileView: View {
     }
 
     private var profileEditorBackground: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 34, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.96, green: 0.98, blue: 1.0),
+                            Color(red: 0.76, green: 0.95, blue: 0.98),
+                            Color(red: 0.91, green: 0.96, blue: 1.0),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+            Circle()
+                .fill(Color.cyan.opacity(0.16))
+                .frame(width: 190, height: 190)
+                .blur(radius: 22)
+                .offset(x: -110, y: -90)
+
+            Circle()
+                .fill(Color.blue.opacity(0.12))
+                .frame(width: 220, height: 220)
+                .blur(radius: 24)
+                .offset(x: 120, y: 100)
+        }
+    }
+
+    private var profileCardBackground: some View {
         LinearGradient(
             colors: [
                 Color(red: 0.96, green: 0.98, blue: 1.0),
