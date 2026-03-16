@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct HomeIntroView: View {
+    @EnvironmentObject private var appearanceStore: AppearanceStore
     let onContinue: () -> Void
 
     @State private var logoIsVisible = false
@@ -24,16 +25,20 @@ struct HomeIntroView: View {
                         Text("TODO AI")
                             .font(.system(size: 42, weight: .black, design: .rounded))
                             .tracking(4)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(primaryTitleColor)
 
                         Text("Plan smarter. Achieve more.")
                             .font(.headline.weight(.medium))
-                            .foregroundStyle(.white.opacity(0.72))
+                            .foregroundStyle(secondaryTitleColor)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 32)
                     }
                     .offset(y: contentIsVisible ? 0 : 26)
                     .opacity(contentIsVisible ? 1 : 0)
+
+                    appearanceToggle
+                        .offset(y: contentIsVisible ? 0 : 22)
+                        .opacity(contentIsVisible ? 1 : 0)
 
                     Button(action: onContinue) {
                         HStack(spacing: 12) {
@@ -44,16 +49,12 @@ struct HomeIntroView: View {
                             Image(systemName: "arrow.right")
                                 .font(.headline.weight(.black))
                         }
-                        .foregroundStyle(Color.black)
+                        .foregroundStyle(callToActionTextColor)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 18)
                         .background(
                             LinearGradient(
-                                colors: [
-                                    Color.white,
-                                    Color(red: 0.67, green: 0.98, blue: 0.96),
-                                    Color(red: 0.42, green: 0.95, blue: 0.99),
-                                ],
+                                colors: buttonGradientColors,
                                 startPoint: .leading,
                                 endPoint: .trailing
                             ),
@@ -61,9 +62,9 @@ struct HomeIntroView: View {
                         )
                         .overlay {
                             Capsule()
-                                .stroke(Color.white.opacity(0.65), lineWidth: 1.2)
+                                .stroke(buttonStrokeColor, lineWidth: 1.2)
                         }
-                        .shadow(color: Color.cyan.opacity(0.42), radius: 22, y: 12)
+                        .shadow(color: buttonShadowColor, radius: 22, y: 12)
                     }
                     .buttonStyle(.plain)
                     .padding(.horizontal, 28)
@@ -72,7 +73,7 @@ struct HomeIntroView: View {
 
                     Text("Your AI-powered daily buddy")
                         .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(footerTextColor)
                         .textCase(.uppercase)
                         .tracking(1.2)
                         .opacity(contentIsVisible ? 1 : 0)
@@ -85,15 +86,12 @@ struct HomeIntroView: View {
                     .tracking(2.4)
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.92),
-                                Color.cyan.opacity(0.95),
-                            ],
+                            colors: versionGradientColors,
                             startPoint: .top,
                             endPoint: .bottom
                         )
                     )
-                    .shadow(color: Color.cyan.opacity(0.35), radius: 18, y: 6)
+                    .shadow(color: versionShadowColor, radius: 18, y: 6)
                     .padding(.bottom, 10)
                     .opacity(contentIsVisible ? 1 : 0)
             }
@@ -111,19 +109,137 @@ struct HomeIntroView: View {
             pulse = true
         }
     }
+
+    private var appearanceToggle: some View {
+        HStack(spacing: 10) {
+            ForEach(AppAppearance.allCases, id: \.rawValue) { appearance in
+                Button {
+                    appearanceStore.appearance = appearance
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: appearance.symbolName)
+                            .font(.subheadline.weight(.bold))
+
+                        Text(appearance.title)
+                            .font(.subheadline.weight(.bold))
+                    }
+                    .foregroundStyle(toggleTextColor(active: appearanceStore.appearance == appearance))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .frame(minWidth: 110)
+                    .background(
+                        Capsule()
+                            .fill(toggleBackgroundColor(active: appearanceStore.appearance == appearance))
+                    )
+                    .overlay {
+                        Capsule()
+                            .stroke(toggleStrokeColor(active: appearanceStore.appearance == appearance), lineWidth: 1)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(8)
+        .background(toggleContainerColor, in: Capsule())
+    }
+
+    private var primaryTitleColor: Color {
+        appearanceStore.appearance.isDark ? .white : Color.black.opacity(0.9)
+    }
+
+    private var secondaryTitleColor: Color {
+        appearanceStore.appearance.isDark ? .white.opacity(0.72) : Color.black.opacity(0.62)
+    }
+
+    private var callToActionTextColor: Color {
+        Color.black.opacity(0.88)
+    }
+
+    private var buttonGradientColors: [Color] {
+        appearanceStore.appearance.isDark ? [
+            Color.white,
+            Color(red: 0.67, green: 0.98, blue: 0.96),
+            Color(red: 0.42, green: 0.95, blue: 0.99),
+        ] : [
+            Color.white,
+            Color(red: 0.84, green: 0.96, blue: 1.0),
+            Color(red: 0.68, green: 0.91, blue: 0.99),
+        ]
+    }
+
+    private var buttonStrokeColor: Color {
+        appearanceStore.appearance.isDark ? Color.white.opacity(0.65) : Color.black.opacity(0.08)
+    }
+
+    private var buttonShadowColor: Color {
+        appearanceStore.appearance.isDark ? Color.cyan.opacity(0.42) : Color.cyan.opacity(0.22)
+    }
+
+    private var footerTextColor: Color {
+        appearanceStore.appearance.isDark ? .white.opacity(0.5) : Color.black.opacity(0.48)
+    }
+
+    private var versionGradientColors: [Color] {
+        appearanceStore.appearance.isDark ? [
+            Color.white.opacity(0.92),
+            Color.cyan.opacity(0.95),
+        ] : [
+            Color.black.opacity(0.86),
+            Color.cyan.opacity(0.88),
+        ]
+    }
+
+    private var versionShadowColor: Color {
+        appearanceStore.appearance.isDark ? Color.cyan.opacity(0.35) : Color.cyan.opacity(0.18)
+    }
+
+    private var toggleContainerColor: Color {
+        appearanceStore.appearance.isDark ? Color.white.opacity(0.08) : Color.white.opacity(0.6)
+    }
+
+    private func toggleBackgroundColor(active: Bool) -> Color {
+        if active {
+            return appearanceStore.appearance.isDark ? Color.white.opacity(0.94) : Color.white.opacity(0.94)
+        }
+
+        return appearanceStore.appearance.isDark ? Color.white.opacity(0.06) : Color.white.opacity(0.28)
+    }
+
+    private func toggleTextColor(active: Bool) -> Color {
+        if active {
+            return Color.black.opacity(0.86)
+        }
+
+        return appearanceStore.appearance.isDark ? .white.opacity(0.76) : Color.black.opacity(0.64)
+    }
+
+    private func toggleStrokeColor(active: Bool) -> Color {
+        if active {
+            return appearanceStore.appearance.isDark ? Color.white.opacity(0.14) : Color.black.opacity(0.08)
+        }
+
+        return appearanceStore.appearance.isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.04)
+    }
 }
 
 private struct IntroBackground: View {
+    @EnvironmentObject private var appearanceStore: AppearanceStore
+
     var body: some View {
         TimelineView(.animation) { timeline in
             let time = timeline.date.timeIntervalSinceReferenceDate
+            let isDark = appearanceStore.appearance.isDark
 
             ZStack {
                 LinearGradient(
-                    colors: [
+                    colors: isDark ? [
                         Color(red: 0.01, green: 0.02, blue: 0.08),
                         Color(red: 0.04, green: 0.10, blue: 0.22),
                         Color(red: 0.03, green: 0.23, blue: 0.30),
+                    ] : [
+                        Color(red: 0.99, green: 0.99, blue: 1.00),
+                        Color(red: 0.93, green: 0.97, blue: 1.00),
+                        Color(red: 0.84, green: 0.94, blue: 0.99),
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
@@ -131,7 +247,7 @@ private struct IntroBackground: View {
 
                 RadialGradient(
                     colors: [
-                        Color(red: 0.38, green: 0.97, blue: 0.95).opacity(0.28),
+                        Color(red: 0.38, green: 0.97, blue: 0.95).opacity(isDark ? 0.28 : 0.18),
                         .clear,
                     ],
                     center: .topTrailing,
@@ -142,7 +258,7 @@ private struct IntroBackground: View {
 
                 RadialGradient(
                     colors: [
-                        Color(red: 0.32, green: 0.49, blue: 1.00).opacity(0.30),
+                        Color(red: 0.32, green: 0.49, blue: 1.00).opacity(isDark ? 0.30 : 0.16),
                         .clear,
                     ],
                     center: .bottomLeading,
@@ -152,21 +268,21 @@ private struct IntroBackground: View {
                 .offset(x: 10, y: 120)
 
                 movingOrb(
-                    color: Color.cyan.opacity(0.22),
+                    color: isDark ? Color.cyan.opacity(0.22) : Color.cyan.opacity(0.16),
                     size: 320,
                     x: -110 + cos(time * 0.23) * 24,
                     y: -240 + sin(time * 0.16) * 30
                 )
 
                 movingOrb(
-                    color: Color.blue.opacity(0.18),
+                    color: isDark ? Color.blue.opacity(0.18) : Color.blue.opacity(0.12),
                     size: 260,
                     x: 140 + sin(time * 0.19) * 28,
                     y: -40 + cos(time * 0.21) * 34
                 )
 
                 movingOrb(
-                    color: Color.white.opacity(0.08),
+                    color: isDark ? Color.white.opacity(0.08) : Color.white.opacity(0.52),
                     size: 280,
                     x: -40 + cos(time * 0.12) * 40,
                     y: 290 + sin(time * 0.18) * 22
@@ -188,9 +304,12 @@ private struct IntroBackground: View {
 }
 
 private struct CircuitGrid: View {
+    @EnvironmentObject private var appearanceStore: AppearanceStore
     let time: TimeInterval
 
     var body: some View {
+        let isDark = appearanceStore.appearance.isDark
+
         ZStack {
             Path { path in
                 let width: CGFloat = 420
@@ -207,14 +326,14 @@ private struct CircuitGrid: View {
                     path.addLine(to: CGPoint(x: width, y: y))
                 }
             }
-            .stroke(Color.white.opacity(0.05), lineWidth: 1)
+            .stroke(isDark ? Color.white.opacity(0.05) : Color.black.opacity(0.05), lineWidth: 1)
             .frame(width: 420, height: 860)
             .rotationEffect(.degrees(-12))
             .offset(y: 30)
 
             ForEach(0..<8, id: \.self) { index in
                 Circle()
-                    .fill(index.isMultiple(of: 2) ? Color.cyan.opacity(0.48) : Color.white.opacity(0.32))
+                    .fill(index.isMultiple(of: 2) ? Color.cyan.opacity(isDark ? 0.48 : 0.34) : (isDark ? Color.white.opacity(0.32) : Color.black.opacity(0.16)))
                     .frame(width: index.isMultiple(of: 2) ? 8 : 5, height: index.isMultiple(of: 2) ? 8 : 5)
                     .blur(radius: index.isMultiple(of: 2) ? 0.2 : 0.8)
                     .offset(
@@ -227,15 +346,18 @@ private struct CircuitGrid: View {
 }
 
 private struct AILogoMark: View {
+    @EnvironmentObject private var appearanceStore: AppearanceStore
     let isAnimating: Bool
 
     var body: some View {
+        let isDark = appearanceStore.appearance.isDark
+
         ZStack {
             Circle()
                 .fill(
                     RadialGradient(
                         colors: [
-                            Color.white.opacity(0.24),
+                            (isDark ? Color.white : Color.blue).opacity(0.24),
                             Color.cyan.opacity(0.14),
                             .clear,
                         ],
@@ -248,7 +370,7 @@ private struct AILogoMark: View {
                 .scaleEffect(isAnimating ? 1.06 : 0.95)
 
             Circle()
-                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                .stroke(isDark ? Color.white.opacity(0.12) : Color.black.opacity(0.08), lineWidth: 1)
                 .frame(width: 208, height: 208)
                 .rotationEffect(.degrees(isAnimating ? 360 : 0))
                 .animation(.linear(duration: 18).repeatForever(autoreverses: false), value: isAnimating)
@@ -259,9 +381,9 @@ private struct AILogoMark: View {
                     AngularGradient(
                         colors: [
                             Color.cyan.opacity(0.1),
-                            Color.white.opacity(0.95),
+                            (isDark ? Color.white : Color.black).opacity(0.95),
                             Color.cyan.opacity(0.8),
-                            Color.white.opacity(0.1),
+                            (isDark ? Color.white : Color.black).opacity(0.1),
                         ],
                         center: .center
                     ),
@@ -274,9 +396,12 @@ private struct AILogoMark: View {
             RoundedRectangle(cornerRadius: 38, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [
+                        colors: isDark ? [
                             Color(red: 0.10, green: 0.13, blue: 0.24),
                             Color(red: 0.05, green: 0.08, blue: 0.16),
+                        ] : [
+                            Color.white.opacity(0.98),
+                            Color(red: 0.88, green: 0.95, blue: 0.99),
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
@@ -285,9 +410,9 @@ private struct AILogoMark: View {
                 .frame(width: 148, height: 148)
                 .overlay {
                     RoundedRectangle(cornerRadius: 38, style: .continuous)
-                        .stroke(Color.white.opacity(0.18), lineWidth: 1.2)
+                        .stroke(isDark ? Color.white.opacity(0.18) : Color.black.opacity(0.08), lineWidth: 1.2)
                 }
-                .shadow(color: Color.cyan.opacity(0.24), radius: 24, y: 14)
+                .shadow(color: isDark ? Color.cyan.opacity(0.24) : Color.cyan.opacity(0.16), radius: 24, y: 14)
 
             VStack(spacing: 14) {
                 HStack(spacing: 14) {
@@ -306,7 +431,7 @@ private struct AILogoMark: View {
                         .font(.system(size: 16, weight: .black))
                         .foregroundStyle(Color.cyan)
                         .frame(width: 30, height: 30)
-                        .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .background((isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.05)), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
             }
 
@@ -338,37 +463,40 @@ private struct AILogoMark: View {
         }
         .overlay {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                .stroke((appearanceStore.appearance.isDark ? Color.white : Color.black).opacity(appearanceStore.appearance.isDark ? 0.3 : 0.08), lineWidth: 1)
         }
     }
 
     private func taskRow(width: CGFloat, isCompleted: Bool) -> some View {
-        HStack(spacing: 8) {
+        let isDark = appearanceStore.appearance.isDark
+
+        return HStack(spacing: 8) {
             ZStack {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(isCompleted ? Color.cyan.opacity(0.95) : Color.white.opacity(0.14))
+                    .fill(isCompleted ? Color.cyan.opacity(0.95) : (isDark ? Color.white.opacity(0.14) : Color.black.opacity(0.08)))
                     .frame(width: 24, height: 24)
 
                 Image(systemName: isCompleted ? "checkmark" : "circle")
                     .font(.system(size: 11, weight: .black))
-                    .foregroundStyle(isCompleted ? Color.black.opacity(0.82) : .white.opacity(0.72))
+                    .foregroundStyle(isCompleted ? Color.black.opacity(0.82) : (isDark ? .white.opacity(0.72) : Color.black.opacity(0.54)))
             }
 
             Capsule()
-                .fill(isCompleted ? Color.white.opacity(0.72) : Color.white.opacity(0.22))
+                .fill(isCompleted ? (isDark ? Color.white.opacity(0.72) : Color.black.opacity(0.6)) : (isDark ? Color.white.opacity(0.22) : Color.black.opacity(0.14)))
                 .frame(width: width, height: 8)
         }
     }
 
     private func connectionDot(angle: Double, active: Bool) -> some View {
         let radians = angle * .pi / 180
+        let isDark = appearanceStore.appearance.isDark
 
         return Circle()
-            .fill(active ? Color.cyan.opacity(0.92) : Color.white.opacity(0.55))
+            .fill(active ? Color.cyan.opacity(0.92) : (isDark ? Color.white.opacity(0.55) : Color.black.opacity(0.26)))
             .frame(width: active ? 12 : 8, height: active ? 12 : 8)
             .overlay {
                 Circle()
-                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                    .stroke((isDark ? Color.white : Color.black).opacity(isDark ? 0.2 : 0.08), lineWidth: 1)
             }
             .offset(
                 x: cos(radians) * 108,
