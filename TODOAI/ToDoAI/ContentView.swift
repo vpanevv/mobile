@@ -6,16 +6,11 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            if hasEnteredHome {
+            if hasEnteredHome, let profile = store.profile {
                 AppBackground()
 
-                if let profile = store.profile {
-                    DashboardView(profile: profile)
-                        .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .opacity))
-                } else {
-                    SetupView()
-                        .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .opacity))
-                }
+                DashboardView(profile: profile)
+                    .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .opacity))
             } else {
                 HomeIntroView {
                     withAnimation(.spring(response: 0.78, dampingFraction: 0.86)) {

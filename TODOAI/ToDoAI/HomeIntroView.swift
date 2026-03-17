@@ -1,12 +1,21 @@
 import SwiftUI
+import AuthenticationServices
 
 struct HomeIntroView: View {
+    @EnvironmentObject private var store: AppStore
     @EnvironmentObject private var appearanceStore: AppearanceStore
     let onContinue: () -> Void
 
     @State private var logoIsVisible = false
     @State private var contentIsVisible = false
     @State private var pulse = false
+    @State private var usernameLogin = ""
+    @State private var authError: String?
+    @State private var pendingAppleUserID: String?
+    @State private var pendingAppleEmail: String?
+    @State private var pendingUsername = ""
+    @State private var pendingAge = ""
+    @State private var showingAppleRegistration = false
 
     var body: some View {
         ZStack {
@@ -40,33 +49,79 @@ struct HomeIntroView: View {
                         .offset(y: contentIsVisible ? 0 : 22)
                         .opacity(contentIsVisible ? 1 : 0)
 
-                    Button(action: onContinue) {
-                        HStack(spacing: 12) {
-                            Text("START YOUR DAY")
-                                .font(.headline.weight(.black))
-                                .tracking(1.4)
+                    VStack(spacing: 14) {
+                        if store.isAuthenticated {
+                            Button(action: onContinue) {
+                                HStack(spacing: 12) {
+                                    Text("CONTINUE AS \(store.profile?.name.uppercased() ?? "USER")")
+                                        .font(.headline.weight(.black))
+                                        .tracking(1.2)
 
-                            Image(systemName: "arrow.right")
-                                .font(.headline.weight(.black))
+                                    Image(systemName: "arrow.right")
+                                        .font(.headline.weight(.black))
+                                }
+                                .foregroundStyle(callToActionTextColor)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 18)
+                                .background(
+                                    LinearGradient(
+                                        colors: buttonGradientColors,
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    ),
+                                    in: Capsule()
+                                )
+                                .overlay {
+                                    Capsule()
+                                        .stroke(buttonStrokeColor, lineWidth: 1.2)
+                                }
+                                .shadow(color: buttonShadowColor, radius: 22, y: 12)
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            SignInWithAppleButton(.signIn) { request in
+                                request.requestedScopes = [.email]
+                            } onCompletion: { result in
+                                handleAppleSignIn(result)
+                            }
+                            .signInWithAppleButtonStyle(appearanceStore.appearance.isDark ? .white : .black)
+                            .frame(height: 56)
+                            .clipShape(Capsule())
+
+                            VStack(spacing: 10) {
+                                TextField("Log in with username", text: $usernameLogin)
+                                    .textInputAutocapitalization(.never)
+                                    .autocorrectionDisabled()
+                                    .padding(.horizontal, 18)
+                                    .padding(.vertical, 14)
+                                    .background(loginFieldBackgroundColor, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                                    .foregroundStyle(loginPrimaryTextColor)
+                                    .overlay {
+                                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                            .stroke(loginFieldStrokeColor, lineWidth: 1)
+                                    }
+
+                                Button(action: signInWithUsername) {
+                                    Text("Log In with Username")
+                                        .font(.headline.weight(.bold))
+                                        .foregroundStyle(loginButtonTextColor)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 15)
+                                        .background(loginButtonBackgroundColor, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                                }
+                                .buttonStyle(.plain)
+                                .disabled(usernameLogin.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                                .opacity(usernameLogin.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1)
+                            }
+
+                            if let authError {
+                                Text(authError)
+                                    .font(.footnote.weight(.semibold))
+                                    .foregroundStyle(errorTextColor)
+                                    .multilineTextAlignment(.center)
+                            }
                         }
-                        .foregroundStyle(callToActionTextColor)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 18)
-                        .background(
-                            LinearGradient(
-                                colors: buttonGradientColors,
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            ),
-                            in: Capsule()
-                        )
-                        .overlay {
-                            Capsule()
-                                .stroke(buttonStrokeColor, lineWidth: 1.2)
-                        }
-                        .shadow(color: buttonShadowColor, radius: 22, y: 12)
                     }
-                    .buttonStyle(.plain)
                     .padding(.horizontal, 28)
                     .offset(y: contentIsVisible ? 0 : 30)
                     .opacity(contentIsVisible ? 1 : 0)
@@ -108,6 +163,75 @@ struct HomeIntroView: View {
 
             pulse = true
         }
+        .sheet(isPresented: $showingAppleRegistration) {
+            NavigationStack {
+                VStack(spacing: 18) {
+                    Text("Finish Your Account")
+                        .font(.title2.weight(.black))
+                        .foregroundStyle(Color.black.opacity(0.86))
+
+                    if let pendingAppleEmail {
+                        Text(pendingAppleEmail)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.black.opacity(0.58))
+                    }
+
+                    TextField("Username", text: $pendingUsername)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                        .background(Color.white.opacity(0.86), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+
+                    TextField("Age", text: $pendingAge)
+                        .keyboardType(.numberPad)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                        .background(Color.white.opacity(0.86), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+
+                    Button(action: finishAppleRegistration) {
+                        Text("Create Account")
+                            .font(.headline.weight(.bold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .foregroundStyle(.black)
+                            .background(
+                                LinearGradient(
+                                    colors: [
+                                        Color.white,
+                                        Color(red: 0.84, green: 0.96, blue: 1.0),
+                                        Color(red: 0.68, green: 0.91, blue: 0.99),
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                in: RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            )
+                    }
+                    .buttonStyle(.plain)
+
+                    if let authError {
+                        Text(authError)
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(Color.red.opacity(0.78))
+                            .multilineTextAlignment(.center)
+                    }
+
+                    Spacer()
+                }
+                .padding(24)
+                .background(AppBackground())
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Cancel") {
+                            showingAppleRegistration = false
+                            pendingAppleUserID = nil
+                            pendingAppleEmail = nil
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private var appearanceToggle: some View {
@@ -141,6 +265,30 @@ struct HomeIntroView: View {
         }
         .padding(8)
         .background(toggleContainerColor, in: Capsule())
+    }
+
+    private var loginFieldBackgroundColor: Color {
+        appearanceStore.appearance.isDark ? Color.white.opacity(0.12) : Color.white.opacity(0.82)
+    }
+
+    private var loginFieldStrokeColor: Color {
+        appearanceStore.appearance.isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.06)
+    }
+
+    private var loginPrimaryTextColor: Color {
+        appearanceStore.appearance.isDark ? .white : Color.black.opacity(0.84)
+    }
+
+    private var loginButtonBackgroundColor: Color {
+        appearanceStore.appearance.isDark ? Color.white.opacity(0.92) : Color.black.opacity(0.88)
+    }
+
+    private var loginButtonTextColor: Color {
+        appearanceStore.appearance.isDark ? .black : .white
+    }
+
+    private var errorTextColor: Color {
+        appearanceStore.appearance.isDark ? Color.red.opacity(0.86) : Color.red.opacity(0.74)
     }
 
     private var primaryTitleColor: Color {
@@ -219,6 +367,69 @@ struct HomeIntroView: View {
         }
 
         return appearanceStore.appearance.isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.04)
+    }
+
+    private func handleAppleSignIn(_ result: Result<ASAuthorization, Error>) {
+        authError = nil
+
+        guard case .success(let authorization) = result,
+              let credential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+            authError = "Apple sign-in failed. Try again."
+            return
+        }
+
+        if store.signInWithApple(userID: credential.user, email: credential.email) {
+            onContinue()
+            return
+        }
+
+        guard let email = credential.email, !email.isEmpty else {
+            authError = "Apple did not return an email. Please try again."
+            return
+        }
+
+        pendingAppleUserID = credential.user
+        pendingAppleEmail = email
+        pendingUsername = ""
+        pendingAge = ""
+        showingAppleRegistration = true
+    }
+
+    private func finishAppleRegistration() {
+        authError = nil
+
+        guard let pendingAppleUserID, let pendingAppleEmail else {
+            authError = "Apple account data is missing. Try again."
+            return
+        }
+
+        guard let age = Int(pendingAge.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            authError = "Enter a valid age."
+            return
+        }
+
+        do {
+            try store.registerAppleAccount(
+                appleUserID: pendingAppleUserID,
+                email: pendingAppleEmail,
+                username: pendingUsername,
+                age: age
+            )
+            showingAppleRegistration = false
+            onContinue()
+        } catch {
+            authError = error.localizedDescription
+        }
+    }
+
+    private func signInWithUsername() {
+        authError = nil
+
+        if store.signIn(username: usernameLogin) {
+            onContinue()
+        } else {
+            authError = "No user was found for that username on this device."
+        }
     }
 }
 

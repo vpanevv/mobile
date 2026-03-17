@@ -233,11 +233,47 @@ struct ProfileView: View {
                 }
             }
 
+            if let email = store.profile?.email, let age = store.profile?.age {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Account")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color.black.opacity(0.56))
+                        .textCase(.uppercase)
+                        .tracking(1.1)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(email)
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(Color.black.opacity(0.82))
+
+                        Text("Age \(age)")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(Color.black.opacity(0.58))
+                    }
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.white.opacity(0.48), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                }
+            }
+
             HStack(spacing: 12) {
                 profileFact(symbol: "sparkles", title: "Style", value: "AI-ready")
                 profileFact(symbol: "checklist.checked", title: "Planner", value: "Synced")
                 profileFact(symbol: "brain.head.profile", title: "Identity", value: "Personal")
             }
+
+            Button(role: .destructive) {
+                store.signOut()
+                dismiss()
+            } label: {
+                Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Color.red.opacity(0.84))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 15)
+                    .background(Color.white.opacity(0.42), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            }
+            .buttonStyle(.plain)
         }
         .padding(22)
         .background(profileEditorBackground)
