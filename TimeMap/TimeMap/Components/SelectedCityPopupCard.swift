@@ -9,16 +9,16 @@ struct SelectedCityPopupCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 26) {
+        VStack(alignment: .leading, spacing: 24) {
             header
             heroMoment
             metadataChips
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 24)
-        .padding(.top, 26)
-        .padding(.bottom, 26)
-        .frame(maxWidth: 420, minHeight: 360, maxHeight: 470, alignment: .topLeading)
+        .padding(.top, 24)
+        .padding(.bottom, 24)
+        .frame(maxWidth: 420, minHeight: 320, maxHeight: 420, alignment: .topLeading)
         .background(cardBackground)
         .overlay(cardStroke)
         .clipShape(RoundedRectangle(cornerRadius: 36, style: .continuous))
@@ -116,26 +116,18 @@ struct SelectedCityPopupCard: View {
     }
 
     private var metadataChips: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 10) {
-                PopupInfoChip(
-                    icon: "globe.americas.fill",
-                    title: "Timezone",
-                    text: snapshot.timeZoneName,
-                    style: theme
-                )
+        HStack(spacing: 10) {
+            PopupInfoChip(
+                icon: "globe.americas.fill",
+                title: "Timezone",
+                text: snapshot.timeZoneName,
+                style: theme
+            )
 
-                PopupInfoChip(
-                    icon: "arrow.left.arrow.right.circle.fill",
-                    title: "Difference",
-                    text: snapshot.differenceText,
-                    style: theme
-                )
-            }
-
-            PopupPillRow(
-                icon: "location.circle.fill",
-                text: snapshot.location.timeZoneIdentifier,
+            PopupInfoChip(
+                icon: "arrow.left.arrow.right.circle.fill",
+                title: "Difference",
+                text: snapshot.differenceText,
                 style: theme
             )
         }
@@ -228,30 +220,6 @@ private struct PopupInfoChip: View {
                         .strokeBorder(Color.white.opacity(0.10), lineWidth: 1)
                 )
         )
-    }
-}
-
-private struct PopupPillRow: View {
-    let icon: String
-    let text: String
-    let style: SelectedCityCardTheme
-
-    var body: some View {
-        Label(text, systemImage: icon)
-            .font(.subheadline.weight(.medium))
-            .foregroundStyle(Color.white.opacity(0.82))
-            .lineLimit(2)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(Color.white.opacity(style.mode == .night ? 0.08 : 0.13))
-                    .overlay(
-                        Capsule(style: .continuous)
-                            .strokeBorder(Color.white.opacity(0.10), lineWidth: 1)
-                    )
-            )
     }
 }
 
