@@ -21,6 +21,8 @@ struct TimeMapHomeView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .padding(16)
+                .timeMapGlass(cornerRadius: 30, tint: TimeMapGradient.aurora)
             }
             .padding(.horizontal, 16)
             .padding(.top, 10)
@@ -32,23 +34,22 @@ struct TimeMapHomeView: View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("TimeMap")
-                    .font(.largeTitle.weight(.bold))
+                    .font(.system(size: 34, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
 
-                Text("Compare time beautifully across the world.")
+                Text("A premium view of time across the planet.")
                     .font(.subheadline)
-                    .foregroundStyle(Color.white.opacity(0.72))
+                    .foregroundStyle(TimeMapPalette.mutedCloud)
             }
 
             Spacer()
 
-            Image(systemName: "globe.badge.chevron.backward")
+            Image(systemName: "globe.europe.africa.fill")
                 .font(.title2.weight(.semibold))
                 .foregroundStyle(.white)
                 .padding(14)
-                .background(Color.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .timeMapGlass(cornerRadius: 20, tint: TimeMapGradient.aurora)
         }
-        .padding(.horizontal, 2)
     }
 }
 
@@ -57,31 +58,25 @@ private struct SearchExplorerView: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            HStack(alignment: .center) {
-                Text("Search any city")
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(.white)
-
-                Spacer()
-
-                Text("Live compare")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.white.opacity(0.68))
-            }
+            SectionHeader(
+                eyebrow: "Explore",
+                title: "Search any city",
+                subtitle: "Find a place instantly and compare its clock with yours."
+            )
 
             CitySearchField(text: $viewModel.searchQuery)
 
             if viewModel.isSearching {
                 StateMessageCard(
-                    icon: "clock.arrow.trianglehead.counterclockwise.rotate.90",
+                    icon: "clock.arrow.circlepath",
                     title: "Searching cities",
-                    message: "Finding matching places and timezone context."
+                    message: "Looking up places and timezone matches."
                 )
             } else if viewModel.hasSearchQuery && viewModel.searchResults.isEmpty {
                 StateMessageCard(
                     icon: "magnifyingglass",
-                    title: "No cities found",
-                    message: "Try a larger nearby city or simplify the search terms."
+                    title: "No results yet",
+                    message: "Try a broader city name or use a nearby major city."
                 )
             } else if !viewModel.searchResults.isEmpty {
                 VStack(spacing: 0) {
@@ -97,17 +92,17 @@ private struct SearchExplorerView: View {
 
                         if result.id != viewModel.searchResults.prefix(3).last?.id {
                             Divider()
-                                .overlay(Color.primary.opacity(0.08))
-                                .padding(.leading, 78)
+                                .overlay(Color.white.opacity(0.08))
+                                .padding(.leading, 72)
                         }
                     }
                 }
-                .timeMapCard()
+                .timeMapGlass(cornerRadius: 24, tint: TimeMapGradient.aurora)
             } else {
                 StateMessageCard(
                     icon: "sparkles",
-                    title: "Start with a city",
-                    message: "Search for a destination and TimeMap will show the current time, timezone, and difference from you."
+                    title: "Start exploring",
+                    message: "Search a city to reveal its current time, timezone, and how far ahead or behind it is."
                 )
             }
 
@@ -120,26 +115,24 @@ private struct SelectedSnapshotSection: View {
     let state: SelectedLocationState
 
     var body: some View {
-        VStack(spacing: 10) {
-            switch state.status {
-            case .idle:
-                EmptyView()
-            case .loading:
-                StateMessageCard(
-                    icon: "network.badge.shield.half.filled",
-                    title: "Resolving location",
-                    message: "Pulling the nearest meaningful place and live time data."
-                )
-            case .loaded(let snapshot):
-                LocationSnapshotCard(snapshot: snapshot)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            case .failed(let message):
-                StateMessageCard(
-                    icon: "exclamationmark.triangle.fill",
-                    title: "Location unavailable",
-                    message: message
-                )
-            }
+        switch state.status {
+        case .idle:
+            EmptyView()
+        case .loading:
+            StateMessageCard(
+                icon: "network.badge.shield.half.filled",
+                title: "Resolving location",
+                message: "Pulling the latest city and timezone data."
+            )
+        case .loaded(let snapshot):
+            LocationSnapshotCard(snapshot: snapshot)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+        case .failed(let message):
+            StateMessageCard(
+                icon: "exclamationmark.triangle.fill",
+                title: "Location unavailable",
+                message: message
+            )
         }
     }
 }

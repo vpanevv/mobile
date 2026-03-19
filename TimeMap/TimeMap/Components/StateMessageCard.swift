@@ -9,28 +9,29 @@ struct StateMessageCard: View {
         HStack(alignment: .top, spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(TimeMapGradient.chip)
-                    .frame(width: 40, height: 40)
+                    .fill(TimeMapGradient.aurora)
+                    .frame(width: 44, height: 44)
+                    .shadow(color: TimeMapPalette.electricBlue.opacity(0.28), radius: 14, y: 8)
 
                 Image(systemName: icon)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(.white)
             }
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
                     .font(.headline)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(.white)
 
                 Text(message)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(TimeMapPalette.mutedCloud)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             Spacer(minLength: 0)
         }
-        .padding(16)
-        .timeMapCard()
+        .padding(18)
+        .timeMapGlass(cornerRadius: TimeMapMetrics.mediumCorner, tint: TimeMapGradient.aurora)
     }
 }

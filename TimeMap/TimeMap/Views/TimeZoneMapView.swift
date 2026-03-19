@@ -7,37 +7,31 @@ struct TimeZoneMapView: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            HStack(alignment: .center) {
-                Text("Tap the world clock")
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(.white)
-
-                Spacer()
-
-                Text("Map mode")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.white.opacity(0.68))
-            }
+            SectionHeader(
+                eyebrow: "Map",
+                title: "Tap the globe",
+                subtitle: "Choose any region and reveal its local moment."
+            )
 
             InteractiveTimeMap(
                 cameraPosition: $cameraPosition,
                 selectedCoordinate: viewModel.selectedMapCoordinate,
                 onTap: viewModel.handleMapTap(at:)
             )
-            .frame(minHeight: 250, maxHeight: 280)
+            .frame(minHeight: 250, maxHeight: 290)
 
             switch viewModel.selectedLocationState.status {
             case .idle:
                 StateMessageCard(
                     icon: "hand.tap.fill",
                     title: "Tap to explore",
-                    message: "Drop into any region and TimeMap will surface nearby place and time details."
+                    message: "Select a point on the map to reveal the nearest place and time."
                 )
             case .loading:
                 StateMessageCard(
                     icon: "point.3.connected.trianglepath.dotted",
                     title: "Resolving map selection",
-                    message: "Fetching locality, country, timezone, and comparison data."
+                    message: "Fetching locality, country, and timezone context."
                 )
             case .loaded(let snapshot):
                 LocationSnapshotCard(snapshot: snapshot)
@@ -68,34 +62,36 @@ private struct InteractiveTimeMap: View {
                 }
             }
             .mapStyle(.standard(elevation: .realistic))
-            .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 32, style: .continuous)
-                    .stroke(Color.white.opacity(0.14), lineWidth: 1)
-            }
+            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
+            )
             .overlay(alignment: .topLeading) {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text("World Time Map")
                         .font(.headline.weight(.semibold))
-                    Text("Tap anywhere to compare local time with a new place.")
+                        .foregroundStyle(.white)
+
+                    Text("Tap anywhere to compare local time across the planet.")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(TimeMapPalette.mutedCloud)
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .padding(16)
+                .timeMapGlass(cornerRadius: 20, tint: TimeMapGradient.aurora)
+                .padding(14)
             }
             .overlay(alignment: .bottomTrailing) {
-                Label("Tap to pick", systemImage: "hand.tap.fill")
+                Label("Tap to select", systemImage: "hand.tap.fill")
                     .font(.footnote.weight(.semibold))
-                    .padding(.horizontal, 11)
-                    .padding(.vertical, 8)
-                    .background(Color.black.opacity(0.28), in: Capsule())
                     .foregroundStyle(.white)
-                    .padding(16)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 9)
+                    .timeMapGlass(cornerRadius: 18, tint: TimeMapGradient.sunrise)
+                    .padding(14)
             }
-            .shadow(color: TimeMapPalette.shadow, radius: 22, y: 14)
+            .shadow(color: TimeMapPalette.shadow, radius: 26, y: 16)
             .gesture(
                 SpatialTapGesture()
                     .onEnded { value in

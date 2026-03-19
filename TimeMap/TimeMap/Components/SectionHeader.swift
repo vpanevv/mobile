@@ -6,11 +6,11 @@ struct SectionHeader: View {
     let subtitle: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(eyebrow.uppercased())
-                .font(.caption.weight(.semibold))
-                .tracking(1.6)
-                .foregroundStyle(TimeMapPalette.mist)
+                .font(.caption.weight(.bold))
+                .tracking(1.8)
+                .foregroundStyle(TimeMapPalette.mutedCloud)
 
             Text(title)
                 .font(.title3.weight(.semibold))
@@ -18,7 +18,8 @@ struct SectionHeader: View {
 
             Text(subtitle)
                 .font(.subheadline)
-                .foregroundStyle(Color.white.opacity(0.72))
+                .foregroundStyle(TimeMapPalette.mutedCloud)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

@@ -7,30 +7,30 @@ struct CitySearchResultRow: View {
         HStack(spacing: 14) {
             ZStack {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(TimeMapGradient.accent)
-                    .frame(width: 48, height: 48)
+                    .fill(TimeMapGradient.sunrise)
+                    .frame(width: 46, height: 46)
 
-                Image(systemName: "mappin.and.ellipse")
+                Image(systemName: "sparkles.map")
                     .foregroundStyle(.white)
             }
 
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(result.title)
                     .font(.body.weight(.semibold))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(.white)
 
                 Text(result.subtitle)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(TimeMapPalette.mutedCloud)
             }
 
             Spacer()
 
             Image(systemName: "arrow.up.right.circle.fill")
                 .font(.title3)
-                .foregroundStyle(TimeMapGradient.chip)
+                .foregroundStyle(TimeMapPalette.cloud)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
     }
 }
