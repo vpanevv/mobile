@@ -113,9 +113,6 @@ final class SmartAISubscriptionStore: ObservableObject {
         do {
             let products = try await Product.products(for: [AppConfiguration.smartAIProductID])
             smartAIProduct = products.first
-            if smartAIProduct == nil {
-                statusMessage = "Create the Smart AI subscription in App Store Connect."
-            }
         } catch {
             statusMessage = "Failed to load subscription: \(error.localizedDescription)"
         }

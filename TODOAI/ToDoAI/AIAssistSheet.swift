@@ -584,6 +584,9 @@ struct AIAssistSheet: View {
                             Text(mode.title)
                                 .font(.subheadline.weight(.bold))
                                 .foregroundStyle(Color.black.opacity(0.84))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.82)
+                                .layoutPriority(1)
 
                             if mode == .smart && !subscriptions.hasSmartAIAccess {
                                 Text("PRO")
@@ -592,14 +595,17 @@ struct AIAssistSheet: View {
                                     .padding(.vertical, 4)
                                     .background(Color.black.opacity(0.92), in: Capsule())
                                     .foregroundStyle(.white)
+                                    .fixedSize()
                             }
+
+                            Spacer(minLength: 0)
                         }
 
                         Text(mode.subtitle)
                             .font(.caption.weight(.medium))
                             .foregroundStyle(Color.black.opacity(0.55))
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(maxWidth: .infinity, minHeight: 84, alignment: .topLeading)
                     .padding(14)
                     .background(
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -611,6 +617,7 @@ struct AIAssistSheet: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .frame(maxWidth: .infinity)
             }
         }
     }
@@ -655,6 +662,7 @@ struct AIAssistSheet: View {
 
 private struct SmartAIPaywallSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var subscriptions: SmartAISubscriptionStore
 
     @State private var isWorking = false
@@ -682,22 +690,26 @@ private struct SmartAIPaywallSheet: View {
 
                         Image(systemName: "brain.head.profile")
                             .font(.system(size: 34, weight: .black))
-                            .foregroundStyle(Color.black.opacity(0.84))
+                            .foregroundStyle(paywallPrimaryText)
                     }
 
                     Text("Unlock Smart AI")
                         .font(.title2.weight(.black))
-                        .foregroundStyle(Color.black.opacity(0.88))
+                        .foregroundStyle(paywallPrimaryText)
 
-                    Text("Quick AI stays free on device. Smart AI uses a premium cloud model to expand your day into sharper, better-planned tasks.")
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(Color.black.opacity(0.62))
+                    VStack(spacing: 6) {
+                        Text("Describe your day.")
+                        Text("Smart AI builds your plan in seconds.")
+                    }
+                    .font(.subheadline.weight(.medium))
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(paywallSecondaryText)
                 }
 
                 VStack(alignment: .leading, spacing: 14) {
-                    paywallRow(symbol: "sparkles.rectangle.stack.fill", title: "Smarter planning", detail: "Turns events into prep tasks, timing tasks, and clean day structure.")
-                    paywallRow(symbol: "lock.shield.fill", title: "Premium feature", detail: "Reserved for subscribers who want stronger AI than the free on-device mode.")
-                    paywallRow(symbol: "server.rack", title: "API-backed", detail: "Ready for a real remote LLM integration instead of just local extraction.")
+                    paywallRow(symbol: "checklist.checked", title: "Breaks your day into clear tasks")
+                    paywallRow(symbol: "flag.2.crossed.fill", title: "Sets priorities automatically")
+                    paywallRow(symbol: "sun.max.fill", title: "Focused day, less stress.")
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(20)
@@ -706,6 +718,25 @@ private struct SmartAIPaywallSheet: View {
                     RoundedRectangle(cornerRadius: 26, style: .continuous)
                         .stroke(Color.black.opacity(0.08), lineWidth: 1)
                 }
+
+                VStack(spacing: 10) {
+                    Text("$4.99 / month")
+                        .font(.system(size: 30, weight: .black, design: .rounded))
+                        .foregroundStyle(paywallPrimaryText)
+
+                    Text("Cancel anytime")
+                        .font(.caption.weight(.bold))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(Color.green.opacity(0.18), in: Capsule())
+                        .overlay {
+                            Capsule()
+                                .stroke(Color.green.opacity(0.45), lineWidth: 1)
+                        }
+                        .foregroundStyle(paywallTagText)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
 
                 Button {
                     purchaseSmartAI()
@@ -740,12 +771,12 @@ private struct SmartAIPaywallSheet: View {
                 }
                 .buttonStyle(.plain)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color.black.opacity(0.72))
+                .foregroundStyle(paywallSecondaryText)
 
                 if let product = subscriptions.smartAIProduct {
-                    Text("Subscription: \(product.displayName) • \(product.displayPrice)")
+                    Text("\(product.displayName) available in App Store billing.")
                         .font(.footnote.weight(.medium))
-                        .foregroundStyle(Color.black.opacity(0.58))
+                        .foregroundStyle(paywallSecondaryText)
                 }
 
                 if subscriptions.isLoadingProducts {
@@ -757,13 +788,8 @@ private struct SmartAIPaywallSheet: View {
                     Text(statusMessage)
                         .font(.footnote)
                         .multilineTextAlignment(.center)
-                        .foregroundStyle(Color.black.opacity(0.58))
+                        .foregroundStyle(paywallSecondaryText)
                 }
-
-                Text("Smart AI now uses StoreKit 2 entitlements. Configure the subscription product in App Store Connect and add your OpenAI API settings to Info.plist.")
-                    .font(.footnote)
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(Color.black.opacity(0.5))
 
                 Spacer(minLength: 0)
             }
@@ -782,7 +808,7 @@ private struct SmartAIPaywallSheet: View {
         }
     }
 
-    private func paywallRow(symbol: String, title: String, detail: String) -> some View {
+    private func paywallRow(symbol: String, title: String, detail: String? = nil) -> some View {
         HStack(alignment: .top, spacing: 14) {
             Image(systemName: symbol)
                 .foregroundStyle(.cyan)
@@ -791,13 +817,27 @@ private struct SmartAIPaywallSheet: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.subheadline.weight(.bold))
-                    .foregroundStyle(Color.black.opacity(0.84))
+                    .foregroundStyle(paywallPrimaryText)
 
-                Text(detail)
-                    .font(.footnote)
-                    .foregroundStyle(Color.black.opacity(0.58))
+                if let detail, !detail.isEmpty {
+                    Text(detail)
+                        .font(.footnote)
+                        .foregroundStyle(paywallSecondaryText)
+                }
             }
         }
+    }
+
+    private var paywallPrimaryText: Color {
+        colorScheme == .dark ? Color.white.opacity(0.96) : Color.black.opacity(0.88)
+    }
+
+    private var paywallSecondaryText: Color {
+        colorScheme == .dark ? Color.white.opacity(0.82) : Color.black.opacity(0.62)
+    }
+
+    private var paywallTagText: Color {
+        colorScheme == .dark ? Color.white.opacity(0.9) : Color.black.opacity(0.78)
     }
 
     private var primaryButtonTitle: String {
@@ -811,7 +851,7 @@ private struct SmartAIPaywallSheet: View {
         case .restoring:
             return "Restoring..."
         default:
-            return "Unlock Smart AI"
+            return "Upgrade to Smart AI"
         }
     }
 
