@@ -42,6 +42,16 @@ enum TimeMapGradient {
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
+
+    static let localHero = LinearGradient(
+        colors: [
+            TimeMapPalette.deepOcean.opacity(0.98),
+            TimeMapPalette.indigo.opacity(0.96),
+            TimeMapPalette.violet.opacity(0.92)
+        ],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
 }
 
 enum TimeMapMetrics {

@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct TimeMapRootView: View {
-    @AppStorage("hasCompletedTimeMapOnboarding") private var hasCompletedOnboarding = false
     @StateObject private var viewModel: TimeMapViewModel
+    @State private var hasEnteredApp = false
 
     init(container: AppContainer) {
         _viewModel = StateObject(
@@ -17,13 +17,13 @@ struct TimeMapRootView: View {
 
     var body: some View {
         ZStack {
-            if hasCompletedOnboarding {
+            if hasEnteredApp {
                 TimeMapHomeView(viewModel: viewModel)
                     .transition(.asymmetric(insertion: .opacity.combined(with: .scale(scale: 1.02)), removal: .opacity))
             } else {
                 TimeMapWelcomeView {
                     withAnimation(.spring(response: 0.75, dampingFraction: 0.88)) {
-                        hasCompletedOnboarding = true
+                        hasEnteredApp = true
                     }
                 }
                 .transition(.asymmetric(insertion: .opacity, removal: .move(edge: .top).combined(with: .opacity)))

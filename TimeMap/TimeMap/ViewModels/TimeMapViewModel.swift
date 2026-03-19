@@ -78,6 +78,11 @@ final class TimeMapViewModel: ObservableObject {
         resolveCoordinate(coordinate, source: .map)
     }
 
+    func dismissSelectedLocation() {
+        selectedLocation = nil
+        selectedLocationState.status = .idle
+    }
+
     private func bindTicker() {
         timeService.ticker()
             .receive(on: RunLoop.main)
@@ -162,6 +167,7 @@ final class TimeMapViewModel: ObservableObject {
                     timeService.makeSnapshot(for: location, relativeTo: .autoupdatingCurrent, now: Date())
                 )
             } catch {
+                selectedLocation = nil
                 selectedLocationState.status = .failed(
                     error.localizedDescription.isEmpty
                         ? "We couldn't resolve a nearby city for that location."

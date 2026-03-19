@@ -7,35 +7,20 @@ struct TimeMapWelcomeView: View {
         ZStack {
             TimeMapBackgroundView()
 
-            VStack(spacing: 28) {
-                Spacer(minLength: 12)
+            VStack(spacing: 22) {
+                Spacer(minLength: 20)
 
                 AnimatedEarthHero()
-                    .frame(height: 420)
+                    .frame(height: 440)
 
-                VStack(spacing: 18) {
-                    Text("TimeMap")
-                        .font(.system(size: 44, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
+                Text("Explore time around the world")
+                    .font(.title2.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
 
-                    Text("Tap the world. Know the time.")
-                        .font(.title3.weight(.semibold))
-                        .foregroundStyle(TimeMapPalette.cloud)
-
-                    Text("Explore cities, compare time zones instantly, and see every place in its own moment.")
-                        .font(.body)
-                        .foregroundStyle(TimeMapPalette.mutedCloud)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 18)
-                }
-                .padding(.horizontal, 24)
-
-                VStack(spacing: 16) {
-                    welcomePanel
-
-                    PrimaryActionButton(title: "Get Started", systemImage: "arrow.right") {
-                        onGetStarted()
-                    }
+                PrimaryActionButton(title: "Get Started", systemImage: "arrow.right") {
+                    onGetStarted()
                 }
                 .padding(.horizontal, 24)
 
@@ -43,40 +28,6 @@ struct TimeMapWelcomeView: View {
             }
             .padding(.vertical, 20)
         }
-    }
-
-    private var welcomePanel: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Label("Featured experience", systemImage: "sparkles")
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(.white)
-
-            Text("A premium world clock for visually exploring time across the globe.")
-                .font(.headline)
-                .foregroundStyle(.white)
-
-            HStack(spacing: 10) {
-                WelcomeFeatureChip(title: "Search cities", icon: "magnifyingglass")
-                WelcomeFeatureChip(title: "Tap the map", icon: "globe")
-                WelcomeFeatureChip(title: "Compare instantly", icon: "clock.arrow.2.circlepath")
-            }
-        }
-        .padding(20)
-        .timeMapGlass(cornerRadius: TimeMapMetrics.mediumCorner, tint: TimeMapGradient.aurora)
-    }
-}
-
-private struct WelcomeFeatureChip: View {
-    let title: String
-    let icon: String
-
-    var body: some View {
-        Label(title, systemImage: icon)
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(.white)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 9)
-            .background(Color.white.opacity(0.08), in: Capsule())
     }
 }
 
