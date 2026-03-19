@@ -4,25 +4,25 @@ struct SelectedCityPopupCard: View {
     let snapshot: LocationTimeSnapshot
     let dismiss: () -> Void
 
-    private var theme: SelectedCityCardTheme {
-        SelectedCityCardTheme(for: snapshot)
+    private var mood: TimeMoodTheme {
+        TimeMoodTheme(snapshot: snapshot)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             header
-            heroMoment
-            metadataChips
+            heroMoodMoment
+            metricsRow
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 24)
         .padding(.top, 24)
         .padding(.bottom, 24)
-        .frame(maxWidth: 420, minHeight: 320, maxHeight: 420, alignment: .topLeading)
+        .frame(maxWidth: 420, minHeight: 340, maxHeight: 430, alignment: .topLeading)
         .background(cardBackground)
         .overlay(cardStroke)
         .clipShape(RoundedRectangle(cornerRadius: 36, style: .continuous))
-        .shadow(color: theme.shadowColor, radius: 38, y: 24)
+        .shadow(color: mood.shadowColor, radius: 40, y: 24)
     }
 
     private var header: some View {
@@ -30,28 +30,26 @@ struct SelectedCityPopupCard: View {
             HStack(alignment: .center, spacing: 14) {
                 ZStack {
                     Circle()
-                        .fill(Color.white.opacity(theme.mode == .night ? 0.10 : 0.18))
-                        .frame(width: 56, height: 56)
+                        .fill(Color.white.opacity(0.14))
+                        .frame(width: 58, height: 58)
 
                     Text(FlagUtility.emoji(for: snapshot.location.countryCode))
                         .font(.system(size: 32))
                 }
+                .overlay(
+                    Circle()
+                        .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
+                )
 
                 VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 8) {
-                        Text(snapshot.location.city)
-                            .font(.system(size: 30, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
-                            .lineLimit(1)
-
-                        Image(systemName: theme.iconName)
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(theme.iconColor)
-                    }
+                    Text(snapshot.location.city)
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
 
                     Text(snapshot.location.country)
                         .font(.title3.weight(.medium))
-                        .foregroundStyle(Color.white.opacity(0.82))
+                        .foregroundStyle(Color.white.opacity(0.8))
                 }
             }
 
@@ -62,7 +60,7 @@ struct SelectedCityPopupCard: View {
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(.white.opacity(0.88))
                     .frame(width: 36, height: 36)
-                    .background(Color.white.opacity(theme.mode == .night ? 0.09 : 0.16), in: Circle())
+                    .background(Color.white.opacity(0.12), in: Circle())
                     .overlay(
                         Circle()
                             .strokeBorder(Color.white.opacity(0.16), lineWidth: 1)
@@ -72,38 +70,56 @@ struct SelectedCityPopupCard: View {
         }
     }
 
-    private var heroMoment: some View {
+    private var heroMoodMoment: some View {
         VStack(spacing: 18) {
+            ZStack {
+                Circle()
+                    .fill(mood.orbFill)
+                    .frame(width: 120, height: 120)
+                    .blur(radius: mood.kind == .night ? 10 : 4)
+                    .overlay {
+                        moodOrbDetail
+                    }
+                    .shadow(color: mood.accentColor.opacity(0.35), radius: 28)
+
+                Circle()
+                    .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
+                    .frame(width: 132, height: 132)
+            }
+
             Text(snapshot.currentTimeText)
                 .font(.system(size: 68, weight: .bold, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(.white)
-                .minimumScaleFactor(0.7)
+                .minimumScaleFactor(0.72)
                 .lineLimit(1)
                 .contentTransition(.numericText())
                 .multilineTextAlignment(.center)
 
-            HStack(spacing: 10) {
-                Image(systemName: theme.iconName)
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(theme.iconColor)
+            VStack(spacing: 10) {
+                HStack(spacing: 10) {
+                    Image(systemName: mood.iconName)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(mood.iconColor)
 
-                Text(theme.modeTitle)
-                    .font(.system(size: 24, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
-            }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 12)
-            .background(Color.white.opacity(theme.mode == .night ? 0.10 : 0.16), in: Capsule())
-            .overlay(
-                Capsule(style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
-            )
+                    Text(mood.title)
+                        .font(.system(size: 24, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                .background(
+                    Capsule(style: .continuous)
+                        .fill(Color.white.opacity(0.14))
+                        .overlay(
+                            Capsule(style: .continuous)
+                                .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
+                        )
+                )
 
-            VStack(spacing: 6) {
-                Text("Current time in \(snapshot.location.city)")
+                Text(mood.subtitle)
                     .font(.headline.weight(.medium))
-                    .foregroundStyle(Color.white.opacity(0.80))
+                    .foregroundStyle(Color.white.opacity(0.84))
 
                 Text(snapshot.dateText)
                     .font(.subheadline.weight(.medium))
@@ -112,23 +128,83 @@ struct SelectedCityPopupCard: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 14)
+        .padding(.vertical, 8)
     }
 
-    private var metadataChips: some View {
+    @ViewBuilder
+    private var moodOrbDetail: some View {
+        switch mood.kind {
+        case .morning:
+            ZStack {
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [Color.white.opacity(0.85), Color.clear],
+                            center: .topLeading,
+                            startRadius: 2,
+                            endRadius: 50
+                        )
+                    )
+                    .scaleEffect(0.8)
+                    .offset(x: -12, y: -12)
+
+                RoundedRectangle(cornerRadius: 50, style: .continuous)
+                    .fill(Color.white.opacity(0.16))
+                    .frame(width: 88, height: 36)
+                    .offset(y: 20)
+                    .blur(radius: 8)
+            }
+        case .day:
+            Circle()
+                .strokeBorder(Color.white.opacity(0.24), lineWidth: 8)
+                .padding(16)
+                .overlay {
+                    Circle()
+                        .fill(Color.white.opacity(0.20))
+                        .frame(width: 26, height: 26)
+                        .offset(x: -18, y: -18)
+                }
+        case .evening:
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.65), Color.clear],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .scaleEffect(0.72)
+                    .offset(y: -14)
+
+                Capsule()
+                    .fill(Color.white.opacity(0.16))
+                    .frame(width: 92, height: 18)
+                    .offset(y: 26)
+                    .blur(radius: 6)
+            }
+        case .night:
+            Image(systemName: "moon.stars.fill")
+                .font(.system(size: 38, weight: .medium))
+                .foregroundStyle(Color.white.opacity(0.96))
+                .shadow(color: mood.iconColor.opacity(0.35), radius: 10)
+        }
+    }
+
+    private var metricsRow: some View {
         HStack(spacing: 10) {
             PopupInfoChip(
                 icon: "globe.americas.fill",
                 title: "Timezone",
                 text: snapshot.timeZoneName,
-                style: theme
+                style: mood
             )
 
             PopupInfoChip(
                 icon: "arrow.left.arrow.right.circle.fill",
                 title: "Difference",
                 text: snapshot.differenceText,
-                style: theme
+                style: mood
             )
         }
     }
@@ -138,33 +214,35 @@ struct SelectedCityPopupCard: View {
             .fill(.ultraThinMaterial)
             .overlay {
                 RoundedRectangle(cornerRadius: 36, style: .continuous)
-                    .fill(theme.gradient)
-                    .opacity(theme.mode == .night ? 0.92 : 0.86)
+                    .fill(mood.gradient)
+                    .opacity(0.94)
             }
             .overlay {
                 GeometryReader { proxy in
                     ZStack {
                         Circle()
-                            .fill(theme.primaryGlow.opacity(theme.mode == .night ? 0.34 : 0.22))
-                            .frame(width: proxy.size.width * 0.7)
-                            .blur(radius: 54)
-                            .offset(x: proxy.size.width * 0.18, y: -proxy.size.height * 0.18)
+                            .fill(mood.primaryGlow.opacity(0.34))
+                            .frame(width: proxy.size.width * 0.72)
+                            .blur(radius: 58)
+                            .offset(x: proxy.size.width * 0.20, y: -proxy.size.height * 0.18)
 
                         Circle()
-                            .fill(theme.secondaryGlow.opacity(theme.mode == .night ? 0.22 : 0.26))
-                            .frame(width: proxy.size.width * 0.52)
-                            .blur(radius: 44)
-                            .offset(x: -proxy.size.width * 0.22, y: proxy.size.height * 0.28)
+                            .fill(mood.secondaryGlow.opacity(0.24))
+                            .frame(width: proxy.size.width * 0.56)
+                            .blur(radius: 48)
+                            .offset(x: -proxy.size.width * 0.20, y: proxy.size.height * 0.26)
 
-                        if theme.mode == .night {
+                        if mood.kind == .night {
                             SelectedCityStars()
-                                .opacity(0.55)
-                        } else {
-                            Circle()
-                                .fill(Color.white.opacity(0.20))
-                                .frame(width: proxy.size.width * 0.46)
-                                .blur(radius: 34)
-                                .offset(x: proxy.size.width * 0.2, y: -proxy.size.height * 0.16)
+                                .opacity(0.58)
+                        }
+
+                        if mood.kind == .evening || mood.kind == .morning {
+                            Capsule()
+                                .fill(Color.white.opacity(0.14))
+                                .frame(width: proxy.size.width * 0.48, height: 28)
+                                .blur(radius: 14)
+                                .offset(x: proxy.size.width * 0.06, y: proxy.size.height * 0.10)
                         }
 
                         RoundedRectangle(cornerRadius: 36, style: .continuous)
@@ -197,13 +275,13 @@ private struct PopupInfoChip: View {
     let icon: String
     let title: String
     let text: String
-    let style: SelectedCityCardTheme
+    let style: TimeMoodTheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Label(title, systemImage: icon)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(Color.white.opacity(0.68))
+                .foregroundStyle(Color.white.opacity(0.7))
 
             Text(text)
                 .font(.headline.weight(.semibold))
@@ -214,7 +292,7 @@ private struct PopupInfoChip: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color.white.opacity(style.mode == .night ? 0.08 : 0.13))
+                .fill(Color.white.opacity(style.kind == .night ? 0.08 : 0.13))
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .strokeBorder(Color.white.opacity(0.10), lineWidth: 1)
@@ -235,7 +313,7 @@ private struct SelectedCityStars: View {
             ZStack {
                 ForEach(Array(points.enumerated()), id: \.offset) { index, point in
                     Circle()
-                        .fill(Color.white.opacity(index.isMultiple(of: 2) ? 0.72 : 0.36))
+                        .fill(Color.white.opacity(index.isMultiple(of: 2) ? 0.72 : 0.34))
                         .frame(width: index.isMultiple(of: 3) ? 3 : 2, height: index.isMultiple(of: 3) ? 3 : 2)
                         .blur(radius: index.isMultiple(of: 3) ? 0.8 : 0)
                         .position(x: proxy.size.width * point.x, y: proxy.size.height * point.y)
@@ -245,52 +323,116 @@ private struct SelectedCityStars: View {
     }
 }
 
-private struct SelectedCityCardTheme {
-    enum Mode {
+private struct TimeMoodTheme {
+    enum Kind {
+        case morning
         case day
+        case evening
         case night
     }
 
-    let mode: Mode
+    let kind: Kind
     let gradient: LinearGradient
     let primaryGlow: Color
     let secondaryGlow: Color
     let shadowColor: Color
     let iconName: String
     let iconColor: Color
+    let orbFill: RadialGradient
+    let accentColor: Color
+    let title: String
+    let subtitle: String
 
-    var modeTitle: String {
-        mode == .night ? "Night in the city" : "Daytime now"
-    }
-
-    init(for snapshot: LocationTimeSnapshot, now: Date = .now) {
+    init(snapshot: LocationTimeSnapshot, now: Date = .now) {
         let timeZone = TimeZone(identifier: snapshot.location.timeZoneIdentifier) ?? .current
         let hour = Calendar.current.dateComponents(in: timeZone, from: now).hour ?? 12
-        let isDaytime = (6..<18).contains(hour)
 
-        if isDaytime {
-            mode = .day
+        switch hour {
+        case 5..<10:
+            kind = .morning
+            gradient = LinearGradient(
+                colors: [
+                    Color(red: 0.23, green: 0.44, blue: 0.94),
+                    Color(red: 0.52, green: 0.79, blue: 0.99),
+                    TimeMapPalette.sunrise.opacity(0.92)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            primaryGlow = TimeMapPalette.sunrise
+            secondaryGlow = TimeMapPalette.cloud
+            shadowColor = TimeMapPalette.electricBlue.opacity(0.30)
+            iconName = "sunrise.fill"
+            iconColor = Color(red: 1.0, green: 0.86, blue: 0.54)
+            orbFill = RadialGradient(
+                colors: [Color(red: 1.0, green: 0.91, blue: 0.65), TimeMapPalette.sunrise, Color.clear],
+                center: .center,
+                startRadius: 8,
+                endRadius: 70
+            )
+            accentColor = TimeMapPalette.sunrise
+            title = "Morning glow"
+            subtitle = "A bright start in \(snapshot.location.city)"
+
+        case 10..<17:
+            kind = .day
             gradient = LinearGradient(
                 colors: [
                     TimeMapPalette.electricBlue.opacity(0.98),
                     TimeMapPalette.cyan.opacity(0.92),
-                    TimeMapPalette.sunrise.opacity(0.78)
+                    Color(red: 0.56, green: 0.84, blue: 1.0)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
             primaryGlow = TimeMapPalette.cloud
-            secondaryGlow = TimeMapPalette.sunrise
-            shadowColor = TimeMapPalette.electricBlue.opacity(0.30)
+            secondaryGlow = TimeMapPalette.cyan
+            shadowColor = TimeMapPalette.electricBlue.opacity(0.26)
             iconName = "sun.max.fill"
-            iconColor = Color(red: 1.0, green: 0.86, blue: 0.44)
-        } else {
-            mode = .night
+            iconColor = Color(red: 1.0, green: 0.93, blue: 0.58)
+            orbFill = RadialGradient(
+                colors: [Color.white.opacity(0.95), Color(red: 1.0, green: 0.88, blue: 0.46), Color.clear],
+                center: .center,
+                startRadius: 4,
+                endRadius: 64
+            )
+            accentColor = TimeMapPalette.cyan
+            title = "Daytime now"
+            subtitle = "Bright hours in \(snapshot.location.city)"
+
+        case 17..<20:
+            kind = .evening
+            gradient = LinearGradient(
+                colors: [
+                    TimeMapPalette.indigo.opacity(0.96),
+                    TimeMapPalette.violet.opacity(0.90),
+                    TimeMapPalette.sunrise.opacity(0.82)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            primaryGlow = TimeMapPalette.sunrise
+            secondaryGlow = TimeMapPalette.violet
+            shadowColor = TimeMapPalette.violet.opacity(0.30)
+            iconName = "sun.horizon.fill"
+            iconColor = Color(red: 1.0, green: 0.80, blue: 0.50)
+            orbFill = RadialGradient(
+                colors: [Color(red: 1.0, green: 0.82, blue: 0.52), TimeMapPalette.sunrise, Color.clear],
+                center: .center,
+                startRadius: 8,
+                endRadius: 64
+            )
+            accentColor = TimeMapPalette.sunrise
+            title = "Evening light"
+            subtitle = "Golden hour in \(snapshot.location.city)"
+
+        default:
+            kind = .night
             gradient = LinearGradient(
                 colors: [
                     TimeMapPalette.night.opacity(0.98),
                     TimeMapPalette.deepOcean.opacity(0.96),
-                    TimeMapPalette.violet.opacity(0.86)
+                    TimeMapPalette.violet.opacity(0.84)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -300,6 +442,15 @@ private struct SelectedCityCardTheme {
             shadowColor = TimeMapPalette.night.opacity(0.52)
             iconName = "moon.stars.fill"
             iconColor = Color(red: 0.86, green: 0.91, blue: 1.0)
+            orbFill = RadialGradient(
+                colors: [Color(red: 0.86, green: 0.91, blue: 1.0), Color(red: 0.47, green: 0.56, blue: 0.92), Color.clear],
+                center: .center,
+                startRadius: 6,
+                endRadius: 68
+            )
+            accentColor = TimeMapPalette.violet
+            title = "Nightfall now"
+            subtitle = "Calm hours in \(snapshot.location.city)"
         }
     }
 }
