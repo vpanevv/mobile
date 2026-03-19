@@ -4,26 +4,26 @@ struct CitySearchField: View {
     @Binding var text: String
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 16) {
             ZStack {
                 Circle()
                     .fill(TimeMapGradient.aurora)
-                    .frame(width: 34, height: 34)
+                    .frame(width: 42, height: 42)
 
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.white)
             }
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text("Search cities")
-                    .font(.caption.weight(.semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundStyle(TimeMapPalette.mutedCloud)
 
                 TextField("Tokyo, Cape Town, London...", text: $text)
                     .textInputAutocapitalization(.words)
                     .disableAutocorrection(true)
-                    .font(.body.weight(.medium))
+                    .font(.title3.weight(.medium))
                     .foregroundStyle(.white)
             }
 
@@ -34,14 +34,15 @@ struct CitySearchField: View {
                     text = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.title3)
-                        .foregroundStyle(TimeMapPalette.cloud.opacity(0.72))
+                        .font(.title2)
+                        .foregroundStyle(TimeMapPalette.cloud.opacity(0.74))
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .timeMapGlass(cornerRadius: 24, tint: TimeMapGradient.aurora)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 18)
+        .frame(maxWidth: .infinity)
+        .timeMapGlass(cornerRadius: 28, tint: TimeMapGradient.aurora)
     }
 }

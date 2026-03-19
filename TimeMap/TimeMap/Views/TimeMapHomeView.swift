@@ -7,80 +7,129 @@ struct TimeMapHomeView: View {
         ZStack {
             TimeMapBackgroundView()
 
-            VStack(spacing: 14) {
+            VStack(alignment: .leading, spacing: 20) {
                 header
                 LocalTimeHeroCard(info: viewModel.localTimeInfo)
                 ModePickerBar(selectedMode: $viewModel.mode)
-
-                Group {
-                    switch viewModel.mode {
-                    case .search:
-                        SearchExplorerView(viewModel: viewModel)
-                    case .map:
-                        TimeZoneMapView(viewModel: viewModel)
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                .padding(16)
-                .timeMapGlass(cornerRadius: 30, tint: TimeMapGradient.aurora)
+                activePanel
+                Spacer(minLength: 0)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 10)
-            .padding(.bottom, 14)
+            .padding(.horizontal, 20)
+            .padding(.top, 18)
+            .padding(.bottom, 20)
+
+            selectedLocationOverlay
         }
     }
 
     private var header: some View {
-        HStack(alignment: .center) {
+        HStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text("TimeMap")
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
 
-                Text("A premium view of time across the planet.")
+                Text("Choose how you want to explore time.")
                     .font(.subheadline)
                     .foregroundStyle(TimeMapPalette.mutedCloud)
             }
 
             Spacer()
-
-            Image(systemName: "globe.europe.africa.fill")
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(.white)
-                .padding(14)
-                .timeMapGlass(cornerRadius: 20, tint: TimeMapGradient.aurora)
         }
+    }
+
+    @ViewBuilder
+    private var activePanel: some View {
+        switch viewModel.mode {
+        case .search:
+            SearchPanel(viewModel: viewModel)
+        case .map:
+            MapPanel(viewModel: viewModel)
+        }
+    }
+
+    @ViewBuilder
+    private var selectedLocationOverlay: some View {
+        switch viewModel.selectedLocationState.status {
+        case .idle:
+            EmptyView()
+        case .loading:
+            overlayBackdrop
+                .overlay(alignment: .bottom) {
+                    StateMessageCard(
+                        icon: "clock.arrow.circlepath",
+                        title: "Loading city",
+                        message: "Resolving time and timezone details."
+                    )
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 34)
+                }
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+        case .failed(let message):
+            overlayBackdrop
+                .overlay(alignment: .bottom) {
+                    StateMessageCard(
+                        icon: "exclamationmark.triangle.fill",
+                        title: "Location unavailable",
+                        message: message
+                    )
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 34)
+                }
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+        case .loaded(let snapshot):
+            overlayBackdrop
+                .overlay {
+                    SelectedCityPopupCard(snapshot: snapshot) {
+                        withAnimation(.spring(response: 0.32, dampingFraction: 0.88)) {
+                            viewModel.dismissSelectedLocation()
+                        }
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 24)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            .transition(.asymmetric(
+                insertion: .scale(scale: 0.96).combined(with: .opacity),
+                removal: .opacity
+            ))
+        }
+    }
+
+    private var overlayBackdrop: some View {
+        Rectangle()
+            .fill(.black.opacity(0.26))
+            .ignoresSafeArea()
     }
 }
 
-private struct SearchExplorerView: View {
+private struct SearchPanel: View {
     @ObservedObject var viewModel: TimeMapViewModel
 
     var body: some View {
-        VStack(spacing: 12) {
-            SectionHeader(
-                eyebrow: "Explore",
-                title: "Search any city",
-                subtitle: "Find a place instantly and compare its clock with yours."
-            )
+        VStack(spacing: 18) {
+            VStack(spacing: 6) {
+                Text("Search cities")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(.white)
+
+                Text("Type a city to compare its local time instantly.")
+                    .font(.subheadline)
+                    .foregroundStyle(TimeMapPalette.mutedCloud)
+            }
+            .frame(maxWidth: .infinity)
 
             CitySearchField(text: $viewModel.searchQuery)
 
             if viewModel.isSearching {
                 StateMessageCard(
-                    icon: "clock.arrow.circlepath",
-                    title: "Searching cities",
-                    message: "Looking up places and timezone matches."
-                )
-            } else if viewModel.hasSearchQuery && viewModel.searchResults.isEmpty {
-                StateMessageCard(
-                    icon: "magnifyingglass",
-                    title: "No results yet",
-                    message: "Try a broader city name or use a nearby major city."
+                    icon: "magnifyingglass.circle.fill",
+                    title: "Searching",
+                    message: "Finding matching cities."
                 )
             } else if !viewModel.searchResults.isEmpty {
                 VStack(spacing: 0) {
-                    ForEach(viewModel.searchResults.prefix(3)) { result in
+                    ForEach(viewModel.searchResults.prefix(4)) { result in
                         Button {
                             withAnimation(.spring(response: 0.36, dampingFraction: 0.88)) {
                                 viewModel.selectSearchResult(result)
@@ -90,7 +139,7 @@ private struct SearchExplorerView: View {
                         }
                         .buttonStyle(.plain)
 
-                        if result.id != viewModel.searchResults.prefix(3).last?.id {
+                        if result.id != viewModel.searchResults.prefix(4).last?.id {
                             Divider()
                                 .overlay(Color.white.opacity(0.08))
                                 .padding(.leading, 72)
@@ -98,41 +147,23 @@ private struct SearchExplorerView: View {
                     }
                 }
                 .timeMapGlass(cornerRadius: 24, tint: TimeMapGradient.aurora)
-            } else {
-                StateMessageCard(
-                    icon: "sparkles",
-                    title: "Start exploring",
-                    message: "Search a city to reveal its current time, timezone, and how far ahead or behind it is."
-                )
             }
-
-            SelectedSnapshotSection(state: viewModel.selectedLocationState)
         }
+        .frame(maxWidth: .infinity)
     }
 }
 
-private struct SelectedSnapshotSection: View {
-    let state: SelectedLocationState
+private struct MapPanel: View {
+    @ObservedObject var viewModel: TimeMapViewModel
 
     var body: some View {
-        switch state.status {
-        case .idle:
-            EmptyView()
-        case .loading:
-            StateMessageCard(
-                icon: "network.badge.shield.half.filled",
-                title: "Resolving location",
-                message: "Pulling the latest city and timezone data."
-            )
-        case .loaded(let snapshot):
-            LocationSnapshotCard(snapshot: snapshot)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-        case .failed(let message):
-            StateMessageCard(
-                icon: "exclamationmark.triangle.fill",
-                title: "Location unavailable",
-                message: message
-            )
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Search by map")
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(.white)
+
+            TimeZoneMapView(viewModel: viewModel)
+                .frame(height: 310)
         }
     }
 }
