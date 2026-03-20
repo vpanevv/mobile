@@ -1,50 +1,88 @@
 # TimeMap
 
-TimeMap is a SwiftUI world clock and timezone explorer for iPhone and iPad.
+> Tap the world. Know the time.
 
-It helps users anchor themselves in their own local time, search for cities around the world, compare timezone differences instantly, and tap an interactive map to discover time visually.
+**TimeMap** is a premium SwiftUI world clock and timezone explorer designed to make global time feel visual, intuitive, and alive.
 
-## Product Focus
+From a glowing local-time dashboard to immersive city mood cards, TimeMap turns every location into a living snapshot of its current moment.
 
-- Persistent local time that always stays prominent
-- Fast city search with timezone-aware results
-- Human-friendly time difference comparisons
-- Map-based exploration of global time
-- Premium, native-feeling visual design
+## Why TimeMap
 
-## Core Experience
+- 🌍 Explore time across the world with a clean, map-first experience
+- 🕒 See your own local time instantly and keep it anchored on screen
+- ✨ Search cities and reveal mood-rich time cards with premium visuals
+- 🌙 Understand day, night, and atmosphere at a glance
+- 📍 Tap the map to discover time by place, not just by list
 
-1. Launch TimeMap and immediately see your local time, date, place, and timezone.
-2. Search for a city to compare its current time with your own.
-3. View a polished detail card with flag, location, time, timezone, and comparison text.
-4. Switch to the map and tap anywhere to resolve the nearest meaningful place.
-5. Compare time across locations without losing sight of your own clock.
+## Experience Highlights
 
-## Architecture
+### 🏠 A Beautiful First Impression
+TimeMap opens with a cinematic welcome screen built around an animated globe, premium gradients, and a focused call to action.
 
-- `App`: app entry and dependency container
-- `Models`: world location, search result, local time, and selection state
-- `ViewModels`: main `TimeMapViewModel`
-- `Views`: home shell and map experience
-- `Components`: reusable hero cards, search field, result rows, and state cards
-- `Services`: time formatting, ticking, search, reverse geocoding, and user location
-- `Theme`: shared palette, surfaces, and visual styling primitives
-- `Utilities`: helpers such as country flag generation
+### ⏰ Your Local Time, Always Clear
+The home screen keeps your current time, city or region, and timezone front and center without overwhelming the interface.
 
-## Tech
+### 🔎 Instant City Search
+Start typing any city name and compare it against your own local time in seconds.
 
-- SwiftUI
-- MapKit
-- CoreLocation
-- Apple-native date and timezone APIs
-- MVVM
+### 🗺️ Explore by Map
+Tap anywhere on the map and TimeMap resolves the nearest meaningful place so you can inspect its current moment instantly.
 
-## Running The App
+### 🎨 Time Mood Cards
+Selected cities are presented as expressive atmospheric cards that reflect their local time of day with:
 
-Open [`/Users/panev/panev-ios/mobile/TimeMap/TimeMap.xcodeproj`](/Users/panev/panev-ios/mobile/TimeMap/TimeMap.xcodeproj) in Xcode and run the `TimeMap` target.
+- sunrise, daylight, evening, or night moods
+- adaptive gradients and glow
+- sun or moon visual cues
+- strong time-first visual hierarchy
 
-For CLI verification, this build command succeeds without code signing:
+## What Makes It Feel Special
+
+- 📱 Native SwiftUI architecture with a modern iOS feel
+- 🧊 Glassy surfaces and layered depth
+- 🌅 Mood-aware visual storytelling for each selected city
+- 🛰️ World exploration aesthetic instead of a generic utility-app layout
+- ⚡ Fast, Apple-native time, map, and geocoding APIs
+
+## Built With
+
+- `SwiftUI`
+- `MapKit`
+- `CoreLocation`
+- `MVVM`
+- Apple-native date, calendar, and timezone APIs
+
+## Project Structure
+
+- `App` — app entry, root flow, dependency container
+- `Models` — time, location, and selection state
+- `ViewModels` — `TimeMapViewModel`
+- `Views` — onboarding, home, and map screens
+- `Components` — reusable premium UI building blocks
+- `Services` — time ticking, search, location resolution, and geocoding
+- `Theme` — shared palette, gradients, glass surfaces, and metrics
+- `Utilities` — helpers like flag generation
+
+## Run TimeMap
+
+Open the Xcode project:
+
+[`/Users/panev/panev-ios/mobile/TimeMap/TimeMap.xcodeproj`](/Users/panev/panev-ios/mobile/TimeMap/TimeMap.xcodeproj)
+
+Run the `TimeMap` target in Xcode.
+
+## CLI Build
+
+For local verification without code signing:
 
 ```bash
 xcodebuild -project /Users/panev/panev-ios/mobile/TimeMap/TimeMap.xcodeproj -scheme TimeMap -destination 'generic/platform=iOS' -derivedDataPath /tmp/TimeMapDerived CODE_SIGNING_ALLOWED=NO build
 ```
+
+## Vision
+
+TimeMap is built to make world time feel less like data and more like presence.
+
+Different cities should not only show different numbers. They should feel different.
+
+That is the heart of TimeMap.
