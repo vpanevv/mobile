@@ -4,6 +4,8 @@ struct SelectedCityPopupCard: View {
     let snapshot: LocationTimeSnapshot
     let dismiss: () -> Void
 
+    @State private var animateMood = false
+
     private var mood: TimeMoodTheme {
         TimeMoodTheme(snapshot: snapshot)
     }
@@ -23,69 +25,68 @@ struct SelectedCityPopupCard: View {
         .overlay(cardStroke)
         .clipShape(RoundedRectangle(cornerRadius: 36, style: .continuous))
         .shadow(color: mood.shadowColor, radius: 40, y: 24)
+        .onAppear {
+            animateMood = true
+        }
     }
 
     private var header: some View {
-        HStack(alignment: .top, spacing: 16) {
-            HStack(alignment: .center, spacing: 14) {
-                ZStack {
-                    Circle()
-                        .fill(Color.white.opacity(0.14))
-                        .frame(width: 58, height: 58)
+        VStack(spacing: 14) {
+            HStack(alignment: .top, spacing: 16) {
+                HStack(alignment: .center, spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.white.opacity(0.14))
+                            .frame(width: 58, height: 58)
 
-                    Text(FlagUtility.emoji(for: snapshot.location.countryCode))
-                        .font(.system(size: 32))
-                }
-                .overlay(
-                    Circle()
-                        .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
-                )
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(snapshot.location.city)
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-
-                    Text(snapshot.location.country)
-                        .font(.title3.weight(.medium))
-                        .foregroundStyle(Color.white.opacity(0.8))
-                }
-            }
-
-            Spacer(minLength: 12)
-
-            Button(action: dismiss) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.88))
-                    .frame(width: 36, height: 36)
-                    .background(Color.white.opacity(0.12), in: Circle())
+                        Text(FlagUtility.emoji(for: snapshot.location.countryCode))
+                            .font(.system(size: 32))
+                    }
                     .overlay(
                         Circle()
-                            .strokeBorder(Color.white.opacity(0.16), lineWidth: 1)
+                            .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
                     )
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(snapshot.location.city)
+                            .font(.system(size: 30, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+
+                        Text(snapshot.location.country)
+                            .font(.title3.weight(.medium))
+                            .foregroundStyle(Color.white.opacity(0.8))
+                    }
+                }
+
+                Spacer(minLength: 12)
+
+                Button(action: dismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.88))
+                        .frame(width: 36, height: 36)
+                        .background(Color.white.opacity(0.12), in: Circle())
+                        .overlay(
+                            Circle()
+                                .strokeBorder(Color.white.opacity(0.16), lineWidth: 1)
+                        )
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
+
+            Text(snapshot.dateText)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Color.white.opacity(0.72))
+                .lineLimit(1)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
         }
     }
 
     private var heroMoodMoment: some View {
-        VStack(spacing: 18) {
-            ZStack {
-                Circle()
-                    .fill(mood.orbFill)
-                    .frame(width: 120, height: 120)
-                    .blur(radius: mood.kind == .night ? 10 : 4)
-                    .overlay {
-                        moodOrbDetail
-                    }
-                    .shadow(color: mood.accentColor.opacity(0.35), radius: 28)
-
-                Circle()
-                    .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
-                    .frame(width: 132, height: 132)
-            }
+        VStack(spacing: 16) {
+            moodSymbol
 
             Text(snapshot.currentTimeText)
                 .font(.system(size: 68, weight: .bold, design: .rounded))
@@ -96,7 +97,7 @@ struct SelectedCityPopupCard: View {
                 .contentTransition(.numericText())
                 .multilineTextAlignment(.center)
 
-            VStack(spacing: 10) {
+            VStack(spacing: 7) {
                 HStack(spacing: 10) {
                     Image(systemName: mood.iconName)
                         .font(.system(size: 18, weight: .semibold))
@@ -120,75 +121,35 @@ struct SelectedCityPopupCard: View {
                 Text(mood.subtitle)
                     .font(.headline.weight(.medium))
                     .foregroundStyle(Color.white.opacity(0.84))
-
-                Text(snapshot.dateText)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color.white.opacity(0.68))
-                    .lineLimit(1)
+                    .multilineTextAlignment(.center)
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
+        .padding(.vertical, 2)
     }
 
-    @ViewBuilder
-    private var moodOrbDetail: some View {
-        switch mood.kind {
-        case .morning:
-            ZStack {
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [Color.white.opacity(0.85), Color.clear],
-                            center: .topLeading,
-                            startRadius: 2,
-                            endRadius: 50
-                        )
-                    )
-                    .scaleEffect(0.8)
-                    .offset(x: -12, y: -12)
-
-                RoundedRectangle(cornerRadius: 50, style: .continuous)
-                    .fill(Color.white.opacity(0.16))
-                    .frame(width: 88, height: 36)
-                    .offset(y: 20)
-                    .blur(radius: 8)
-            }
-        case .day:
+    private var moodSymbol: some View {
+        ZStack {
             Circle()
-                .strokeBorder(Color.white.opacity(0.24), lineWidth: 8)
-                .padding(16)
-                .overlay {
-                    Circle()
-                        .fill(Color.white.opacity(0.20))
-                        .frame(width: 26, height: 26)
-                        .offset(x: -18, y: -18)
-                }
-        case .evening:
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.white.opacity(0.65), Color.clear],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .scaleEffect(0.72)
-                    .offset(y: -14)
+                .fill(mood.symbolBackground)
+                .frame(width: 108, height: 108)
+                .blur(radius: 2)
+                .scaleEffect(animateMood ? 1.02 : 0.98)
+                .opacity(animateMood ? 1 : 0.92)
 
-                Capsule()
-                    .fill(Color.white.opacity(0.16))
-                    .frame(width: 92, height: 18)
-                    .offset(y: 26)
-                    .blur(radius: 6)
-            }
-        case .night:
-            Image(systemName: "moon.stars.fill")
-                .font(.system(size: 38, weight: .medium))
-                .foregroundStyle(Color.white.opacity(0.96))
-                .shadow(color: mood.iconColor.opacity(0.35), radius: 10)
+            Circle()
+                .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
+                .frame(width: 118, height: 118)
+
+            Image(systemName: mood.heroIconName)
+                .font(.system(size: mood.kind == .night ? 38 : 34, weight: .regular))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(mood.iconColor)
+                .offset(y: animateMood ? -2 : 2)
+                .shadow(color: mood.iconColor.opacity(0.28), radius: 12)
         }
+        .frame(height: 122)
+        .animation(.easeInOut(duration: 3.6).repeatForever(autoreverses: true), value: animateMood)
     }
 
     private var metricsRow: some View {
@@ -337,8 +298,9 @@ private struct TimeMoodTheme {
     let secondaryGlow: Color
     let shadowColor: Color
     let iconName: String
+    let heroIconName: String
     let iconColor: Color
-    let orbFill: RadialGradient
+    let symbolBackground: RadialGradient
     let accentColor: Color
     let title: String
     let subtitle: String
@@ -363,8 +325,9 @@ private struct TimeMoodTheme {
             secondaryGlow = TimeMapPalette.cloud
             shadowColor = TimeMapPalette.electricBlue.opacity(0.30)
             iconName = "sunrise.fill"
+            heroIconName = "sunrise.circle.fill"
             iconColor = Color(red: 1.0, green: 0.86, blue: 0.54)
-            orbFill = RadialGradient(
+            symbolBackground = RadialGradient(
                 colors: [Color(red: 1.0, green: 0.91, blue: 0.65), TimeMapPalette.sunrise, Color.clear],
                 center: .center,
                 startRadius: 8,
@@ -389,8 +352,9 @@ private struct TimeMoodTheme {
             secondaryGlow = TimeMapPalette.cyan
             shadowColor = TimeMapPalette.electricBlue.opacity(0.26)
             iconName = "sun.max.fill"
+            heroIconName = "sun.max.circle.fill"
             iconColor = Color(red: 1.0, green: 0.93, blue: 0.58)
-            orbFill = RadialGradient(
+            symbolBackground = RadialGradient(
                 colors: [Color.white.opacity(0.95), Color(red: 1.0, green: 0.88, blue: 0.46), Color.clear],
                 center: .center,
                 startRadius: 4,
@@ -415,8 +379,9 @@ private struct TimeMoodTheme {
             secondaryGlow = TimeMapPalette.violet
             shadowColor = TimeMapPalette.violet.opacity(0.30)
             iconName = "sun.horizon.fill"
+            heroIconName = "sun.horizon.circle.fill"
             iconColor = Color(red: 1.0, green: 0.80, blue: 0.50)
-            orbFill = RadialGradient(
+            symbolBackground = RadialGradient(
                 colors: [Color(red: 1.0, green: 0.82, blue: 0.52), TimeMapPalette.sunrise, Color.clear],
                 center: .center,
                 startRadius: 8,
@@ -441,8 +406,9 @@ private struct TimeMoodTheme {
             secondaryGlow = TimeMapPalette.cyan
             shadowColor = TimeMapPalette.night.opacity(0.52)
             iconName = "moon.stars.fill"
+            heroIconName = "moon.stars.circle.fill"
             iconColor = Color(red: 0.86, green: 0.91, blue: 1.0)
-            orbFill = RadialGradient(
+            symbolBackground = RadialGradient(
                 colors: [Color(red: 0.86, green: 0.91, blue: 1.0), Color(red: 0.47, green: 0.56, blue: 0.92), Color.clear],
                 center: .center,
                 startRadius: 6,
