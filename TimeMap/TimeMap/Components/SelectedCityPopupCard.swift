@@ -117,11 +117,6 @@ struct SelectedCityPopupCard: View {
                                 .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
                         )
                 )
-
-                Text(mood.subtitle)
-                    .font(.headline.weight(.medium))
-                    .foregroundStyle(Color.white.opacity(0.84))
-                    .multilineTextAlignment(.center)
             }
         }
         .frame(maxWidth: .infinity)
@@ -303,7 +298,6 @@ private struct TimeMoodTheme {
     let symbolBackground: RadialGradient
     let accentColor: Color
     let title: String
-    let subtitle: String
 
     init(snapshot: LocationTimeSnapshot, now: Date = .now) {
         let timeZone = TimeZone(identifier: snapshot.location.timeZoneIdentifier) ?? .current
@@ -335,7 +329,6 @@ private struct TimeMoodTheme {
             )
             accentColor = TimeMapPalette.sunrise
             title = "Morning glow"
-            subtitle = "A bright start in \(snapshot.location.city)"
 
         case 10..<17:
             kind = .day
@@ -362,7 +355,6 @@ private struct TimeMoodTheme {
             )
             accentColor = TimeMapPalette.cyan
             title = "Daytime now"
-            subtitle = "Bright hours in \(snapshot.location.city)"
 
         case 17..<20:
             kind = .evening
@@ -389,7 +381,6 @@ private struct TimeMoodTheme {
             )
             accentColor = TimeMapPalette.sunrise
             title = "Evening light"
-            subtitle = "Golden hour in \(snapshot.location.city)"
 
         default:
             kind = .night
@@ -416,7 +407,6 @@ private struct TimeMoodTheme {
             )
             accentColor = TimeMapPalette.violet
             title = "Nightfall now"
-            subtitle = "Calm hours in \(snapshot.location.city)"
         }
     }
 }
