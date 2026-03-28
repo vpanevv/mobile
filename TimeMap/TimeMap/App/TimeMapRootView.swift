@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TimeMapRootView: View {
     @StateObject private var viewModel: TimeMapViewModel
+    @StateObject private var favoritesStore: FavoritesStore
     @State private var hasEnteredApp = false
 
     init(container: AppContainer) {
@@ -13,12 +14,17 @@ struct TimeMapRootView: View {
                 userLocationService: container.userLocationService
             )
         )
+        _favoritesStore = StateObject(wrappedValue: container.favoritesStore)
     }
 
     var body: some View {
         ZStack {
             if hasEnteredApp {
-                TimeMapHomeView(viewModel: viewModel)
+                TimeMapHomeView(
+                    viewModel: viewModel,
+                    favoritesStore: favoritesStore,
+                    timeService: viewModel.timeService
+                )
                     .transition(.asymmetric(insertion: .opacity.combined(with: .scale(scale: 1.02)), removal: .opacity))
             } else {
                 TimeMapWelcomeView {

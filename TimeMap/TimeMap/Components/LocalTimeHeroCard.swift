@@ -2,10 +2,12 @@ import SwiftUI
 
 struct LocalTimeHeroCard: View {
     let info: LocalTimeInfo
+    let favoritesCount: Int
+    let openFavorites: () -> Void
 
     var body: some View {
         HStack(alignment: .center, spacing: 20) {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 14) {
                 Label("Local Time", systemImage: "location.fill")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.white.opacity(0.82))
@@ -29,6 +31,32 @@ struct LocalTimeHeroCard: View {
                         .font(.caption)
                         .foregroundStyle(TimeMapPalette.mutedCloud)
                 }
+
+                Button(action: openFavorites) {
+                    HStack(spacing: 10) {
+                        Image(systemName: favoritesCount == 0 ? "heart" : "heart.fill")
+                            .font(.system(size: 14, weight: .semibold))
+
+                        Text(favoritesCount == 0 ? "Favorites" : "Favorites \(favoritesCount)")
+                            .font(.subheadline.weight(.semibold))
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 11, weight: .bold))
+                            .opacity(0.8)
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(
+                        Capsule(style: .continuous)
+                            .fill(Color.white.opacity(0.14))
+                            .overlay(
+                                Capsule(style: .continuous)
+                                    .strokeBorder(Color.white.opacity(0.16), lineWidth: 1)
+                            )
+                    )
+                }
+                .buttonStyle(.plain)
             }
 
             Spacer(minLength: 8)
