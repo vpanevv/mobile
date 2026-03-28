@@ -33,7 +33,7 @@ final class TimeMapViewModel: ObservableObject {
     @Published var selectedLocationState = SelectedLocationState()
     @Published var selectedMapCoordinate: CLLocationCoordinate2D?
 
-    private let timeService: TimeService
+    let timeService: TimeService
     private let searchService: LocationSearchService
     private let locationResolver: LocationResolver
     private let userLocationService: UserLocationService
@@ -81,6 +81,14 @@ final class TimeMapViewModel: ObservableObject {
     func dismissSelectedLocation() {
         selectedLocation = nil
         selectedLocationState.status = .idle
+    }
+
+    func showFavorite(_ favorite: FavoriteCity) {
+        let location = favorite.worldLocation
+        selectedLocation = location
+        selectedLocationState.status = .loaded(
+            timeService.makeSnapshot(for: location, relativeTo: .autoupdatingCurrent, now: Date())
+        )
     }
 
     private func bindTicker() {

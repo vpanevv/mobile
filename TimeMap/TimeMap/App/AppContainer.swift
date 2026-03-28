@@ -5,11 +5,13 @@ struct AppContainer {
     let searchService: LocationSearchService
     let locationResolver: LocationResolver
     let userLocationService: UserLocationService
+    let favoritesStore: FavoritesStore
 
     static let live = AppContainer(
         timeService: TimeService(),
         searchService: LocationSearchService(),
         locationResolver: LocationResolver(),
-        userLocationService: UserLocationService()
+        userLocationService: UserLocationService(),
+        favoritesStore: FavoritesStore()
     )
 }

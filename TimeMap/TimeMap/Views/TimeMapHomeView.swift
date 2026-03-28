@@ -2,6 +2,10 @@ import SwiftUI
 
 struct TimeMapHomeView: View {
     @ObservedObject var viewModel: TimeMapViewModel
+    @ObservedObject var favoritesStore: FavoritesStore
+    let timeService: TimeService
+
+    @State private var isPresentingFavorites = false
 
     var body: some View {
         ZStack {
@@ -9,7 +13,15 @@ struct TimeMapHomeView: View {
 
             VStack(alignment: .leading, spacing: 20) {
                 header
-                LocalTimeHeroCard(info: viewModel.localTimeInfo)
+                LocalTimeHeroCard(
+                    info: viewModel.localTimeInfo,
+                    favoritesCount: favoritesStore.favorites.count,
+                    openFavorites: {
+                        withAnimation(.spring(response: 0.32, dampingFraction: 0.88)) {
+                            isPresentingFavorites = true
+                        }
+                    }
+                )
                 ModePickerBar(selectedMode: $viewModel.mode)
                 activePanel
                 Spacer(minLength: 0)
@@ -19,6 +31,17 @@ struct TimeMapHomeView: View {
             .padding(.bottom, 20)
 
             selectedLocationOverlay
+        }
+        .sheet(isPresented: $isPresentingFavorites) {
+            FavoritesView(
+                favoritesStore: favoritesStore,
+                timeService: timeService,
+                openFavorite: { favorite in
+                    withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {
+                        viewModel.showFavorite(favorite)
+                    }
+                }
+            )
         }
     }
 
@@ -80,14 +103,29 @@ struct TimeMapHomeView: View {
         case .loaded(let snapshot):
             overlayBackdrop
                 .overlay {
-                    SelectedCityPopupCard(snapshot: snapshot) {
-                        withAnimation(.spring(response: 0.32, dampingFraction: 0.88)) {
-                            viewModel.dismissSelectedLocation()
-                        }
+                    GeometryReader { proxy in
+                        SelectedCityPopupCard(
+                            snapshot: snapshot,
+                            isFavorite: favoritesStore.contains(snapshot.location),
+                            toggleFavorite: {
+                                withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
+                                    favoritesStore.toggle(snapshot.location)
+                                }
+                            },
+                            dismiss: {
+                                withAnimation(.spring(response: 0.32, dampingFraction: 0.88)) {
+                                    viewModel.dismissSelectedLocation()
+                                }
+                            }
+                        )
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 24)
+                        .frame(
+                            maxWidth: .infinity,
+                            maxHeight: max(320, proxy.size.height - 52),
+                            alignment: .center
+                        )
                     }
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 24)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             .transition(.asymmetric(
                 insertion: .scale(scale: 0.96).combined(with: .opacity),
@@ -158,12 +196,12 @@ private struct MapPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Search by map")
+            Text("Explore the world")
                 .font(.headline.weight(.semibold))
                 .foregroundStyle(.white)
 
-            TimeZoneMapView(viewModel: viewModel)
-                .frame(height: 310)
+            InteractiveGlobeView(viewModel: viewModel)
+                .frame(height: 384)
         }
     }
 }
