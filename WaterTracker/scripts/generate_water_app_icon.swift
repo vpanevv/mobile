@@ -1,6 +1,6 @@
 import AppKit
 
-let outputURL = URL(fileURLWithPath: "/Users/panev/panev-ios/mobile/TimeMap/WaterTracker/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png")
+let outputURL = URL(fileURLWithPath: "/Users/panev/panev-ios/mobile/WaterTracker/WaterTracker/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png")
 let size = CGSize(width: 1024, height: 1024)
 
 let image = NSImage(size: size)
