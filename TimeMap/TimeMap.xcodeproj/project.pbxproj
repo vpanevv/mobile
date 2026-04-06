@@ -7,73 +7,19 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		68997B4B2F3675AC00DE4C9C /* TimeMap.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TimeMap.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		68A100000000000000000001 /* TimeMapWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TimeMapWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		68997B4B2F3675AC00DE4C9C /* WaterTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WaterTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		68997B582F3675AD00DE4C9C /* Exceptions for "TimeMap" folder in "TimeMap" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 68997B4A2F3675AC00DE4C9C /* TimeMap */;
-		};
-		68A100000000000000000002 /* Exceptions for "TimeMapWidgets" folder in "TimeMapWidgets" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 68A100000000000000000009 /* TimeMapWidgets */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		68997B4D2F3675AC00DE4C9C /* TimeMap */ = {
+		68997B4D2F3675AC00DE4C9C /* WaterTracker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				68997B582F3675AD00DE4C9C /* Exceptions for "TimeMap" folder in "TimeMap" target */,
-			);
-			path = TimeMap;
-			sourceTree = "<group>";
-		};
-		68A100000000000000000003 /* TimeMapWidgets */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				68A100000000000000000002 /* Exceptions for "TimeMapWidgets" folder in "TimeMapWidgets" target */,
-			);
-			path = TimeMapWidgets;
+			path = WaterTracker;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
-/* Begin PBXBuildFile section */
-		68A100000000000000000008 /* TimeMapWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 68A100000000000000000001 /* TimeMapWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-/* End PBXBuildFile section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		68A100000000000000000007 /* Embed App Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 13;
-			files = (
-				68A100000000000000000008 /* TimeMapWidgets.appex in Embed App Extensions */,
-			);
-			name = "Embed App Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFrameworksBuildPhase section */
 		68997B482F3675AC00DE4C9C /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		68A100000000000000000004 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -86,8 +32,7 @@
 		68997B422F3675AC00DE4C9C = {
 			isa = PBXGroup;
 			children = (
-				68997B4D2F3675AC00DE4C9C /* TimeMap */,
-				68A100000000000000000003 /* TimeMapWidgets */,
+				68997B4D2F3675AC00DE4C9C /* WaterTracker */,
 				68997B4C2F3675AC00DE4C9C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -95,70 +40,35 @@
 		68997B4C2F3675AC00DE4C9C /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				68997B4B2F3675AC00DE4C9C /* TimeMap.app */,
-				68A100000000000000000001 /* TimeMapWidgets.appex */,
+				68997B4B2F3675AC00DE4C9C /* WaterTracker.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
-/* Begin PBXContainerItemProxy section */
-		68A10000000000000000000A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 68997B432F3675AC00DE4C9C /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 68A100000000000000000009;
-			remoteInfo = TimeMapWidgets;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXNativeTarget section */
-		68997B4A2F3675AC00DE4C9C /* TimeMap */ = {
+		68997B4A2F3675AC00DE4C9C /* WaterTracker */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 68997B592F3675AD00DE4C9C /* Build configuration list for PBXNativeTarget "TimeMap" */;
+			buildConfigurationList = 68997B592F3675AD00DE4C9C /* Build configuration list for PBXNativeTarget "WaterTracker" */;
 			buildPhases = (
 				68997B472F3675AC00DE4C9C /* Sources */,
 				68997B482F3675AC00DE4C9C /* Frameworks */,
 				68997B492F3675AC00DE4C9C /* Resources */,
-				68A100000000000000000007 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				68A10000000000000000000B /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				68997B4D2F3675AC00DE4C9C /* TimeMap */,
+				68997B4D2F3675AC00DE4C9C /* WaterTracker */,
 			);
-			name = TimeMap;
+			name = WaterTracker;
 			packageProductDependencies = (
 			);
-			productName = TimeMap;
-			productReference = 68997B4B2F3675AC00DE4C9C /* TimeMap.app */;
+			productName = WaterTracker;
+			productReference = 68997B4B2F3675AC00DE4C9C /* WaterTracker.app */;
 			productType = "com.apple.product-type.application";
-		};
-		68A100000000000000000009 /* TimeMapWidgets */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 68A10000000000000000000C /* Build configuration list for PBXNativeTarget "TimeMapWidgets" */;
-			buildPhases = (
-				68A100000000000000000006 /* Sources */,
-				68A100000000000000000004 /* Frameworks */,
-				68A100000000000000000005 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				68A100000000000000000003 /* TimeMapWidgets */,
-			);
-			name = TimeMapWidgets;
-			packageProductDependencies = (
-			);
-			productName = TimeMapWidgets;
-			productReference = 68A100000000000000000001 /* TimeMapWidgets.appex */;
-			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -189,21 +99,13 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				68997B4A2F3675AC00DE4C9C /* TimeMap */,
-				68A100000000000000000009 /* TimeMapWidgets */,
+				68997B4A2F3675AC00DE4C9C /* WaterTracker */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		68997B492F3675AC00DE4C9C /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		68A100000000000000000005 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -220,22 +122,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		68A100000000000000000006 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		68A10000000000000000000B /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 68A100000000000000000009 /* TimeMapWidgets */;
-			targetProxy = 68A10000000000000000000A /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		68997B5A2F3675AD00DE4C9C /* Debug */ = {
@@ -243,13 +130,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = TimeMap/TimeMap.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DP5G9GAZQJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = TimeMap/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -260,8 +145,8 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.TimeMap;
-				PRODUCT_NAME = TimeMap;
+				PRODUCT_BUNDLE_IDENTIFIER = com.panev.WaterTracker;
+				PRODUCT_NAME = WaterTracker;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -277,13 +162,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = TimeMap/TimeMap.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DP5G9GAZQJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = TimeMap/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -294,8 +177,8 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.TimeMap;
-				PRODUCT_NAME = TimeMap;
+				PRODUCT_BUNDLE_IDENTIFIER = com.panev.WaterTracker;
+				PRODUCT_NAME = WaterTracker;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -427,68 +310,6 @@
 			};
 			name = Release;
 		};
-		68A10000000000000000000D /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_ENTITLEMENTS = TimeMapWidgets/TimeMapWidgets.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = DP5G9GAZQJ;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = TimeMapWidgets/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.TimeMap.TimeMapWidgets;
-				PRODUCT_NAME = TimeMapWidgets;
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		68A10000000000000000000E /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_ENTITLEMENTS = TimeMapWidgets/TimeMapWidgets.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = DP5G9GAZQJ;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = TimeMapWidgets/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.TimeMap.TimeMapWidgets;
-				PRODUCT_NAME = TimeMapWidgets;
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -501,20 +322,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		68997B592F3675AD00DE4C9C /* Build configuration list for PBXNativeTarget "TimeMap" */ = {
+		68997B592F3675AD00DE4C9C /* Build configuration list for PBXNativeTarget "WaterTracker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				68997B5A2F3675AD00DE4C9C /* Debug */,
 				68997B5B2F3675AD00DE4C9C /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		68A10000000000000000000C /* Build configuration list for PBXNativeTarget "TimeMapWidgets" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				68A10000000000000000000D /* Debug */,
-				68A10000000000000000000E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
