@@ -1,6 +1,6 @@
 import AppKit
 
-let sourceURL = URL(fileURLWithPath: "/Users/panev/panev-ios/mobile/TimeMap/WaterTracker/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png")
+let sourceURL = URL(fileURLWithPath: "/Users/panev/panev-ios/mobile/WaterTracker/WaterTracker/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png")
 let outputDirectory = sourceURL.deletingLastPathComponent()
 
 let iconSpecs: [(String, CGFloat)] = [

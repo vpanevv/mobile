@@ -24,24 +24,19 @@ struct ContentView: View {
 
                 ScrollView {
                     VStack(spacing: 20) {
+                        titleCard
                         heroCard
+                        goalCard
                         quickAddCard
                         historyCard
                     }
                     .padding(20)
                 }
             }
-            .navigationTitle("Water Tracker")
+            .toolbar(.hidden, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
-                        Picker("Daily Goal", selection: $store.dailyGoalML) {
-                            Text("1.5 L").tag(1_500)
-                            Text("2.0 L").tag(2_000)
-                            Text("2.5 L").tag(2_500)
-                            Text("3.0 L").tag(3_000)
-                        }
-
                         Button("Reset Today", role: .destructive) {
                             store.resetToday()
                         }
@@ -61,6 +56,21 @@ struct ContentView: View {
                     .presentationDragIndicator(.visible)
             }
         }
+    }
+
+    private var titleCard: some View {
+        HStack {
+            Spacer()
+
+            Text("WaterTracker")
+                .font(.system(size: 30, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+
+            Spacer()
+        }
+        .padding(.vertical, 18)
+        .padding(.horizontal, 20)
+        .background(glassCardBackground)
     }
 
     private var heroCard: some View {
@@ -83,7 +93,38 @@ struct ContentView: View {
         }
         .padding(24)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(cardBackground)
+        .background(glassCardBackground)
+    }
+
+    private var goalCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Daily Target")
+                    .font(.system(.title3, design: .rounded, weight: .bold))
+                    .foregroundStyle(.white)
+
+                Spacer()
+
+                Text("\(store.dailyGoalML / 1000).\(store.dailyGoalML % 1000 == 0 ? "0" : "5") L")
+                    .font(.headline.weight(.bold))
+                    .foregroundStyle(.white.opacity(0.82))
+            }
+
+            Picker("Daily Target", selection: $store.dailyGoalML) {
+                Text("1.5 L").tag(1_500)
+                Text("2.0 L").tag(2_000)
+                Text("2.5 L").tag(2_500)
+                Text("3.0 L").tag(3_000)
+            }
+            .pickerStyle(.segmented)
+            .tint(Color.white.opacity(0.95))
+
+            Text("Adjust your hydration goal anytime.")
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(.white.opacity(0.68))
+        }
+        .padding(24)
+        .background(glassCardBackground)
     }
 
     private var quickAddCard: some View {
@@ -107,7 +148,7 @@ struct ContentView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity, minHeight: 88, alignment: .leading)
                         .padding(.horizontal, 16)
-                        .background(Color.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .background(glassTileBackground)
                     }
                     .buttonStyle(.plain)
                 }
@@ -121,12 +162,12 @@ struct ContentView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color.white.opacity(0.12), in: Capsule())
+                    .background(glassCapsuleBackground)
             }
             .buttonStyle(.plain)
         }
         .padding(24)
-        .background(cardBackground)
+        .background(glassCardBackground)
     }
 
     private var historyCard: some View {
@@ -171,7 +212,7 @@ struct ContentView: View {
             }
         }
         .padding(24)
-        .background(cardBackground)
+        .background(glassCardBackground)
     }
 
     private var customSheet: some View {
@@ -193,7 +234,18 @@ struct ContentView: View {
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(Color.blue, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .background(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .fill(Color(red: 0.18, green: 0.46, blue: 0.98).opacity(0.42))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .stroke(.white.opacity(0.18), lineWidth: 1)
+                        )
+                )
 
                 Spacer()
             }
@@ -226,12 +278,53 @@ struct ContentView: View {
         }
     }
 
-    private var cardBackground: some View {
+    private var glassCardBackground: some View {
         RoundedRectangle(cornerRadius: 28, style: .continuous)
-            .fill(.white.opacity(0.10))
+            .fill(.ultraThinMaterial)
             .overlay(
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .stroke(.white.opacity(0.12), lineWidth: 1)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                .white.opacity(0.18),
+                                .white.opacity(0.04)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .stroke(.white.opacity(0.16), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 12)
+    }
+
+    private var glassTileBackground: some View {
+        RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .fill(.thinMaterial)
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color.white.opacity(0.06))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(.white.opacity(0.14), lineWidth: 1)
+            )
+    }
+
+    private var glassCapsuleBackground: some View {
+        Capsule()
+            .fill(.thinMaterial)
+            .overlay(
+                Capsule()
+                    .fill(Color.white.opacity(0.06))
+            )
+            .overlay(
+                Capsule()
+                    .stroke(.white.opacity(0.16), lineWidth: 1)
             )
     }
 }

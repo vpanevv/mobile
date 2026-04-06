@@ -14,5 +14,5 @@ Simple native iOS water intake tracking for a first TestFlight launch.
 ## Build
 
 ```bash
-xcodebuild -project /Users/panev/panev-ios/mobile/TimeMap/TimeMap.xcodeproj -scheme WaterTracker -destination 'generic/platform=iOS' -derivedDataPath /tmp/WaterTrackerDerived CODE_SIGNING_ALLOWED=NO build
+xcodebuild -project /Users/panev/panev-ios/mobile/WaterTracker/WaterTracker.xcodeproj -destination 'generic/platform=iOS' -scheme WaterTracker -derivedDataPath /tmp/WaterTrackerDerived CODE_SIGNING_ALLOWED=NO build
 ```
