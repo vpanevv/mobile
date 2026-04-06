@@ -41,6 +41,16 @@ final class HydrationStore: ObservableObject {
         max(dailyGoalML - totalTodayML, 0)
     }
 
+    var dailySummaryTitle: String {
+        totalTodayML >= dailyGoalML ? "You hit your goal" : "\(remainingML) ml left"
+    }
+
+    var dailySummarySubtitle: String {
+        totalTodayML >= dailyGoalML
+            ? "Nice work. You are done for today unless you want another glass."
+            : "Keep going to reach your hydration target before the day ends."
+    }
+
     var currentStreak: Int {
         var streak = 0
         var cursor = calendar.startOfDay(for: .now)
@@ -54,6 +64,38 @@ final class HydrationStore: ObservableObject {
         }
 
         return streak
+    }
+
+    var sevenDayStreak: Int {
+        min(currentStreak, 7)
+    }
+
+    var averageDailyIntakeLast7Days: Int {
+        let totals = last7DaysSnapshots.map(\.intakeML)
+        guard totals.isEmpty == false else { return 0 }
+        return totals.reduce(0, +) / totals.count
+    }
+
+    var goalsHitThisWeek: Int {
+        datesInCurrentWeek().reduce(0) { partialResult, date in
+            partialResult + (hydration(on: date) >= dailyGoalML ? 1 : 0)
+        }
+    }
+
+    var last7DaysSnapshots: [DailyHydrationSnapshot] {
+        let today = calendar.startOfDay(for: .now)
+
+        return (0..<7).compactMap { offset in
+            guard let date = calendar.date(byAdding: .day, value: -(6 - offset), to: today) else {
+                return nil
+            }
+
+            return DailyHydrationSnapshot(
+                date: date,
+                intakeML: hydration(on: date),
+                goalML: dailyGoalML
+            )
+        }
     }
 
     func addWater(_ amountML: Int) {
@@ -74,6 +116,20 @@ final class HydrationStore: ObservableObject {
         entries
             .filter { calendar.isDate($0.date, inSameDayAs: day) }
             .reduce(0) { $0 + $1.amountML }
+    }
+
+    private func datesInCurrentWeek() -> [Date] {
+        let today = calendar.startOfDay(for: .now)
+        let weekday = calendar.component(.weekday, from: today)
+        let offset = (weekday - calendar.firstWeekday + 7) % 7
+
+        guard let weekStart = calendar.date(byAdding: .day, value: -offset, to: today) else {
+            return [today]
+        }
+
+        return (0...offset).compactMap { index in
+            calendar.date(byAdding: .day, value: index, to: weekStart)
+        }
     }
 
     private func load() {
@@ -99,5 +155,17 @@ final class HydrationStore: ObservableObject {
 
     private func saveGoal() {
         defaults.set(dailyGoalML, forKey: goalKey)
+    }
+}
+
+struct DailyHydrationSnapshot: Identifiable, Hashable {
+    let date: Date
+    let intakeML: Int
+    let goalML: Int
+
+    var id: Date { date }
+
+    var hitGoal: Bool {
+        intakeML >= goalML
     }
 }
