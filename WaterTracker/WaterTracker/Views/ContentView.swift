@@ -26,6 +26,7 @@ struct ContentView: View {
                     VStack(spacing: 20) {
                         titleCard
                         heroCard
+                        dailySummaryCard
                         goalCard
                         quickAddCard
                         historyCard
@@ -59,14 +60,31 @@ struct ContentView: View {
     }
 
     private var titleCard: some View {
-        HStack {
-            Spacer()
+        ZStack {
+            HStack {
+                Spacer()
 
-            Text("WaterTracker")
-                .font(.system(size: 30, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
+                NavigationLink {
+                    StatsView()
+                } label: {
+                    Image(systemName: "chart.bar.fill")
+                        .font(.headline.weight(.bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 42, height: 42)
+                        .background(Circle().fill(.white.opacity(0.08)))
+                }
+                .buttonStyle(.plain)
+            }
 
-            Spacer()
+            HStack {
+                Spacer()
+
+                Text("WaterTracker")
+                    .font(.system(size: 30, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+
+                Spacer()
+            }
         }
         .padding(.vertical, 18)
         .padding(.horizontal, 20)
@@ -122,6 +140,24 @@ struct ContentView: View {
             Text("Adjust your hydration goal anytime.")
                 .font(.footnote.weight(.medium))
                 .foregroundStyle(.white.opacity(0.68))
+        }
+        .padding(24)
+        .background(glassCardBackground)
+    }
+
+    private var dailySummaryCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Daily Summary")
+                .font(.system(.title3, design: .rounded, weight: .bold))
+                .foregroundStyle(.white)
+
+            Text(store.dailySummaryTitle)
+                .font(.system(.title2, design: .rounded, weight: .bold))
+                .foregroundStyle(.white)
+
+            Text(store.dailySummarySubtitle)
+                .font(.body.weight(.medium))
+                .foregroundStyle(.white.opacity(0.70))
         }
         .padding(24)
         .background(glassCardBackground)
