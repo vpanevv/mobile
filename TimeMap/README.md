@@ -1,88 +1,30 @@
-# TimeMap
+# WaterTracker
 
-> Tap the world. Know the time.
+`WaterTracker` is a simple native iOS app for a first TestFlight release.
 
-**TimeMap** is a premium SwiftUI world clock and timezone explorer designed to make global time feel visual, intuitive, and alive.
+It focuses on one job:
 
-From a glowing local-time dashboard to immersive city mood cards, TimeMap turns every location into a living snapshot of its current moment.
+- log water quickly
+- track progress toward a daily goal
+- keep today history visible
+- persist data locally between launches
 
-## Why TimeMap
+## Project
 
-- 🌍 Explore time across the world with a clean, map-first experience
-- 🕒 See your own local time instantly and keep it anchored on screen
-- ✨ Search cities and reveal mood-rich time cards with premium visuals
-- 🌙 Understand day, night, and atmosphere at a glance
-- 📍 Tap the map to discover time by place, not just by list
+Open [TimeMap.xcodeproj](/Users/panev/panev-ios/mobile/TimeMap/TimeMap.xcodeproj) and run the `WaterTracker` scheme.
 
-## Experience Highlights
+The app source lives under [WaterTracker](/Users/panev/panev-ios/mobile/TimeMap/WaterTracker).
 
-### 🏠 A Beautiful First Impression
-TimeMap opens with a cinematic welcome screen built around an animated globe, premium gradients, and a focused call to action.
-
-### ⏰ Your Local Time, Always Clear
-The home screen keeps your current time, city or region, and timezone front and center without overwhelming the interface.
-
-### 🔎 Instant City Search
-Start typing any city name and compare it against your own local time in seconds.
-
-### 🗺️ Explore by Map
-Tap anywhere on the map and TimeMap resolves the nearest meaningful place so you can inspect its current moment instantly.
-
-### 🎨 Time Mood Cards
-Selected cities are presented as expressive atmospheric cards that reflect their local time of day with:
-
-- sunrise, daylight, evening, or night moods
-- adaptive gradients and glow
-- sun or moon visual cues
-- strong time-first visual hierarchy
-
-## What Makes It Feel Special
-
-- 📱 Native SwiftUI architecture with a modern iOS feel
-- 🧊 Glassy surfaces and layered depth
-- 🌅 Mood-aware visual storytelling for each selected city
-- 🛰️ World exploration aesthetic instead of a generic utility-app layout
-- ⚡ Fast, Apple-native time, map, and geocoding APIs
-
-## Built With
-
-- `SwiftUI`
-- `MapKit`
-- `CoreLocation`
-- `MVVM`
-- Apple-native date, calendar, and timezone APIs
-
-## Project Structure
-
-- `App` — app entry, root flow, dependency container
-- `Models` — time, location, and selection state
-- `ViewModels` — `TimeMapViewModel`
-- `Views` — onboarding, home, and map screens
-- `Components` — reusable premium UI building blocks
-- `Services` — time ticking, search, location resolution, and geocoding
-- `Theme` — shared palette, gradients, glass surfaces, and metrics
-- `Utilities` — helpers like flag generation
-
-## Run TimeMap
-
-Open the Xcode project:
-
-[`/Users/panev/panev-ios/mobile/TimeMap/TimeMap.xcodeproj`](/Users/panev/panev-ios/mobile/TimeMap/TimeMap.xcodeproj)
-
-Run the `TimeMap` target in Xcode.
-
-## CLI Build
-
-For local verification without code signing:
+## Build
 
 ```bash
-xcodebuild -project /Users/panev/panev-ios/mobile/TimeMap/TimeMap.xcodeproj -scheme TimeMap -destination 'generic/platform=iOS' -derivedDataPath /tmp/TimeMapDerived CODE_SIGNING_ALLOWED=NO build
+xcodebuild -project /Users/panev/panev-ios/mobile/TimeMap/TimeMap.xcodeproj -scheme WaterTracker -sdk iphoneos -derivedDataPath /tmp/WaterTrackerDerived CODE_SIGNING_ALLOWED=NO build
 ```
 
-## Vision
+## Notes
 
-TimeMap is built to make world time feel less like data and more like presence.
+In this environment, `xcodebuild` is currently blocked at the asset compilation stage by an unavailable CoreSimulator service, but the Swift source files typecheck successfully with:
 
-Different cities should not only show different numbers. They should feel different.
-
-That is the heart of TimeMap.
+```bash
+swiftc -typecheck -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk -target arm64-apple-ios26.0 /Users/panev/panev-ios/mobile/TimeMap/WaterTracker/WaterTrackerApp.swift /Users/panev/panev-ios/mobile/TimeMap/WaterTracker/Models/HydrationEntry.swift /Users/panev/panev-ios/mobile/TimeMap/WaterTracker/Stores/HydrationStore.swift /Users/panev/panev-ios/mobile/TimeMap/WaterTracker/Views/ProgressRing.swift /Users/panev/panev-ios/mobile/TimeMap/WaterTracker/Views/ContentView.swift
+```
