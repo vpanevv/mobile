@@ -1,0 +1,12 @@
+# API keys
+WishBox/WishBox/Config.plist
+
+# Xcode
+*.xcuserstate
+*.xcworkspacedata
+xcuserdata/
+DerivedData/
+build/
+
+# macOS
+.DS_Store
