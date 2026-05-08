@@ -1,53 +1,24 @@
 import SwiftUI
-import UIKit
 
 struct HolidayPicker: View {
     @Binding var selected: HolidayType
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        DropdownMenu(
+            items: HolidayType.allCases,
+            selected: $selected,
+            accentColor: Color.neonCyan
+        ) { item, isSelected in
             HStack(spacing: 10) {
-                ForEach(HolidayType.allCases) { type in
-                    let isSelected = selected == type
-                    Button {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        withAnimation(.spring(response: 0.45, dampingFraction: 0.72)) {
-                            selected = type
-                        }
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: type.icon)
-                                .font(.system(size: 13, weight: .semibold))
-                            Text(type.label)
-                                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        }
-                        .foregroundStyle(isSelected ? Color.neonCyan : .white.opacity(0.45))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(
-                            isSelected
-                                ? Color.neonCyan.opacity(0.10)
-                                : Color.white.opacity(0.04)
-                        )
-                        .clipShape(Capsule())
-                        .overlay(
-                            Capsule()
-                                .stroke(
-                                    isSelected
-                                        ? Color.neonCyan.opacity(0.65)
-                                        : Color.white.opacity(0.07),
-                                    lineWidth: 1
-                                )
-                        )
-                        .shadow(
-                            color: isSelected ? Color.neonCyan.opacity(0.25) : .clear,
-                            radius: 8
-                        )
-                    }
-                    .buttonStyle(.plain)
-                }
+                Image(systemName: item.icon)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(isSelected ? Color.neonCyan : .primary.opacity(0.5))
+                    .frame(width: 22)
+                Text(item.label)
+                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                    .foregroundStyle(isSelected ? Color.neonCyan : .primary.opacity(0.85))
             }
-            .padding(.horizontal, 20)
         }
+        .padding(.horizontal, 20)
     }
 }

@@ -9,13 +9,14 @@ struct WishResultCard: View {
     @State private var isTyping = false
     @State private var copied = false
     @State private var typewriterTask: Task<Void, Never>?
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         VStack(spacing: 0) {
             // ── Main card ────────────────────────────────────────────────
             VStack(alignment: .leading, spacing: 20) {
 
-                // "AI Generated" badge
+                // Badge row
                 HStack(spacing: 6) {
                     Circle()
                         .fill(isTyping ? Color.neonCyan : Color.neonCyan.opacity(0.5))
@@ -33,15 +34,15 @@ struct WishResultCard: View {
                     }
                 }
 
-                // Wish text — typewriter reveal
+                // Wish text — typewriter
                 Text(displayedText + (isTyping ? "▋" : ""))
                     .font(.system(size: 18, weight: .regular))
-                    .foregroundStyle(.white.opacity(0.92))
+                    .foregroundStyle(.primary.opacity(0.92))
                     .lineSpacing(7)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .animation(nil, value: displayedText)
 
-                // Copy button — appears after typing finishes
+                // Copy button — shown after typing
                 if !isTyping {
                     Button {
                         UIPasteboard.general.string = wish
@@ -67,32 +68,27 @@ struct WishResultCard: View {
                         .frame(height: 46)
                         .background(
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(
-                                    copied
-                                        ? Color.green.opacity(0.08)
-                                        : Color.neonCyan.opacity(0.08)
-                                )
+                                .fill(copied ? Color.green.opacity(0.08) : Color.neonCyan.opacity(0.08))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                                         .stroke(
-                                            copied
-                                                ? Color.green.opacity(0.35)
-                                                : Color.neonCyan.opacity(0.35),
+                                            copied ? Color.green.opacity(0.35) : Color.neonCyan.opacity(0.35),
                                             lineWidth: 1
                                         )
                                 )
                         )
-                        .shadow(
-                            color: copied ? Color.green.opacity(0.15) : Color.neonCyan.opacity(0.15),
-                            radius: 8
-                        )
+                        .shadow(color: copied ? Color.green.opacity(0.12) : Color.neonCyan.opacity(0.12), radius: 8)
                     }
                     .buttonStyle(.plain)
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
                 }
             }
             .padding(22)
-            .background(Color.surface.opacity(0.94))
+            .background(
+                scheme == .dark
+                    ? Color.surface.opacity(0.94)
+                    : Color(UIColor.systemBackground).opacity(0.94)
+            )
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -122,7 +118,7 @@ struct WishResultCard: View {
                     Text("Generate another")
                         .font(.system(size: 13, weight: .medium, design: .rounded))
                 }
-                .foregroundStyle(.white.opacity(0.35))
+                .foregroundStyle(.primary.opacity(0.35))
                 .padding(.top, 14)
             }
             .buttonStyle(.plain)
@@ -137,7 +133,7 @@ struct WishResultCard: View {
         typewriterTask = Task {
             for char in wish {
                 if Task.isCancelled { break }
-                try? await Task.sleep(nanoseconds: 22_000_000) // ~22 ms / char
+                try? await Task.sleep(nanoseconds: 22_000_000)
                 guard !Task.isCancelled else { break }
                 displayedText.append(char)
             }
