@@ -78,12 +78,12 @@ private struct DotIndicators: View {
 // MARK: - Main view
 struct OnboardingView: View {
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
+    @AppStorage("wishbox.isDark") private var isDark: Bool = true
     @State private var currentStep = 0
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .topTrailing) {
             NeuralBackground()
-                .preferredColorScheme(.dark)
 
             VStack(spacing: 0) {
                 Spacer()
@@ -159,9 +159,14 @@ struct OnboardingView: View {
                 .padding(.horizontal, 32)
                 .padding(.bottom, 48)
             }
+
+            // Floating theme toggle — top-right, mirrors ContentView
+            ThemeToggleButton(isDark: $isDark)
+                .padding(.top, 12)
+                .padding(.trailing, 20)
         }
         .ignoresSafeArea()
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(isDark ? .dark : .light)
         // ── Auto-advance timer ─────────────────────────────────────────────
         .onReceive(
             Timer.publish(every: 2.5, on: .main, in: .common).autoconnect()
