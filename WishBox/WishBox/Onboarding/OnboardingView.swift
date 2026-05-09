@@ -2,143 +2,297 @@ import SwiftUI
 import UIKit
 import Combine
 
-// MARK: - Data model
-private struct OnboardingStep: Identifiable {
-    let id: Int
-    let icon: String
-    let headline: String
-    let subtitle: String?
-}
+// MARK: - Shimmer title
 
-private let steps: [OnboardingStep] = [
-    OnboardingStep(id: 0, icon: "calendar.badge.plus", headline: "Select an occasion",       subtitle: nil),
-    OnboardingStep(id: 1, icon: "person.fill",          headline: "Insert a name",            subtitle: "optional"),
-    OnboardingStep(id: 2, icon: "sparkles",             headline: "Let WishBox do the rest",  subtitle: nil),
-]
-
-// MARK: - Headline card
-private struct HeadlineCard: View {
-    let step: OnboardingStep
+private struct ShimmerText: View {
+    let text: String
+    @State private var shimmerPhase: CGFloat = -1
 
     var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: step.icon)
-                .font(.system(size: 28, weight: .semibold))
-                .foregroundStyle(Color(hex: 0xc084fc))
-                .frame(width: 36)
+        Text(text)
+            .font(.system(size: 34, weight: .bold, design: .rounded))
+            .foregroundStyle(.white)
+            .overlay(
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear,                          location: shimmerPhase - 0.18),
+                        .init(color: .white.opacity(0.70),            location: shimmerPhase),
+                        .init(color: .clear,                          location: shimmerPhase + 0.18),
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                .blendMode(.plusLighter)
+            )
+            .onAppear { startShimmer() }
+    }
 
-            VStack(alignment: .leading, spacing: 5) {
-                HStack(spacing: 8) {
-                    Text(step.headline)
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    if let sub = step.subtitle {
-                        Text(sub)
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(Color(hex: 0xc084fc))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(Color(hex: 0xc084fc).opacity(0.18))
-                            .clipShape(Capsule())
-                    }
-                }
-            }
-
-            Spacer(minLength: 0)
+    private func startShimmer() {
+        shimmerPhase = -0.2
+        withAnimation(.linear(duration: 0.9).delay(1.2)) {
+            shimmerPhase = 1.2
         }
-        .padding(20)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.white.opacity(0.10), lineWidth: 1)
-        )
+        // Repeat every 3 s
+        Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
+            shimmerPhase = -0.2
+            withAnimation(.linear(duration: 0.9)) {
+                shimmerPhase = 1.2
+            }
+        }
     }
 }
 
-// MARK: - Dot indicators
-private struct DotIndicators: View {
-    let count: Int
-    let active: Int
+// MARK: - Progress bar
+
+private struct OnboardingProgressBar: View {
+    let step: Int
+    let total: Int
+
+    var progress: CGFloat { CGFloat(step + 1) / CGFloat(total) }
 
     var body: some View {
-        HStack(spacing: 6) {
-            ForEach(0..<count, id: \.self) { i in
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(i == active ? Color.white : Color.white.opacity(0.30))
-                    .frame(width: i == active ? 20 : 6, height: 6)
-                    .animation(.spring(response: 0.4, dampingFraction: 0.75), value: active)
+                    .fill(Color.white.opacity(0.15))
+                    .frame(height: 4)
+
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(hex: 0xc084fc), Color(hex: 0xf9a8d4)],
+                            startPoint: .leading, endPoint: .trailing
+                        )
+                    )
+                    .frame(width: geo.size.width * progress, height: 4)
+                    .animation(.spring(response: 0.5, dampingFraction: 0.75), value: step)
             }
         }
+        .frame(height: 4)
+    }
+}
+
+// MARK: - Logo view
+
+private struct OnboardingLogo: View {
+    var namespace: Namespace.ID
+    @State private var ringProgress: CGFloat = 0
+    @State private var haloAngle: Double = 0
+    @State private var pulsing = false
+    @State private var burst = false
+
+    var body: some View {
+        ZStack {
+            // Rotating halo
+            Circle()
+                .stroke(
+                    AngularGradient(
+                        colors: [
+                            Color(hex: 0xc084fc).opacity(0.6),
+                            Color(hex: 0xf9a8d4).opacity(0.3),
+                            Color(hex: 0xc084fc).opacity(0.0),
+                            Color(hex: 0xc084fc).opacity(0.6),
+                        ],
+                        center: .center,
+                        angle: .degrees(haloAngle)
+                    ),
+                    lineWidth: 2
+                )
+                .frame(width: 114, height: 114)
+
+            // Trim-path ring (entrance animation)
+            Circle()
+                .trim(from: 0, to: ringProgress)
+                .stroke(Color(hex: 0xc084fc).opacity(0.5), lineWidth: 2)
+                .frame(width: 104, height: 104)
+                .rotationEffect(.degrees(-90))
+
+            // Glass background
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .frame(width: 96, height: 96)
+                .matchedGeometryEffect(id: "logoBackground", in: namespace)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                )
+
+            // Gift icon
+            Image(systemName: "gift.fill")
+                .font(.system(size: 44, weight: .semibold))
+                .foregroundStyle(.white)
+                .matchedGeometryEffect(id: "logoIcon", in: namespace)
+                .scaleEffect(pulsing ? 1.05 : 1.0)
+        }
+        .onAppear {
+            // Trim ring entrance
+            withAnimation(.easeOut(duration: 0.8).delay(0.1)) {
+                ringProgress = 1
+            }
+            // Rotating halo
+            withAnimation(.linear(duration: 4).repeatForever(autoreverses: false)) {
+                haloAngle = 360
+            }
+            // Breathing pulse
+            withAnimation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true).delay(0.4)) {
+                pulsing = true
+            }
+        }
+        .onTapGesture {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.4)) {
+                burst = true
+            }
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7).delay(0.25)) {
+                burst = false
+            }
+        }
+    }
+}
+
+// MARK: - Ghost preview
+
+private struct GhostPreview: View {
+    var body: some View {
+        VStack(spacing: 12) {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.white.opacity(0.06))
+                .frame(height: 44)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.white.opacity(0.04))
+                .frame(height: 44)
+        }
+        .padding(.horizontal, 32)
+        .blur(radius: 6)
+        .opacity(0.5)
+        .allowsHitTesting(false)
     }
 }
 
 // MARK: - Main view
+
 struct OnboardingView: View {
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
     @AppStorage("wishbox.isDark") private var isDark: Bool = true
+    @StateObject private var motion = MotionManager()
+
+    var namespace: Namespace.ID
+
     @State private var currentStep = 0
+    @State private var seenSteps: Set<Int> = [0]
+    @State private var dragOffset: CGFloat = 0
+    @State private var cardVisible = true
+
+    // Staggered entrance
+    @State private var logoVisible    = false
+    @State private var titleVisible   = false
+    @State private var subtitleVisible = false
+    @State private var cardEntrance   = false
+    @State private var progressVisible = false
+    @State private var buttonVisible  = false
+
+    private let timer = Timer.publish(every: 2.8, on: .main, in: .common).autoconnect()
+    private var allStepsSeen: Bool { seenSteps.count == onboardingSteps.count }
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            NeuralBackground()
+            background
 
             VStack(spacing: 0) {
                 Spacer()
-
-                // ── Logo ──────────────────────────────────────────────────
-                ZStack {
-                    RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                        .frame(width: 96, height: 96)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
-                        )
-                    Image(systemName: "gift.fill")
-                        .font(.system(size: 44, weight: .semibold))
-                        .foregroundStyle(.white)
+                logo
+                Spacer().frame(height: 20)
+                titleArea
+                Spacer().frame(height: 32)
+                cardArea
+                Spacer().frame(height: 20)
+                progressSection
+                if !allStepsSeen {
+                    Spacer().frame(height: 16)
+                    GhostPreview()
                 }
-
-                Spacer().frame(height: 24)
-
-                // ── Title ─────────────────────────────────────────────────
-                Text("WishBox")
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-
-                Spacer().frame(height: 36)
-
-                // ── Headline carousel ─────────────────────────────────────
-                ZStack {
-                    ForEach(steps) { step in
-                        if step.id == currentStep {
-                            HeadlineCard(step: step)
-                                .transition(.asymmetric(
-                                    insertion: .move(edge: .trailing).combined(with: .opacity),
-                                    removal:   .move(edge: .leading).combined(with: .opacity)
-                                ))
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity, minHeight: 100, alignment: .center)
-                .clipped()
-                .animation(.spring(response: 0.5, dampingFraction: 0.8), value: currentStep)
-                .padding(.horizontal, 32)
-
-                Spacer().frame(height: 24)
-
-                // ── Dots ──────────────────────────────────────────────────
-                DotIndicators(count: steps.count, active: currentStep)
-
                 Spacer()
+                ctaButton
+            }
 
-                // ── CTA ───────────────────────────────────────────────────
+            ThemeToggleButton(isDark: $isDark)
+                .padding(.top, 12)
+                .padding(.trailing, 20)
+        }
+        .ignoresSafeArea()
+        .preferredColorScheme(isDark ? .dark : .light)
+        .onAppear { runEntrance() }
+        .onReceive(timer) { _ in advanceStep() }
+    }
+
+    // MARK: Sub-views
+
+    private var background: some View {
+        ZStack {
+            Color(hex: 0x05030f).ignoresSafeArea()
+            AmbientBlobView(motion: motion)
+            ParticleSystemView()
+        }
+    }
+
+    private var logo: some View {
+        OnboardingLogo(namespace: namespace)
+            .opacity(logoVisible ? 1 : 0)
+            .scaleEffect(logoVisible ? 1 : 0.7)
+    }
+
+    private var titleArea: some View {
+        VStack(spacing: 4) {
+            ShimmerText(text: "WishBox")
+                .opacity(titleVisible ? 1 : 0)
+                .offset(y: titleVisible ? 0 : 12)
+
+            Text("Your AI wish generator")
+                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .foregroundStyle(Color(hex: 0xc084fc).opacity(0.75))
+                .opacity(subtitleVisible ? 1 : 0)
+                .offset(y: subtitleVisible ? 0 : 8)
+        }
+    }
+
+    private var cardArea: some View {
+        ZStack {
+            ForEach(onboardingSteps) { step in
+                if step.id == currentStep {
+                    OnboardingHeadlineCard(
+                        step: step,
+                        dragOffset: $dragOffset,
+                        onSwipeLeft: { advance(by: 1) },
+                        onSwipeRight: { advance(by: -1) }
+                    )
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal:   .move(edge: .leading).combined(with: .opacity)
+                    ))
+                    .id(step.id)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 100)
+        .clipped()
+        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: currentStep)
+        .padding(.horizontal, 32)
+        .opacity(cardEntrance ? 1 : 0)
+        .offset(y: cardEntrance ? 0 : 20)
+    }
+
+    private var progressSection: some View {
+        OnboardingProgressBar(step: currentStep, total: onboardingSteps.count)
+            .padding(.horizontal, 48)
+            .opacity(progressVisible ? 1 : 0)
+    }
+
+    private var ctaButton: some View {
+        Group {
+            if allStepsSeen {
                 Button {
                     UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                    withAnimation(.spring(response: 0.45, dampingFraction: 0.72)) {
+                    withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
                         hasSeenOnboarding = true
                     }
                 } label: {
@@ -151,40 +305,46 @@ struct OnboardingView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
-                    .background(.ultraThinMaterial)
+                    .background(
+                        LinearGradient(
+                            colors: [Color(hex: 0x7c3aed), Color(hex: 0xbe185d)],
+                            startPoint: .leading, endPoint: .trailing
+                        )
+                    )
                     .clipShape(Capsule())
                     .overlay(Capsule().stroke(Color.white.opacity(0.15), lineWidth: 1))
+                    .shadow(color: Color(hex: 0x7c3aed).opacity(0.45), radius: 16, y: 6)
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal, 32)
                 .padding(.bottom, 48)
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
+        }
+        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: allStepsSeen)
+    }
 
-            // Floating theme toggle — top-right, mirrors ContentView
-            ThemeToggleButton(isDark: $isDark)
-                .padding(.top, 12)
-                .padding(.trailing, 20)
-        }
-        .ignoresSafeArea()
-        .preferredColorScheme(isDark ? .dark : .light)
-        // ── Auto-advance timer ─────────────────────────────────────────────
-        .onReceive(
-            Timer.publish(every: 2.5, on: .main, in: .common).autoconnect()
-        ) { _ in
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                currentStep = (currentStep + 1) % steps.count
-            }
-        }
-        // ── Pause in background ────────────────────────────────────────────
-        .onReceive(
-            NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)
-        ) { _ in
-            // Timer auto-cancels when view disappears; this guard handles partial background
-            currentStep = currentStep // no-op to satisfy compiler; timer won't tick in background
+    // MARK: Helpers
+
+    private func runEntrance() {
+        let spring = Animation.spring(response: 0.6, dampingFraction: 0.75)
+        withAnimation(spring.delay(0.0))   { logoVisible     = true }
+        withAnimation(spring.delay(0.25))  { titleVisible    = true }
+        withAnimation(spring.delay(0.45))  { subtitleVisible = true }
+        withAnimation(spring.delay(0.65))  { cardEntrance    = true }
+        withAnimation(spring.delay(0.85))  { progressVisible = true }
+        withAnimation(spring.delay(1.10))  { buttonVisible   = true }
+    }
+
+    private func advance(by delta: Int) {
+        let next = (currentStep + delta + onboardingSteps.count) % onboardingSteps.count
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+            currentStep = next
+            seenSteps.insert(next)
         }
     }
-}
 
-#Preview {
-    OnboardingView()
+    private func advanceStep() {
+        advance(by: 1)
+    }
 }
