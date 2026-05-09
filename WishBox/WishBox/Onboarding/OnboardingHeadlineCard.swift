@@ -29,7 +29,7 @@ let onboardingSteps: [OnboardingStep] = [
     OnboardingStep(
         id: 2,
         icon: "sparkles",
-        headline: "Let WishBox do the rest",
+        headline: "WishBox do the rest",
         subtitle: nil,
         tint: Color(hex: 0x4a044e)
     ),
@@ -125,7 +125,7 @@ struct OnboardingHeadlineCard: View {
                     RevealText(
                         text: step.headline,
                         font: .system(size: 22, weight: .bold, design: .rounded),
-                        color: .white
+                        color: .primary
                     )
                     .fixedSize(horizontal: false, vertical: true)
 

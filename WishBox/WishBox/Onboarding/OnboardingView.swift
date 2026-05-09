@@ -11,12 +11,12 @@ private struct ShimmerText: View {
     var body: some View {
         Text(text)
             .font(.system(size: 34, weight: .bold, design: .rounded))
-            .foregroundStyle(.white)
+            .foregroundStyle(.primary)
             .overlay(
                 LinearGradient(
                     stops: [
                         .init(color: .clear,                          location: shimmerPhase - 0.18),
-                        .init(color: .white.opacity(0.70),            location: shimmerPhase),
+                        .init(color: Color(hex: 0xc084fc).opacity(0.60), location: shimmerPhase),
                         .init(color: .clear,                          location: shimmerPhase + 0.18),
                     ],
                     startPoint: .leading,
@@ -120,7 +120,7 @@ private struct OnboardingLogo: View {
             // Gift icon
             Image(systemName: "gift.fill")
                 .font(.system(size: 44, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
                 .matchedGeometryEffect(id: "logoIcon", in: namespace)
                 .scaleEffect(pulsing ? 1.05 : 1.0)
         }
@@ -229,7 +229,7 @@ struct OnboardingView: View {
 
     private var background: some View {
         ZStack {
-            Color(hex: 0x05030f).ignoresSafeArea()
+            NeuralBackground()
             AmbientBlobView(motion: motion)
             ParticleSystemView()
         }
@@ -249,7 +249,7 @@ struct OnboardingView: View {
 
             Text("Your AI wish generator")
                 .font(.system(size: 13, weight: .medium, design: .rounded))
-                .foregroundStyle(Color(hex: 0xc084fc).opacity(0.75))
+                .foregroundStyle(Color(hex: 0xc084fc))
                 .opacity(subtitleVisible ? 1 : 0)
                 .offset(y: subtitleVisible ? 0 : 8)
         }
