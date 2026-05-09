@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct WishBoxApp: App {
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
+    @Namespace private var logoNamespace
 
     var body: some Scene {
         WindowGroup {
@@ -10,7 +11,7 @@ struct WishBoxApp: App {
                 ContentView()
 
                 if !hasSeenOnboarding {
-                    OnboardingView()
+                    OnboardingView(namespace: logoNamespace)
                         .transition(
                             .opacity.combined(with: .scale(scale: 1.04))
                         )
