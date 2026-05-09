@@ -185,6 +185,7 @@ private struct AIHeader: View {
 struct ContentView: View {
     @StateObject private var viewModel = WishGeneratorViewModel()
     @AppStorage("wishbox.isDark") private var isDark: Bool = true
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
@@ -246,6 +247,31 @@ struct ContentView: View {
             ThemeToggleButton(isDark: $isDark)
                 .padding(.top, 12)
                 .padding(.trailing, 20)
+
+            // Back to onboarding — top-left
+            Button {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+                    hasSeenOnboarding = false
+                }
+            } label: {
+                Image(systemName: "arrow.left")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color.neonCyan)
+                    .frame(width: 38, height: 38)
+                    .background(
+                        isDark
+                            ? Color.surface.opacity(0.9)
+                            : Color(UIColor.systemBackground).opacity(0.9)
+                    )
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.neonCyan.opacity(0.30), lineWidth: 1))
+                    .shadow(color: Color.neonCyan.opacity(0.12), radius: 8)
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 12)
+            .padding(.leading, 20)
         }
         .ignoresSafeArea(.keyboard)
         .preferredColorScheme(isDark ? .dark : .light)
