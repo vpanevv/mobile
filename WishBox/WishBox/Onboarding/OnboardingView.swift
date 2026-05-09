@@ -201,26 +201,26 @@ struct OnboardingView: View {
             VStack(spacing: 0) {
                 Spacer()
                 logo
-                Spacer().frame(height: 20)
+                Spacer().frame(height: 24)
                 titleArea
-                Spacer().frame(height: 32)
+                Spacer().frame(height: 40)
                 cardArea
                 Spacer().frame(height: 20)
                 progressSection
-                if !allStepsSeen {
-                    Spacer().frame(height: 16)
-                    GhostPreview()
-                }
                 Spacer()
-                ctaButton
             }
 
+            // Theme toggle — respects safe area naturally now
             ThemeToggleButton(isDark: $isDark)
                 .padding(.top, 12)
                 .padding(.trailing, 20)
         }
-        .ignoresSafeArea()
+        // Background views carry their own .ignoresSafeArea(); the ZStack
+        // intentionally respects the safe area so the toggle sits below the notch.
         .preferredColorScheme(isDark ? .dark : .light)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            ctaButton
+        }
         .onAppear { runEntrance() }
         .onReceive(timer) { _ in advanceStep() }
     }
@@ -288,40 +288,39 @@ struct OnboardingView: View {
     }
 
     private var ctaButton: some View {
-        Group {
-            if allStepsSeen {
-                Button {
-                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                    withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
-                        hasSeenOnboarding = true
-                    }
-                } label: {
-                    HStack(spacing: 10) {
-                        Text("Get Started")
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
-                        Image(systemName: "arrow.right")
-                            .font(.system(size: 15, weight: .semibold))
-                    }
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .background(
-                        LinearGradient(
-                            colors: [Color(hex: 0x7c3aed), Color(hex: 0xbe185d)],
-                            startPoint: .leading, endPoint: .trailing
-                        )
-                    )
-                    .clipShape(Capsule())
-                    .overlay(Capsule().stroke(Color.white.opacity(0.15), lineWidth: 1))
-                    .shadow(color: Color(hex: 0x7c3aed).opacity(0.45), radius: 16, y: 6)
-                }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 32)
-                .padding(.bottom, 48)
-                .transition(.opacity.combined(with: .move(edge: .bottom)))
+        Button {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+                hasSeenOnboarding = true
             }
+        } label: {
+            HStack(spacing: 10) {
+                Text("Get Started")
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 15, weight: .semibold))
+            }
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 56)
+            .background(
+                LinearGradient(
+                    colors: [Color(hex: 0x7c3aed), Color(hex: 0xbe185d)],
+                    startPoint: .leading, endPoint: .trailing
+                )
+                .opacity(allStepsSeen ? 1 : 0.35)
+            )
+            .clipShape(Capsule())
+            .overlay(Capsule().stroke(Color.white.opacity(0.15), lineWidth: 1))
+            .shadow(color: Color(hex: 0x7c3aed).opacity(allStepsSeen ? 0.45 : 0), radius: 16, y: 6)
         }
-        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: allStepsSeen)
+        .buttonStyle(.plain)
+        .disabled(!allStepsSeen)
+        .padding(.horizontal, 32)
+        .padding(.bottom, 16)
+        .scaleEffect(allStepsSeen ? 1 : 0.94)
+        .opacity(allStepsSeen ? 1 : 0.4)
+        .animation(.spring(response: 0.5, dampingFraction: 0.75), value: allStepsSeen)
     }
 
     // MARK: Helpers
