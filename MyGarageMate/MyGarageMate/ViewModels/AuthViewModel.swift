@@ -20,7 +20,7 @@ final class AuthViewModel: ObservableObject {
 
             createOrUpdateProfile(
                 appleUserID: credential.user,
-                name: providedName ?? "GarageMate Driver",
+                name: providedName ?? "MyGarageMate Driver",
                 email: credential.email,
                 modelContext: modelContext
             )
@@ -31,8 +31,8 @@ final class AuthViewModel: ObservableObject {
 
     func continueWithoutApple(modelContext: ModelContext) {
         createOrUpdateProfile(
-            appleUserID: "demo.garagemate.local",
-            name: "GarageMate Driver",
+            appleUserID: "demo.mygaragemate.local",
+            name: "MyGarageMate Driver",
             email: nil,
             modelContext: modelContext
         )
@@ -65,8 +65,8 @@ final class AuthViewModel: ObservableObject {
             }
 
             try modelContext.save()
-            UserDefaults.standard.set(true, forKey: "GarageMate.isSignedIn")
-            UserDefaults.standard.set(profile.id.uuidString, forKey: "GarageMate.activeProfileID")
+            UserDefaults.standard.set(true, forKey: "MyGarageMate.isSignedIn")
+            UserDefaults.standard.set(profile.id.uuidString, forKey: "MyGarageMate.activeProfileID")
             HapticsManager.success()
         } catch {
             errorMessage = "Could not save your profile. \(error.localizedDescription)"

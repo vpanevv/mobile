@@ -28,7 +28,7 @@ struct SignInView: View {
                             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 34, style: .continuous))
 
                         VStack(spacing: 10) {
-                            Text("GarageMate")
+                            Text("MyGarageMate")
                                 .font(.largeTitle.bold())
                             Text("A polished local-first garage for your cars, services, reminders, and notes.")
                                 .font(.body)

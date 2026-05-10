@@ -20,7 +20,7 @@ struct GarageView: View {
                     EmptyStateView(
                         symbolName: "car.badge.plus",
                         title: "Your garage is ready",
-                        message: "Add your first car and GarageMate will keep service costs, reminders, and mechanic notes close at hand.",
+                        message: "Add your first car and MyGarageMate will keep service costs, reminders, and mechanic notes close at hand.",
                         buttonTitle: "Add Car"
                     ) {
                         isAddingCar = true

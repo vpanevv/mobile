@@ -19,7 +19,7 @@ enum SampleCarData {
 
     static func demoProfile() -> UserProfile {
         let profile = UserProfile(
-            appleUserID: "demo.garagemate.local",
+            appleUserID: "demo.mygaragemate.local",
             name: "Alex Driver",
             email: "alex@example.com",
             preferredCurrencyCode: "EUR",
@@ -63,7 +63,7 @@ enum SampleCarData {
         do {
             container = try ModelContainer(for: schema, configurations: [configuration])
         } catch {
-            preconditionFailure("Could not create GarageMate preview container: \(error)")
+            preconditionFailure("Could not create MyGarageMate preview container: \(error)")
         }
         container.mainContext.insert(demoProfile())
         return container
