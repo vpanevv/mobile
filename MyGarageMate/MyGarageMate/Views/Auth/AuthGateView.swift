@@ -2,8 +2,8 @@ import SwiftData
 import SwiftUI
 
 struct AuthGateView: View {
-    @AppStorage("GarageMate.isSignedIn") private var isSignedIn = false
-    @AppStorage("GarageMate.activeProfileID") private var activeProfileID = ""
+    @AppStorage("MyGarageMate.isSignedIn") private var isSignedIn = false
+    @AppStorage("MyGarageMate.activeProfileID") private var activeProfileID = ""
     @Query(sort: \UserProfile.createdAt, order: .forward) private var profiles: [UserProfile]
 
     var body: some View {

@@ -2,7 +2,7 @@ import SwiftData
 import SwiftUI
 
 @main
-struct GarageMateApp: App {
+struct MyGarageMateApp: App {
     private let modelContainer = Self.makeModelContainer()
 
     private static func makeModelContainer() -> ModelContainer {
@@ -22,14 +22,14 @@ struct GarageMateApp: App {
             do {
                 return try ModelContainer(for: schema, configurations: [fallbackConfiguration])
             } catch {
-                preconditionFailure("Could not create GarageMate SwiftData container: \(error)")
+                preconditionFailure("Could not create MyGarageMate SwiftData container: \(error)")
             }
         }
     }
 
     var body: some Scene {
         WindowGroup {
-            AuthGateView()
+            AppLaunchView()
         }
         .modelContainer(modelContainer)
     }

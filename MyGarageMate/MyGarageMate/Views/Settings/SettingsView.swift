@@ -3,8 +3,8 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
-    @AppStorage("GarageMate.isSignedIn") private var isSignedIn = true
-    @AppStorage("GarageMate.activeProfileID") private var activeProfileID = ""
+    @AppStorage("MyGarageMate.isSignedIn") private var isSignedIn = true
+    @AppStorage("MyGarageMate.activeProfileID") private var activeProfileID = ""
     @Bindable var profile: UserProfile
 
     @State private var destructiveAction: DestructiveAction?
@@ -168,7 +168,7 @@ private enum DestructiveAction: Identifiable {
         switch self {
         #if DEBUG
         case .resetDemoData:
-            "This replaces current local GarageMate data with the sample garage."
+            "This replaces current local MyGarageMate data with the sample garage."
         case .deleteAllData:
             "This permanently removes the local profile, cars, service history, reminders, and notes."
         #endif

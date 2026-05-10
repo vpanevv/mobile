@@ -1,13 +1,13 @@
 # TestFlight Beta Notes
 
 ## App name
-GarageMate
+MyGarageMate
 
 ## Version
 1.0 beta
 
 ## Short beta description
-GarageMate is a simple and beautiful car maintenance companion for tracking service history, oil changes, insurance, inspections, reminders, mechanic notes, and repair costs.
+MyGarageMate is a simple and beautiful car maintenance companion for tracking service history, oil changes, insurance, inspections, reminders, mechanic notes, and repair costs.
 
 ## What to test
 - Sign in with Apple
@@ -45,4 +45,4 @@ GarageMate is a simple and beautiful car maintenance companion for tracking serv
 - Receipt scanning/OCR is not included in version 1.
 
 ## Privacy summary
-GarageMate stores car maintenance data locally on the device using SwiftData. Version 1 does not use a backend server. Sign in with Apple is used for account identity. Car photos and receipt images are stored locally.
+MyGarageMate stores car maintenance data locally on the device using SwiftData. Version 1 does not use a backend server. Sign in with Apple is used for account identity. Car photos and receipt images are stored locally.
