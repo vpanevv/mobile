@@ -59,7 +59,12 @@ enum SampleCarData {
     static var previewContainer: ModelContainer {
         let schema = Schema([UserProfile.self, Car.self, ServiceRecord.self, CarReminder.self, MechanicNote.self])
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-        let container = try! ModelContainer(for: schema, configurations: [configuration])
+        let container: ModelContainer
+        do {
+            container = try ModelContainer(for: schema, configurations: [configuration])
+        } catch {
+            preconditionFailure("Could not create GarageMate preview container: \(error)")
+        }
         container.mainContext.insert(demoProfile())
         return container
     }

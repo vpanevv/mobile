@@ -4,6 +4,7 @@ import SwiftUI
 struct UpcomingView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Car.createdAt, order: .forward) private var cars: [Car]
+    @State private var reminderPendingDeletion: CarReminder?
 
     private var reminders: [(reminder: CarReminder, car: Car)] {
         cars.flatMap { car in
@@ -35,15 +36,19 @@ struct UpcomingView: View {
                                     Button {
                                         item.reminder.isCompleted = true
                                         NotificationManager.cancel(reminder: item.reminder)
-                                        HapticsManager.success()
+                                        do {
+                                            try modelContext.save()
+                                            HapticsManager.success()
+                                        } catch {
+                                            assertionFailure("Failed to complete reminder: \(error)")
+                                        }
                                     } label: {
                                         Label("Complete", systemImage: "checkmark")
                                     }
                                     .tint(.green)
 
                                     Button(role: .destructive) {
-                                        NotificationManager.cancel(reminder: item.reminder)
-                                        modelContext.delete(item.reminder)
+                                        reminderPendingDeletion = item.reminder
                                     } label: {
                                         Label("Delete", systemImage: "trash")
                                     }
@@ -55,6 +60,36 @@ struct UpcomingView: View {
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Upcoming")
+            .confirmationDialog(
+                "Delete reminder?",
+                isPresented: Binding(
+                    get: { reminderPendingDeletion != nil },
+                    set: { if !$0 { reminderPendingDeletion = nil } }
+                ),
+                titleVisibility: .visible
+            ) {
+                Button("Delete Reminder", role: .destructive) {
+                    deletePendingReminder()
+                }
+                Button("Cancel", role: .cancel) {
+                    reminderPendingDeletion = nil
+                }
+            } message: {
+                Text("This removes the selected reminder and cancels its pending notification.")
+            }
         }
+    }
+
+    private func deletePendingReminder() {
+        guard let reminder = reminderPendingDeletion else { return }
+        NotificationManager.cancel(reminder: reminder)
+        modelContext.delete(reminder)
+        do {
+            try modelContext.save()
+            HapticsManager.warning()
+        } catch {
+            assertionFailure("Failed to delete reminder: \(error)")
+        }
+        reminderPendingDeletion = nil
     }
 }

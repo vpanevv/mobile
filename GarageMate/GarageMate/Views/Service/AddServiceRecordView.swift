@@ -25,24 +25,29 @@ struct AddServiceRecordView: View {
             Form {
                 Section("Service") {
                     TextField("Title", text: $title)
+                        .accessibilityLabel("Service title")
                     Picker("Category", selection: $category) {
                         ForEach(ServiceCategory.allCases) { category in
                             Label(category.title, systemImage: category.symbolName).tag(category)
                         }
                     }
+                    .accessibilityLabel("Service category")
                     DatePicker("Date", selection: $date, displayedComponents: .date)
                     TextField("Mileage", value: $mileage, format: .number)
                         .keyboardType(.decimalPad)
+                        .accessibilityLabel("Service mileage")
                 }
 
                 Section("Cost") {
                     TextField("Amount", text: $amountText)
                         .keyboardType(.decimalPad)
+                        .accessibilityLabel("Service cost amount")
                     Picker("Currency", selection: $currencyCode) {
                         Text("EUR").tag("EUR")
                         Text("USD").tag("USD")
                     }
                     .pickerStyle(.segmented)
+                    .accessibilityLabel("Service currency")
                 }
 
                 DisclosureGroup("Optional details") {
@@ -67,6 +72,15 @@ struct AddServiceRecordView: View {
                         }
                     }
                 }
+
+                if let validationMessage {
+                    Section {
+                        Text(validationMessage)
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                            .accessibilityLabel(validationMessage)
+                    }
+                }
             }
             .navigationTitle("Add Service")
             .navigationBarTitleDisplayMode(.inline)
@@ -76,7 +90,8 @@ struct AddServiceRecordView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save", action: save)
-                        .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .disabled(!canSave)
+                        .accessibilityLabel("Save service record")
                 }
             }
             .onAppear {
@@ -109,7 +124,25 @@ struct AddServiceRecordView: View {
         }
     }
 
+    private var canSave: Bool {
+        validationMessage == nil
+    }
+
+    private var validationMessage: String? {
+        if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return "Add a service title before saving."
+        }
+        if mileage < 0 {
+            return "Mileage cannot be negative."
+        }
+        if createFollowUpReminder, category == .oil, reminderMileage < 0 {
+            return "Reminder mileage cannot be negative."
+        }
+        return nil
+    }
+
     private func save() {
+        guard canSave else { return }
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         let record = ServiceRecord(
             title: trimmedTitle,

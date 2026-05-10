@@ -4,29 +4,60 @@ import SwiftUI
 struct MechanicNotesView: View {
     @Environment(\.modelContext) private var modelContext
     @Bindable var car: Car
+    @State private var notePendingDeletion: MechanicNote?
 
     var body: some View {
-        if car.notesNewestFirst.isEmpty {
-            EmptyStateView(
-                symbolName: "note.text",
-                title: "No mechanic notes",
-                message: "Keep quick observations here so small symptoms are not forgotten."
-            )
-        } else {
-            VStack(alignment: .leading, spacing: 12) {
-                ForEach(car.notesNewestFirst) { note in
-                    noteRow(note)
-                        .swipeActions {
-                            Button(role: .destructive) {
-                                modelContext.delete(note)
-                                HapticsManager.warning()
-                            } label: {
-                                Label("Delete", systemImage: "trash")
+        Group {
+            if car.notesNewestFirst.isEmpty {
+                EmptyStateView(
+                    symbolName: "note.text",
+                    title: "No mechanic notes",
+                    message: "Keep quick observations here so small symptoms are not forgotten."
+                )
+            } else {
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(car.notesNewestFirst) { note in
+                        noteRow(note)
+                            .swipeActions {
+                                Button(role: .destructive) {
+                                    notePendingDeletion = note
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
                             }
-                        }
+                    }
                 }
             }
         }
+        .confirmationDialog(
+            "Delete mechanic note?",
+            isPresented: Binding(
+                get: { notePendingDeletion != nil },
+                set: { if !$0 { notePendingDeletion = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Delete Note", role: .destructive) {
+                deletePendingNote()
+            }
+            Button("Cancel", role: .cancel) {
+                notePendingDeletion = nil
+            }
+        } message: {
+            Text("This removes the selected mechanic note from this device.")
+        }
+    }
+
+    private func deletePendingNote() {
+        guard let note = notePendingDeletion else { return }
+        modelContext.delete(note)
+        do {
+            try modelContext.save()
+            HapticsManager.warning()
+        } catch {
+            assertionFailure("Failed to delete mechanic note: \(error)")
+        }
+        notePendingDeletion = nil
     }
 
     private func noteRow(_ note: MechanicNote) -> some View {

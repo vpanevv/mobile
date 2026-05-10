@@ -20,11 +20,13 @@ struct AddReminderView: View {
             Form {
                 Section("Reminder") {
                     TextField("Title", text: $title)
+                        .accessibilityLabel("Reminder title")
                     Picker("Type", selection: $type) {
                         ForEach(ReminderType.allCases) { type in
                             Label(type.title, systemImage: type.symbolName).tag(type)
                         }
                     }
+                    .accessibilityLabel("Reminder type")
                 }
 
                 Section("Due") {
@@ -37,6 +39,7 @@ struct AddReminderView: View {
                     if hasDueMileage {
                         TextField("Mileage", value: $dueMileage, format: .number)
                             .keyboardType(.decimalPad)
+                            .accessibilityLabel("Due mileage")
                     }
                 }
 
@@ -44,6 +47,15 @@ struct AddReminderView: View {
                     Toggle("Remind me", isOn: $hasReminderDate)
                     if hasReminderDate {
                         DatePicker("Reminder date", selection: $reminderDate, displayedComponents: [.date, .hourAndMinute])
+                    }
+                }
+
+                if let validationMessage {
+                    Section {
+                        Text(validationMessage)
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                            .accessibilityLabel(validationMessage)
                     }
                 }
             }
@@ -55,13 +67,32 @@ struct AddReminderView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save", action: save)
-                        .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .disabled(!canSave)
+                        .accessibilityLabel("Save reminder")
                 }
             }
         }
     }
 
+    private var canSave: Bool {
+        validationMessage == nil
+    }
+
+    private var validationMessage: String? {
+        if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return "Add a reminder title before saving."
+        }
+        if !hasDueDate && !hasDueMileage {
+            return "Add a due date or due mileage."
+        }
+        if hasDueMileage && dueMileage < 0 {
+            return "Due mileage cannot be negative."
+        }
+        return nil
+    }
+
     private func save() {
+        guard canSave else { return }
         let reminder = CarReminder(
             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
             reminderType: type,

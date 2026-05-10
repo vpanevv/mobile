@@ -194,34 +194,44 @@ struct AddCarView: View {
     }
 
     private var footer: some View {
-        HStack(spacing: 12) {
-            if step > 0 {
-                Button {
-                    step -= 1
-                    HapticsManager.lightTap()
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .frame(width: 42, height: 42)
-                }
-                .buttonStyle(.bordered)
-                .clipShape(Circle())
-                .accessibilityLabel("Previous step")
+        VStack(alignment: .leading, spacing: 10) {
+            if let validationMessage {
+                Text(validationMessage)
+                    .font(.footnote)
+                    .foregroundStyle(.red)
+                    .accessibilityLabel(validationMessage)
             }
 
-            Button {
-                if step == steps.count - 1 {
-                    saveCar()
-                } else {
-                    step += 1
-                    HapticsManager.lightTap()
+            HStack(spacing: 12) {
+                if step > 0 {
+                    Button {
+                        step -= 1
+                        HapticsManager.lightTap()
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .frame(width: 42, height: 42)
+                    }
+                    .buttonStyle(.bordered)
+                    .clipShape(Circle())
+                    .accessibilityLabel("Previous step")
                 }
-            } label: {
-                Label(step == steps.count - 1 ? "Save Car" : "Continue", systemImage: step == steps.count - 1 ? "checkmark" : "chevron.right")
-                    .frame(maxWidth: .infinity)
+
+                Button {
+                    if step == steps.count - 1 {
+                        saveCar()
+                    } else {
+                        step += 1
+                        HapticsManager.lightTap()
+                    }
+                } label: {
+                    Label(step == steps.count - 1 ? "Save Car" : "Continue", systemImage: step == steps.count - 1 ? "checkmark" : "chevron.right")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .disabled(!canContinue)
+                .accessibilityLabel(step == steps.count - 1 ? "Save car" : "Continue")
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .disabled(!canContinue)
         }
     }
 
@@ -242,8 +252,23 @@ struct AddCarView: View {
             selectedMake != nil
         case 1:
             !selectedModel.isEmpty
+        case 3:
+            currentMileage >= 0
         default:
             true
+        }
+    }
+
+    private var validationMessage: String? {
+        switch step {
+        case 0 where selectedMake == nil:
+            "Choose a make to continue."
+        case 1 where selectedModel.isEmpty:
+            "Choose a model to continue."
+        case 3 where currentMileage < 0:
+            "Mileage cannot be negative."
+        default:
+            nil
         }
     }
 

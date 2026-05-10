@@ -17,18 +17,30 @@ struct AddMechanicNoteView: View {
                 Section("Note") {
                     TextField("What should your mechanic know?", text: $text, axis: .vertical)
                         .lineLimit(4...8)
+                        .accessibilityLabel("Mechanic note text")
                     Picker("Priority", selection: $priority) {
                         ForEach(NotePriority.allCases) { priority in
                             Label(priority.title, systemImage: priority.symbolName).tag(priority)
                         }
                     }
                     .pickerStyle(.segmented)
+                    .accessibilityLabel("Note priority")
                 }
 
                 Section("Context") {
                     DatePicker("Date", selection: $date, displayedComponents: .date)
                     TextField("Mileage", value: $mileage, format: .number)
                         .keyboardType(.decimalPad)
+                        .accessibilityLabel("Note mileage")
+                }
+
+                if let validationMessage {
+                    Section {
+                        Text(validationMessage)
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                            .accessibilityLabel(validationMessage)
+                    }
                 }
             }
             .navigationTitle("Add Note")
@@ -39,7 +51,8 @@ struct AddMechanicNoteView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save", action: save)
-                        .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .disabled(!canSave)
+                        .accessibilityLabel("Save mechanic note")
                 }
             }
             .onAppear {
@@ -48,7 +61,22 @@ struct AddMechanicNoteView: View {
         }
     }
 
+    private var canSave: Bool {
+        validationMessage == nil
+    }
+
+    private var validationMessage: String? {
+        if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return "Add a note before saving."
+        }
+        if mileage < 0 {
+            return "Mileage cannot be negative."
+        }
+        return nil
+    }
+
     private func save() {
+        guard canSave else { return }
         let note = MechanicNote(
             text: text.trimmingCharacters(in: .whitespacesAndNewlines),
             date: date,
