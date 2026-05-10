@@ -1,0 +1,29 @@
+import SwiftData
+import SwiftUI
+
+@main
+struct GarageMateApp: App {
+    private let modelContainer: ModelContainer = {
+        let schema = Schema([
+            UserProfile.self,
+            Car.self,
+            ServiceRecord.self,
+            CarReminder.self,
+            MechanicNote.self
+        ])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+
+        do {
+            return try ModelContainer(for: schema, configurations: [configuration])
+        } catch {
+            fatalError("Could not create GarageMate SwiftData container: \(error)")
+        }
+    }()
+
+    var body: some Scene {
+        WindowGroup {
+            AuthGateView()
+        }
+        .modelContainer(modelContainer)
+    }
+}
