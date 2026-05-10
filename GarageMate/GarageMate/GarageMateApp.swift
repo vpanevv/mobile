@@ -3,7 +3,9 @@ import SwiftUI
 
 @main
 struct GarageMateApp: App {
-    private let modelContainer: ModelContainer = {
+    private let modelContainer = Self.makeModelContainer()
+
+    private static func makeModelContainer() -> ModelContainer {
         let schema = Schema([
             UserProfile.self,
             Car.self,
@@ -16,9 +18,14 @@ struct GarageMateApp: App {
         do {
             return try ModelContainer(for: schema, configurations: [configuration])
         } catch {
-            fatalError("Could not create GarageMate SwiftData container: \(error)")
+            let fallbackConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            do {
+                return try ModelContainer(for: schema, configurations: [fallbackConfiguration])
+            } catch {
+                preconditionFailure("Could not create GarageMate SwiftData container: \(error)")
+            }
         }
-    }()
+    }
 
     var body: some Scene {
         WindowGroup {

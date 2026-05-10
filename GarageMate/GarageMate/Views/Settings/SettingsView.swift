@@ -41,12 +41,15 @@ struct SettingsView: View {
                         Text("EUR").tag("EUR")
                         Text("USD").tag("USD")
                     }
+                    .accessibilityLabel("Preferred currency")
                     Picker("Mileage Unit", selection: $profile.mileageUnit) {
                         Text("km").tag("km")
                         Text("mi").tag("mi")
                     }
+                    .accessibilityLabel("Mileage unit")
                 }
 
+                #if DEBUG
                 Section("Development") {
                     Button {
                         destructiveAction = .resetDemoData
@@ -60,12 +63,13 @@ struct SettingsView: View {
                         Label("Delete All Local Data", systemImage: "trash")
                     }
                 }
+                #endif
 
                 Section {
                     HStack {
                         Text("App Version")
                         Spacer()
-                        Text("1.0.0")
+                        Text("1.0")
                             .foregroundStyle(.secondary)
                     }
 
@@ -103,6 +107,7 @@ struct SettingsView: View {
 
     private func perform(_ action: DestructiveAction) {
         switch action {
+        #if DEBUG
         case .resetDemoData:
             deleteProfiles()
             let demoProfile = SampleCarData.demoProfile()
@@ -113,6 +118,7 @@ struct SettingsView: View {
             deleteProfiles()
             activeProfileID = ""
             isSignedIn = false
+        #endif
         case .signOut:
             isSignedIn = false
         }
@@ -140,26 +146,32 @@ struct SettingsView: View {
 }
 
 private enum DestructiveAction: Identifiable {
+    #if DEBUG
     case resetDemoData
     case deleteAllData
+    #endif
     case signOut
 
     var id: String { title }
 
     var title: String {
         switch self {
+        #if DEBUG
         case .resetDemoData: "Reset demo data?"
         case .deleteAllData: "Delete all local data?"
+        #endif
         case .signOut: "Sign out?"
         }
     }
 
     var message: String {
         switch self {
+        #if DEBUG
         case .resetDemoData:
             "This replaces current local GarageMate data with the sample garage."
         case .deleteAllData:
             "This permanently removes the local profile, cars, service history, reminders, and notes."
+        #endif
         case .signOut:
             "Your local data stays on this device. Sign in again to continue."
         }
@@ -167,16 +179,21 @@ private enum DestructiveAction: Identifiable {
 
     var confirmationTitle: String {
         switch self {
+        #if DEBUG
         case .resetDemoData: "Reset Demo Data"
         case .deleteAllData: "Delete Everything"
+        #endif
         case .signOut: "Sign Out"
         }
     }
 
     var role: ButtonRole? {
         switch self {
+        #if DEBUG
         case .resetDemoData: nil
-        case .deleteAllData, .signOut: .destructive
+        case .deleteAllData: .destructive
+        #endif
+        case .signOut: .destructive
         }
     }
 }

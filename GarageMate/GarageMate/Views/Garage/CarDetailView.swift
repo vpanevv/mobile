@@ -1,7 +1,10 @@
+import SwiftData
 import SwiftUI
 import UIKit
 
 struct CarDetailView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     @Bindable var car: Car
     let profile: UserProfile
 
@@ -9,6 +12,7 @@ struct CarDetailView: View {
     @State private var isAddingService = false
     @State private var isAddingNote = false
     @State private var isAddingReminder = false
+    @State private var isConfirmingDelete = false
 
     var body: some View {
         ScrollView {
@@ -53,6 +57,14 @@ struct CarDetailView: View {
                 } label: {
                     Label("Reminder", systemImage: "bell.badge.fill")
                 }
+
+                Divider()
+
+                Button(role: .destructive) {
+                    isConfirmingDelete = true
+                } label: {
+                    Label("Delete Car", systemImage: "trash")
+                }
             } label: {
                 Image(systemName: "plus")
             }
@@ -66,6 +78,18 @@ struct CarDetailView: View {
         }
         .sheet(isPresented: $isAddingReminder) {
             AddReminderView(car: car)
+        }
+        .confirmationDialog(
+            "Delete this car?",
+            isPresented: $isConfirmingDelete,
+            titleVisibility: .visible
+        ) {
+            Button("Delete Car", role: .destructive) {
+                deleteCar()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This removes \(car.displayName) and all related service records, reminders, and mechanic notes from this device.")
         }
     }
 
@@ -207,6 +231,22 @@ struct CarDetailView: View {
         }
         .buttonStyle(.bordered)
         .buttonBorderShape(.roundedRectangle(radius: 16))
+        .accessibilityLabel("Add \(title.lowercased())")
+    }
+
+    private func deleteCar() {
+        for reminder in car.reminders {
+            NotificationManager.cancel(reminder: reminder)
+        }
+        modelContext.delete(car)
+
+        do {
+            try modelContext.save()
+            HapticsManager.warning()
+            dismiss()
+        } catch {
+            assertionFailure("Failed to delete car: \(error)")
+        }
     }
 }
 

@@ -51,6 +51,7 @@ struct SignInView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         .accessibilityLabel("Continue with Apple")
 
+                        #if DEBUG
                         Button {
                             viewModel.continueWithoutApple(modelContext: modelContext)
                         } label: {
@@ -59,6 +60,8 @@ struct SignInView: View {
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.large)
+                        .accessibilityLabel("Continue without Apple for local testing")
+                        #endif
                     }
 
                     if let errorMessage = viewModel.errorMessage {
