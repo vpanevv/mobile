@@ -28,12 +28,12 @@ struct GarageView: View {
                     .padding(.horizontal)
                     .padding(.top, 80)
                 } else {
-                    LazyVStack(spacing: 18) {
+                    LazyVStack(spacing: 12) {
                         ForEach(cars) { car in
                             NavigationLink {
                                 CarDetailView(car: car, profile: profile)
                             } label: {
-                                CarCardView(car: car, currencyCode: profile.preferredCurrencyCode)
+                                CarCardView(car: car)
                             }
                             .buttonStyle(.plain)
                             .contextMenu {
@@ -45,7 +45,8 @@ struct GarageView: View {
                             }
                         }
                     }
-                    .padding()
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
                 }
             }
             .background(Color(.systemGroupedBackground))

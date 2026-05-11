@@ -16,13 +16,20 @@ struct ServiceHistoryView: View {
                 )
             } else {
                 VStack(alignment: .leading, spacing: 10) {
-                    ForEach(car.serviceRecordsNewestFirst) { record in
+                    ForEach(car.serviceRecordsNewestFirst, id: \.id) { record in
                         serviceRow(record)
-                            .swipeActions {
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                 Button(role: .destructive) {
                                     recordPendingDeletion = record
                                 } label: {
                                     Label("Delete", systemImage: "trash")
+                                }
+                            }
+                            .contextMenu {
+                                Button(role: .destructive) {
+                                    recordPendingDeletion = record
+                                } label: {
+                                    Label("Delete Service", systemImage: "trash")
                                 }
                             }
                     }
@@ -83,9 +90,20 @@ struct ServiceHistoryView: View {
             Spacer()
 
             CurrencyAmountView(amountMinor: record.amountMinor, currencyCode: record.currencyCode)
+
+            Button(role: .destructive) {
+                recordPendingDeletion = record
+            } label: {
+                Image(systemName: "trash")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.red)
+                    .frame(width: 34, height: 34)
+                    .background(.red.opacity(0.10), in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Delete \(record.title)")
         }
         .padding(14)
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .accessibilityElement(children: .combine)
     }
 }
