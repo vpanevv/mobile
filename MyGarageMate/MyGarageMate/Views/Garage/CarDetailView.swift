@@ -1,4 +1,5 @@
 import SwiftData
+import PhotosUI
 import SwiftUI
 import UIKit
 
@@ -13,6 +14,10 @@ struct CarDetailView: View {
     @State private var isAddingNote = false
     @State private var isAddingReminder = false
     @State private var isConfirmingDelete = false
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var isEditingMileage = false
+    @State private var mileageDraft = ""
+    @State private var mileageValidationMessage: String?
 
     var body: some View {
         ScrollView {
@@ -79,6 +84,14 @@ struct CarDetailView: View {
         .sheet(isPresented: $isAddingReminder) {
             AddReminderView(car: car)
         }
+        .sheet(isPresented: $isEditingMileage) {
+            mileageEditor
+        }
+        .onChange(of: selectedPhotoItem) { _, newValue in
+            Task {
+                await updatePhoto(from: newValue)
+            }
+        }
         .confirmationDialog(
             "Delete this car?",
             isPresented: $isConfirmingDelete,
@@ -117,15 +130,80 @@ struct CarDetailView: View {
                     .font(.largeTitle.bold())
                     .lineLimit(2)
                     .minimumScaleFactor(0.72)
-                Text("\(car.currentMileage.formatted(.number.precision(.fractionLength(0)))) \(car.mileageUnit)")
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
+
+                Button {
+                    beginEditingMileage()
+                } label: {
+                    HStack(spacing: 8) {
+                        Text("\(car.currentMileage.formatted(.number.precision(.fractionLength(0)))) \(car.mileageUnit)")
+                            .font(.headline)
+                        Image(systemName: "pencil.circle.fill")
+                            .font(.headline)
+                    }
+                    .foregroundStyle(.primary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Edit current mileage")
             }
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(.ultraThinMaterial)
+
+            PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                Label("Edit Photo", systemImage: "photo.badge.plus")
+                    .font(.subheadline.weight(.semibold))
+                    .labelStyle(.iconOnly)
+                    .foregroundStyle(.primary)
+                    .frame(width: 44, height: 44)
+                    .background(.ultraThinMaterial, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .padding(16)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+            .accessibilityLabel("Edit car photo")
         }
-        .accessibilityElement(children: .combine)
+    }
+
+    private var mileageEditor: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("Current mileage", text: $mileageDraft)
+                        .keyboardType(.decimalPad)
+                        .textInputAutocapitalization(.never)
+                        .accessibilityLabel("Current mileage")
+
+                    Text(car.mileageUnit)
+                        .foregroundStyle(.secondary)
+                } header: {
+                    Text("Mileage")
+                } footer: {
+                    if let mileageValidationMessage {
+                        Text(mileageValidationMessage)
+                            .foregroundStyle(.red)
+                    } else {
+                        Text("Update the current mileage shown throughout MyGarageMate.")
+                    }
+                }
+            }
+            .navigationTitle("Edit Mileage")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        isEditingMileage = false
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        saveMileage()
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
+        }
+        .presentationDetents([.medium])
     }
 
     private var summaryCards: some View {
@@ -210,7 +288,7 @@ struct CarDetailView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Upcoming")
                         .font(.headline)
-                    ForEach(car.upcomingReminders) { reminder in
+                    ForEach(car.upcomingReminders, id: \.id) { reminder in
                         ReminderRow(reminder: reminder, car: car)
                     }
                 }
@@ -232,6 +310,55 @@ struct CarDetailView: View {
         .buttonStyle(.bordered)
         .buttonBorderShape(.roundedRectangle(radius: 16))
         .accessibilityLabel("Add \(title.lowercased())")
+    }
+
+    private func beginEditingMileage() {
+        mileageDraft = "\(Int(car.currentMileage.rounded()))"
+        mileageValidationMessage = nil
+        HapticsManager.lightTap()
+        isEditingMileage = true
+    }
+
+    private func saveMileage() {
+        let normalizedValue = mileageDraft
+            .replacingOccurrences(of: " ", with: "")
+            .replacingOccurrences(of: ",", with: ".")
+
+        guard let mileage = Double(normalizedValue), mileage >= 0 else {
+            mileageValidationMessage = "Enter a valid mileage."
+            HapticsManager.warning()
+            return
+        }
+
+        car.currentMileage = mileage
+
+        do {
+            try modelContext.save()
+            HapticsManager.success()
+            isEditingMileage = false
+        } catch {
+            mileageValidationMessage = "Could not save mileage. Try again."
+            assertionFailure("Failed to update mileage: \(error)")
+        }
+    }
+
+    private func updatePhoto(from item: PhotosPickerItem?) async {
+        guard
+            let data = try? await item?.loadTransferable(type: Data.self),
+            let image = UIImage(data: data),
+            let jpegData = image.jpegData(compressionQuality: 0.82)
+        else { return }
+
+        await MainActor.run {
+            car.photoData = jpegData
+
+            do {
+                try modelContext.save()
+                HapticsManager.success()
+            } catch {
+                assertionFailure("Failed to update car photo: \(error)")
+            }
+        }
     }
 
     private func deleteCar() {
