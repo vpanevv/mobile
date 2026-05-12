@@ -1,5 +1,7 @@
+import PhotosUI
 import SwiftData
 import SwiftUI
+import UIKit
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
@@ -7,6 +9,7 @@ struct SettingsView: View {
     @AppStorage("MyGarageMate.activeProfileID") private var activeProfileID = ""
     @Bindable var profile: UserProfile
 
+    @State private var selectedProfilePhotoItem: PhotosPickerItem?
     @State private var destructiveAction: DestructiveAction?
 
     var body: some View {
@@ -14,10 +17,20 @@ struct SettingsView: View {
             Form {
                 Section {
                     HStack(spacing: 14) {
-                        Image(systemName: "person.crop.circle.fill")
-                            .font(.system(size: 44))
-                            .symbolRenderingMode(.hierarchical)
-                            .foregroundStyle(.tint)
+                        PhotosPicker(selection: $selectedProfilePhotoItem, matching: .images) {
+                            profilePhoto
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Choose profile photo")
+                        .contextMenu {
+                            if profile.avatarData != nil {
+                                Button(role: .destructive) {
+                                    destructiveAction = .removeProfilePhoto
+                                } label: {
+                                    Label("Remove Profile Photo", systemImage: "trash")
+                                }
+                            }
+                        }
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text(profile.name)
@@ -102,7 +115,50 @@ struct SettingsView: View {
                     Text(destructiveAction.message)
                 }
             }
+            .onChange(of: selectedProfilePhotoItem) { _, newValue in
+                Task {
+                    await updateProfilePhoto(from: newValue)
+                }
+            }
         }
+    }
+
+    @ViewBuilder
+    private var profilePhoto: some View {
+        ZStack(alignment: .bottomTrailing) {
+            Group {
+                if let avatarData = profile.avatarData, let uiImage = UIImage(data: avatarData) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    Image(systemName: "person.crop.circle.fill")
+                        .font(.system(size: 66))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(.tint)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(.thinMaterial)
+                }
+            }
+            .frame(width: 68, height: 68)
+            .clipShape(Circle())
+            .overlay {
+                Circle()
+                    .strokeBorder(.white.opacity(0.58), lineWidth: 1)
+            }
+
+            Image(systemName: "camera.fill")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.white)
+                .frame(width: 25, height: 25)
+                .background(.blue.gradient, in: Circle())
+                .overlay {
+                    Circle()
+                        .strokeBorder(Color(.systemBackground), lineWidth: 2)
+                }
+                .accessibilityHidden(true)
+        }
+        .frame(width: 74, height: 74)
     }
 
     private func perform(_ action: DestructiveAction) {
@@ -121,6 +177,8 @@ struct SettingsView: View {
         #endif
         case .signOut:
             isSignedIn = false
+        case .removeProfilePhoto:
+            profile.avatarData = nil
         }
 
         do {
@@ -131,6 +189,38 @@ struct SettingsView: View {
         }
 
         destructiveAction = nil
+    }
+
+    @MainActor
+    private func updateProfilePhoto(from item: PhotosPickerItem?) async {
+        guard
+            let data = try? await item?.loadTransferable(type: Data.self),
+            let image = UIImage(data: data),
+            let jpegData = compressedProfilePhotoData(from: image)
+        else { return }
+
+        profile.avatarData = jpegData
+
+        do {
+            try modelContext.save()
+            HapticsManager.success()
+        } catch {
+            assertionFailure("Failed to save profile photo: \(error)")
+        }
+    }
+
+    private func compressedProfilePhotoData(from image: UIImage) -> Data? {
+        let maxLength: CGFloat = 768
+        let longestSide = max(image.size.width, image.size.height)
+        let scale = longestSide > maxLength ? maxLength / longestSide : 1
+        let targetSize = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        let resizedImage = renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: targetSize))
+        }
+
+        return resizedImage.jpegData(compressionQuality: 0.84)
     }
 
     private func deleteProfiles() {
@@ -150,6 +240,7 @@ private enum DestructiveAction: Identifiable {
     case resetDemoData
     case deleteAllData
     #endif
+    case removeProfilePhoto
     case signOut
 
     var id: String { title }
@@ -160,6 +251,7 @@ private enum DestructiveAction: Identifiable {
         case .resetDemoData: "Reset demo data?"
         case .deleteAllData: "Delete all local data?"
         #endif
+        case .removeProfilePhoto: "Remove profile photo?"
         case .signOut: "Sign out?"
         }
     }
@@ -172,6 +264,8 @@ private enum DestructiveAction: Identifiable {
         case .deleteAllData:
             "This permanently removes the local profile, cars, service history, reminders, and notes."
         #endif
+        case .removeProfilePhoto:
+            "This removes the selected profile photo from local MyGarageMate data."
         case .signOut:
             "Your local data stays on this device. Sign in again to continue."
         }
@@ -183,6 +277,7 @@ private enum DestructiveAction: Identifiable {
         case .resetDemoData: "Reset Demo Data"
         case .deleteAllData: "Delete Everything"
         #endif
+        case .removeProfilePhoto: "Remove Photo"
         case .signOut: "Sign Out"
         }
     }
@@ -193,6 +288,7 @@ private enum DestructiveAction: Identifiable {
         case .resetDemoData: nil
         case .deleteAllData: .destructive
         #endif
+        case .removeProfilePhoto: .destructive
         case .signOut: .destructive
         }
     }
