@@ -50,7 +50,7 @@ struct GarageView: View {
                 }
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("Garage")
+            .navigationTitle("My garage")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
