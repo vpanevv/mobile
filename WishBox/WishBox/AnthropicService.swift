@@ -43,20 +43,26 @@ struct AnthropicService {
         }
     }
 
-    func generateWish(holidayType: String, name: String?, language: WishLanguage = .english) async throws -> String {
-        let systemPrompt = "You are a warm, creative wish generator. Write heartfelt, joyful, and slightly poetic wishes. Keep them 2–4 sentences. Never use generic clichés. Vary style each time."
+    func generateWish(
+        holidayType: String,
+        name: String?,
+        language: WishLanguage = .english,
+        tone: WishTone = .friendly,
+        length: WishLength = .medium
+    ) async throws -> String {
+        let systemPrompt = "You are WishBox, a creative wish generator. \(tone.apiInstruction) \(length.apiInstruction) Never use clichés like 'May your day be filled with joy'. Be original and specific. Return ONLY the wish text — no quotes, no labels, no extra formatting."
 
         let basePrompt: String
         if let name, !name.isEmpty {
-            basePrompt = "Generate a \(holidayType) wish for \(name)."
+            basePrompt = "Generate a \(holidayType.lowercased()) wish for \(name)."
         } else {
-            basePrompt = "Generate a \(holidayType) wish."
+            basePrompt = "Generate a \(holidayType.lowercased()) wish."
         }
         let userPrompt = "\(basePrompt) \(language.promptInstruction)"
 
         let requestBody = APIRequest(
             model: model,
-            max_tokens: 300,
+            max_tokens: 400,
             system: systemPrompt,
             messages: [.init(role: "user", content: userPrompt)]
         )
