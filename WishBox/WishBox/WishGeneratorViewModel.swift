@@ -13,6 +13,19 @@ final class WishGeneratorViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var showError = false
 
+    // Persisted selections
+    @AppStorage("lastTone")   var selectedToneRaw:   String = WishTone.friendly.rawValue
+    @AppStorage("lastLength") var selectedLengthRaw: String = WishLength.medium.rawValue
+
+    var selectedTone: WishTone {
+        get { WishTone(rawValue: selectedToneRaw) ?? .friendly }
+        set { selectedToneRaw = newValue.rawValue }
+    }
+    var selectedLength: WishLength {
+        get { WishLength(rawValue: selectedLengthRaw) ?? .medium }
+        set { selectedLengthRaw = newValue.rawValue }
+    }
+
     private let service = AnthropicService()
 
     func generateWish() {
@@ -26,7 +39,9 @@ final class WishGeneratorViewModel: ObservableObject {
                 let wish = try await service.generateWish(
                     holidayType: selectedHoliday.label,
                     name: includeName ? name : nil,
-                    language: selectedLanguage
+                    language: selectedLanguage,
+                    tone: selectedTone,
+                    length: selectedLength
                 )
                 withAnimation(.spring(response: 0.45, dampingFraction: 0.72)) {
                     generatedWish = wish
