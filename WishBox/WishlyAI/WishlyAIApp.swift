@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct WishlyApp: App {
+struct WishlyAIApp: App {
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
     @Namespace private var logoNamespace
 
