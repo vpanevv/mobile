@@ -173,7 +173,7 @@ private struct GhostPreview: View {
 
 struct OnboardingView: View {
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
-    @AppStorage("wishbox.isDark") private var isDark: Bool = true
+    @AppStorage("wishly.isDark") private var isDark: Bool = true
     @StateObject private var motion = MotionManager()
 
     var namespace: Namespace.ID
@@ -243,7 +243,7 @@ struct OnboardingView: View {
 
     private var titleArea: some View {
         VStack(spacing: 4) {
-            ShimmerText(text: "WishBox")
+            ShimmerText(text: "Wishly")
                 .opacity(titleVisible ? 1 : 0)
                 .offset(y: titleVisible ? 0 : 12)
 

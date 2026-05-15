@@ -169,7 +169,7 @@ private struct AIHeader: View {
                     .foregroundStyle(Color.neonCyan)
             }
 
-            Text("WishBox")
+            Text("Wishly")
                 .font(.system(size: 30, weight: .bold, design: .rounded))
                 .foregroundStyle(.primary)
 
@@ -184,7 +184,7 @@ private struct AIHeader: View {
 // MARK: - Main view
 struct ContentView: View {
     @StateObject private var viewModel = WishGeneratorViewModel()
-    @AppStorage("wishbox.isDark") private var isDark: Bool = true
+    @AppStorage("wishly.isDark") private var isDark: Bool = true
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
 
     @State private var toneVisible   = false

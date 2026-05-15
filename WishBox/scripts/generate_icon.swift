@@ -1,5 +1,5 @@
 #!/usr/bin/env swift
-/// Renders the WishBox app icon to a 1024×1024 PNG and writes it into the asset catalog.
+/// Renders the Wishly app icon to a 1024×1024 PNG and writes it into the asset catalog.
 /// Run from the repo root:  swift WishBox/scripts/generate_icon.swift
 import AppKit
 
@@ -57,7 +57,7 @@ if let sym = NSImage(systemSymbolName: "gift.fill", accessibilityDescription: ni
 }
 
 // ── Export ─────────────────────────────────────────────────────────────────
-let outPath = "WishBox/WishBox/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png"
+let outPath = "WishBox/Wishly/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png"
 guard let png = rep.representation(using: .png, properties: [:]) else {
     print("✗ PNG encoding failed"); exit(1)
 }

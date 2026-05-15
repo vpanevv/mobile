@@ -50,7 +50,7 @@ struct AnthropicService {
         tone: WishTone = .friendly,
         length: WishLength = .medium
     ) async throws -> String {
-        let systemPrompt = "You are WishBox, a creative wish generator. \(tone.apiInstruction) \(length.apiInstruction) Never use clichés like 'May your day be filled with joy'. Be original and specific. Return ONLY the wish text — no quotes, no labels, no extra formatting."
+        let systemPrompt = "You are Wishly, a creative wish generator. \(tone.apiInstruction) \(length.apiInstruction) Never use clichés like 'May your day be filled with joy'. Be original and specific. Return ONLY the wish text — no quotes, no labels, no extra formatting."
 
         let basePrompt: String
         if let name, !name.isEmpty {
