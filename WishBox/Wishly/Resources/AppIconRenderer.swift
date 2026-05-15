@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Renders the WishBox app icon design as a SwiftUI view.
+/// Renders the Wishly app icon design as a SwiftUI view.
 /// Used for Xcode Previews and as the source of truth for the icon shape.
 struct AppIconView: View {
     var body: some View {

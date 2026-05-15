@@ -29,7 +29,7 @@ let onboardingSteps: [OnboardingStep] = [
     OnboardingStep(
         id: 2,
         icon: "sparkles",
-        headline: "WishBox do the rest",
+        headline: "Wishly do the rest",
         subtitle: nil,
         tint: Color(hex: 0x4a044e)
     ),
