@@ -33,13 +33,13 @@ private func makeParticles(count: Int) -> [Particle] {
             x: CGFloat.random(in: 0...1, using: &rng),
             baseY: CGFloat.random(in: 0...1, using: &rng),
             size: CGFloat.random(in: 3...7, using: &rng),
-            driftSpeed: CGFloat.random(in: 12...28, using: &rng),
-            swayAmp: CGFloat.random(in: 8...22, using: &rng),
-            swayFreq: CGFloat.random(in: 0.15...0.45, using: &rng),
+            driftSpeed: CGFloat.random(in: 5...12, using: &rng),
+            swayAmp: CGFloat.random(in: 4...10, using: &rng),
+            swayFreq: CGFloat.random(in: 0.06...0.18, using: &rng),
             phaseOffset: CGFloat.random(in: 0...(.pi * 2), using: &rng),
-            opacityMin: CGFloat.random(in: 0.10...0.30, using: &rng),
-            opacityMax: CGFloat.random(in: 0.55...0.90, using: &rng),
-            opacityFreq: CGFloat.random(in: 0.20...0.60, using: &rng),
+            opacityMin: CGFloat.random(in: 0.10...0.25, using: &rng),
+            opacityMax: CGFloat.random(in: 0.45...0.80, using: &rng),
+            opacityFreq: CGFloat.random(in: 0.08...0.25, using: &rng),
             colorIndex: Int.random(in: 0...2, using: &rng)
         )
     }

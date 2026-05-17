@@ -294,12 +294,9 @@ struct OnboardingView: View {
                 hasSeenOnboarding = true
             }
         } label: {
-            HStack(spacing: 10) {
-                Text("Get Started")
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
-                Image(systemName: "arrow.right")
-                    .font(.system(size: 15, weight: .semibold))
-            }
+            Text("TRY IT NOW")
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .tracking(1.5)
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .frame(height: 56)
