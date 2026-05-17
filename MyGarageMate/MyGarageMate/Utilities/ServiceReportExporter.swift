@@ -3,29 +3,23 @@ import UIKit
 
 enum ServiceReportExporter {
     enum ExportError: LocalizedError {
-        case noServiceRecords
+        case noServiceRecordsForCar
 
         var errorDescription: String? {
             switch self {
-            case .noServiceRecords:
-                "No service records available to export."
+            case .noServiceRecordsForCar:
+                "No service records available for this car."
             }
         }
     }
 
-    static func makePDF(for profile: UserProfile) throws -> URL {
-        let cars = profile.cars.sorted { left, right in
-            if left.make != right.make { return left.make < right.make }
-            if left.model != right.model { return left.model < right.model }
-            return left.year < right.year
-        }
-
-        guard cars.contains(where: { !$0.serviceRecords.isEmpty }) else {
-            throw ExportError.noServiceRecords
+    static func makePDF(for car: Car) throws -> URL {
+        guard !car.serviceRecords.isEmpty else {
+            throw ExportError.noServiceRecordsForCar
         }
 
         let fileURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("MyGarageMate-Service-Report-\(Self.fileStamp()).pdf")
+            .appendingPathComponent("MyGarageMate-\(Self.fileSafeName(car.make))-\(Self.fileSafeName(car.model))-Service-Report-\(Self.fileStamp()).pdf")
 
         let pageRect = CGRect(x: 0, y: 0, width: 612, height: 792)
         let renderer = UIGraphicsPDFRenderer(bounds: pageRect)
@@ -35,17 +29,23 @@ enum ServiceReportExporter {
         try renderer.writePDF(to: fileURL) { context in
             var y = margin
 
+            func beginPage() {
+                context.beginPage()
+                UIColor.white.setFill()
+                UIBezierPath(rect: pageRect).fill()
+                y = margin
+            }
+
             func beginPageIfNeeded(_ neededHeight: CGFloat) {
                 if y + neededHeight > pageRect.height - margin {
-                    context.beginPage()
-                    y = margin
+                    beginPage()
                 }
             }
 
             func drawText(
                 _ text: String,
                 font: UIFont,
-                color: UIColor = .label,
+                color: UIColor = .black,
                 indent: CGFloat = 0,
                 spacingAfter: CGFloat = 8
             ) {
@@ -70,13 +70,21 @@ enum ServiceReportExporter {
 
             func drawDivider() {
                 beginPageIfNeeded(14)
-                UIColor.separator.setStroke()
+                UIColor.systemGray4.setStroke()
                 let path = UIBezierPath()
                 path.move(to: CGPoint(x: margin, y: y))
                 path.addLine(to: CGPoint(x: pageRect.width - margin, y: y))
                 path.lineWidth = 1
                 path.stroke()
                 y += 14
+            }
+
+            func drawCarPhotoIfAvailable() {
+                guard let photoData = car.photoData, let image = UIImage(data: photoData) else { return }
+                beginPageIfNeeded(190)
+                let imageRect = aspectFitRect(for: image.size, inside: CGRect(x: margin, y: y, width: contentWidth, height: 170))
+                image.draw(in: imageRect)
+                y += 184
             }
 
             func drawIcon(_ symbolName: String) {
@@ -87,45 +95,36 @@ enum ServiceReportExporter {
                     .draw(in: CGRect(x: margin, y: y + 1, width: 18, height: 18))
             }
 
-            context.beginPage()
-            drawText("MyGarageMate Service Report", font: .systemFont(ofSize: 28, weight: .bold), spacingAfter: 6)
-            drawText("Generated \(Self.displayDateTime(Date()))", font: .systemFont(ofSize: 11), color: .secondaryLabel, spacingAfter: 18)
+            beginPage()
+            drawText("MyGarageMate Car Service Report", font: .systemFont(ofSize: 28, weight: .bold), spacingAfter: 6)
+            drawText("Generated \(Self.displayDateTime(Date()))", font: .systemFont(ofSize: 11), color: .darkGray, spacingAfter: 18)
+            drawText("\(car.year) \(car.make) \(car.model)", font: .systemFont(ofSize: 21, weight: .bold), spacingAfter: 4)
+            drawCarPhotoIfAvailable()
 
-            for car in cars {
-                beginPageIfNeeded(90)
-                drawText("\(car.year) \(car.make) \(car.model)", font: .systemFont(ofSize: 21, weight: .bold), spacingAfter: 4)
+            let records = car.serviceRecords.sorted { $0.date > $1.date }
+            for record in records {
+                beginPageIfNeeded(170)
+                drawIcon(record.category.symbolName)
+                drawText(record.title, font: .systemFont(ofSize: 16, weight: .semibold), indent: 26, spacingAfter: 2)
+                drawText("Type: \(record.category.title)", font: .systemFont(ofSize: 12), color: .darkGray, indent: 26, spacingAfter: 3)
+                drawText("Service icon: \(record.category.symbolName)", font: .systemFont(ofSize: 12), color: .darkGray, indent: 26, spacingAfter: 8)
 
-                if car.serviceRecords.isEmpty {
-                    drawText("No services for this car.", font: .systemFont(ofSize: 12), color: .secondaryLabel, spacingAfter: 18)
-                    drawDivider()
-                    continue
-                }
-
-                let records = car.serviceRecords.sorted { $0.date > $1.date }
-                for record in records {
-                    beginPageIfNeeded(170)
-                    drawIcon(record.category.symbolName)
-                    drawText(record.title, font: .systemFont(ofSize: 16, weight: .semibold), indent: 26, spacingAfter: 2)
-                    drawText("Type: \(record.category.title)", font: .systemFont(ofSize: 12), color: .secondaryLabel, indent: 26, spacingAfter: 3)
-                    drawText("Service icon: \(record.category.symbolName)", font: .systemFont(ofSize: 12), color: .secondaryLabel, indent: 26, spacingAfter: 8)
-
-                    let mileage = record.mileage.map { "\($0.formatted(.number.precision(.fractionLength(0)))) \(car.mileageUnit)" } ?? "Not recorded"
-                    let cost = CurrencyFormatter.string(fromMinor: record.amountMinor, currencyCode: record.currencyCode)
-                    drawText("Service date: \(Self.displayDate(record.date))", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
-                    drawText("Mileage: \(mileage)", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
-                    drawText("Cost: \(cost)", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
-                    drawText("Currency: \(record.currencyCode)", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
-                    drawText("Mechanic name: \(record.shopName ?? "Not recorded")", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
-                    drawText("Mechanic notes: \(record.notes ?? "None")", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
-                    drawText("Description: \(record.title)", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
-                    drawText("Completion status: Completed", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
-                    drawText("Created date: \(Self.displayDateTime(record.createdAt))", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
-                    drawText("Last updated date: \(Self.displayDateTime(record.updatedAt ?? record.createdAt))", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
-                    drawText("Reminder information: \(Self.reminderSummary(for: record, in: car))", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 12)
-                }
-
-                drawDivider()
+                let mileage = record.mileage.map { "\($0.formatted(.number.precision(.fractionLength(0)))) \(car.mileageUnit)" } ?? "Not recorded"
+                let cost = CurrencyFormatter.string(fromMinor: record.amountMinor, currencyCode: record.currencyCode)
+                drawText("Service date: \(Self.displayDate(record.date))", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
+                drawText("Mileage: \(mileage)", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
+                drawText("Cost: \(cost)", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
+                drawText("Currency: \(record.currencyCode)", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
+                drawText("Mechanic name: \(record.shopName ?? "Not recorded")", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
+                drawText("Mechanic notes: \(record.notes ?? "None")", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
+                drawText("Description: \(record.title)", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
+                drawText("Completion status: Completed", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
+                drawText("Created date: \(Self.displayDateTime(record.createdAt))", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
+                drawText("Last updated date: \(Self.displayDateTime(record.updatedAt ?? record.createdAt))", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 3)
+                drawText("Reminder information: \(Self.reminderSummary(for: record, in: car))", font: .systemFont(ofSize: 12), indent: 12, spacingAfter: 12)
             }
+
+            drawDivider()
         }
 
         return fileURL
@@ -181,5 +180,31 @@ enum ServiceReportExporter {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd-HHmmss"
         return formatter.string(from: Date())
+    }
+
+    private static func fileSafeName(_ value: String) -> String {
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_"))
+        return value
+            .replacingOccurrences(of: " ", with: "-")
+            .unicodeScalars
+            .filter { allowed.contains($0) }
+            .map(String.init)
+            .joined()
+    }
+
+    private static func aspectFitRect(for imageSize: CGSize, inside boundingRect: CGRect) -> CGRect {
+        guard imageSize.width > 0, imageSize.height > 0 else { return boundingRect }
+
+        let widthRatio = boundingRect.width / imageSize.width
+        let heightRatio = boundingRect.height / imageSize.height
+        let scale = min(widthRatio, heightRatio)
+        let fittedSize = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
+
+        return CGRect(
+            x: boundingRect.midX - fittedSize.width / 2,
+            y: boundingRect.midY - fittedSize.height / 2,
+            width: fittedSize.width,
+            height: fittedSize.height
+        )
     }
 }
