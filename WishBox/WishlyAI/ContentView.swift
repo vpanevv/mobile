@@ -184,11 +184,14 @@ private struct AIHeader: View {
 // MARK: - Main view
 struct ContentView: View {
     @StateObject private var viewModel = WishGeneratorViewModel()
+    @EnvironmentObject var store: FavoritesStore
     @AppStorage("wishlyai.isDark") private var isDark: Bool = true
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
 
     @State private var toneVisible   = false
     @State private var lengthVisible = false
+    @State private var showFavorites = false
+    @State private var favButtonPulse = false
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
@@ -258,9 +261,16 @@ struct ContentView: View {
 
                     // Result
                     if let wish = viewModel.generatedWish {
-                        WishResultCard(wish: wish) {
+                        WishResultCard(
+                            wish: wish,
+                            occasion: viewModel.selectedHoliday,
+                            tone: viewModel.selectedTone,
+                            length: viewModel.selectedLength,
+                            recipientName: viewModel.includeName ? viewModel.name : nil
+                        ) {
                             viewModel.generateWish()
                         }
+                        .environmentObject(store)
                         .padding(.horizontal, 20)
                         .transition(
                             .opacity
@@ -279,27 +289,71 @@ struct ContentView: View {
                 .padding(.top, 12)
                 .padding(.trailing, 20)
 
-            // Back to onboarding — top-left
-            Button {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
-                    hasSeenOnboarding = false
+            // Back + Favorites buttons — top-left
+            HStack(spacing: 8) {
+                // Back to onboarding
+                Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+                        hasSeenOnboarding = false
+                    }
+                } label: {
+                    Image(systemName: "arrow.left")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color.neonCyan)
+                        .frame(width: 38, height: 38)
+                        .background(
+                            isDark
+                                ? Color.surface.opacity(0.9)
+                                : Color(UIColor.systemBackground).opacity(0.9)
+                        )
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.neonCyan.opacity(0.30), lineWidth: 1))
+                        .shadow(color: Color.neonCyan.opacity(0.12), radius: 8)
                 }
-            } label: {
-                Image(systemName: "arrow.left")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color.neonCyan)
-                    .frame(width: 38, height: 38)
-                    .background(
-                        isDark
-                            ? Color.surface.opacity(0.9)
-                            : Color(UIColor.systemBackground).opacity(0.9)
-                    )
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.neonCyan.opacity(0.30), lineWidth: 1))
-                    .shadow(color: Color.neonCyan.opacity(0.12), radius: 8)
+                .buttonStyle(.plain)
+
+                // Favorites
+                Button {
+                    showFavorites = true
+                } label: {
+                    ZStack(alignment: .topTrailing) {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Color(hex: 0xc084fc))
+                            .frame(width: 38, height: 38)
+                            .background(
+                                isDark
+                                    ? Color.surface.opacity(0.9)
+                                    : Color(UIColor.systemBackground).opacity(0.9)
+                            )
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color(hex: 0xc084fc).opacity(0.30), lineWidth: 1))
+                            .shadow(color: Color(hex: 0xc084fc).opacity(0.12), radius: 8)
+                            .scaleEffect(favButtonPulse ? 1.1 : 1.0)
+
+                        if store.favorites.count > 0 {
+                            Text("\(min(store.favorites.count, 99))")
+                                .font(.system(size: 11, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .background(Color.red)
+                                .clipShape(Capsule())
+                                .offset(x: 4, y: -4)
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+                .onChange(of: store.favorites.count) { _ in
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) { favButtonPulse = true }
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7).delay(0.2)) { favButtonPulse = false }
+                }
+                .sheet(isPresented: $showFavorites) {
+                    FavoritesView()
+                        .environmentObject(store)
+                }
             }
-            .buttonStyle(.plain)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.top, 12)
             .padding(.leading, 20)

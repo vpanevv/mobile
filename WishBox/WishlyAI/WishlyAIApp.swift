@@ -4,11 +4,13 @@ import SwiftUI
 struct WishlyAIApp: App {
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
     @Namespace private var logoNamespace
+    @StateObject private var favoritesStore = FavoritesStore()
 
     var body: some Scene {
         WindowGroup {
             ZStack {
                 ContentView()
+                    .environmentObject(favoritesStore)
 
                 if !hasSeenOnboarding {
                     OnboardingView(namespace: logoNamespace)
