@@ -10,6 +10,9 @@ struct SettingsView: View {
     @Bindable var profile: UserProfile
 
     @State private var selectedProfilePhotoItem: PhotosPickerItem?
+    @State private var serviceReportURL: URL?
+    @State private var serviceReportMessage: String?
+    @State private var isGeneratingServiceReport = false
     @State private var destructiveAction: DestructiveAction?
 
     var body: some View {
@@ -60,6 +63,29 @@ struct SettingsView: View {
                         Text("mi").tag("mi")
                     }
                     .accessibilityLabel("Mileage unit")
+                }
+
+                Section("Reports") {
+                    Button {
+                        generateServiceReport()
+                    } label: {
+                        Label("Generate Services Report", systemImage: "doc.richtext")
+                    }
+                    .disabled(isGeneratingServiceReport)
+                    .accessibilityLabel("Generate services report")
+
+                    if let serviceReportURL {
+                        ShareLink(item: serviceReportURL) {
+                            Label("Share Services Report", systemImage: "square.and.arrow.up")
+                        }
+                        .accessibilityLabel("Share services report")
+                    }
+
+                    if let serviceReportMessage {
+                        Text(serviceReportMessage)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 #if DEBUG
@@ -221,6 +247,24 @@ struct SettingsView: View {
         }
 
         return resizedImage.jpegData(compressionQuality: 0.84)
+    }
+
+    private func generateServiceReport() {
+        isGeneratingServiceReport = true
+        serviceReportURL = nil
+        serviceReportMessage = nil
+
+        do {
+            let url = try ServiceReportExporter.makePDF(for: profile)
+            serviceReportURL = url
+            serviceReportMessage = "Report ready: \(url.lastPathComponent)"
+            HapticsManager.success()
+        } catch {
+            serviceReportMessage = error.localizedDescription
+            HapticsManager.warning()
+        }
+
+        isGeneratingServiceReport = false
     }
 
     private func deleteProfiles() {

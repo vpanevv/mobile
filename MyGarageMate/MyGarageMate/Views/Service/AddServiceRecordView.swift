@@ -144,6 +144,7 @@ struct AddServiceRecordView: View {
     private func save() {
         guard canSave else { return }
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let createdAt = Date.now
         let record = ServiceRecord(
             title: trimmedTitle,
             category: category,
@@ -153,7 +154,9 @@ struct AddServiceRecordView: View {
             currencyCode: currencyCode,
             shopName: shopName.nilIfBlank,
             notes: notes.nilIfBlank,
-            receiptImageData: receiptImageData
+            receiptImageData: receiptImageData,
+            createdAt: createdAt,
+            updatedAt: createdAt
         )
         record.car = car
         car.serviceRecords.append(record)

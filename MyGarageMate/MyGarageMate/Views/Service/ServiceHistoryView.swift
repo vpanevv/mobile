@@ -156,6 +156,7 @@ private struct EditServiceRecordView: View {
     let car: Car
 
     @State private var title: String
+    @State private var category: ServiceCategory
     @State private var date: Date
     @State private var amountText: String
     @State private var currencyCode: String
@@ -168,6 +169,7 @@ private struct EditServiceRecordView: View {
         self.record = record
         self.car = car
         _title = State(initialValue: record.title)
+        _category = State(initialValue: record.category)
         _date = State(initialValue: record.date)
         _amountText = State(initialValue: Self.amountText(fromMinor: record.amountMinor))
         _currencyCode = State(initialValue: record.currencyCode)
@@ -181,8 +183,34 @@ private struct EditServiceRecordView: View {
         NavigationStack {
             Form {
                 Section("Service") {
+                    HStack(spacing: 12) {
+                        Image(systemName: category.symbolName)
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(.tint)
+                            .frame(width: 42, height: 42)
+                            .background(.thinMaterial, in: Circle())
+                            .accessibilityHidden(true)
+
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(category.title)
+                                .font(.headline)
+                            Text("Selected service type")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Selected service type \(category.title)")
+
                     TextField("Title", text: $title)
                         .accessibilityLabel("Service title")
+
+                    Picker("Category", selection: $category) {
+                        ForEach(ServiceCategory.allCases) { category in
+                            Label(category.title, systemImage: category.symbolName).tag(category)
+                        }
+                    }
+                    .accessibilityLabel("Service category")
 
                     DatePicker("Date", selection: $date, displayedComponents: .date)
                 }
@@ -252,6 +280,7 @@ private struct EditServiceRecordView: View {
     private func save() {
         guard validationMessage == nil else { return }
         record.title = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        record.category = category
         record.date = date
         record.amountMinor = CurrencyFormatter.minorUnits(from: amountText)
         record.currencyCode = currencyCode
@@ -259,6 +288,7 @@ private struct EditServiceRecordView: View {
         record.shopName = shopName.nilIfBlankForEdit
         record.notes = notes.nilIfBlankForEdit
         record.receiptImageData = receiptImageData
+        record.updatedAt = .now
 
         if mileage > car.currentMileage {
             car.currentMileage = mileage
