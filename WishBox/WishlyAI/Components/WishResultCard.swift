@@ -3,12 +3,19 @@ import UIKit
 
 struct WishResultCard: View {
     let wish: String
+    let occasion: HolidayType
+    let tone: WishTone
+    let length: WishLength
+    let recipientName: String?
     let onRegenerate: () -> Void
 
+    @EnvironmentObject var store: FavoritesStore
     @State private var displayedText = ""
     @State private var isTyping = false
     @State private var copied = false
     @State private var typewriterTask: Task<Void, Never>?
+    @State private var heartBurst = false
+    @State private var heartScale: CGFloat = 1.0
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
@@ -106,6 +113,10 @@ struct WishResultCard: View {
                     )
             )
             .shadow(color: Color.neonCyan.opacity(0.12), radius: 24, x: 0, y: 4)
+            .overlay(alignment: .topTrailing) {
+                heartButton
+                    .padding(14)
+            }
 
             // ── Regenerate ───────────────────────────────────────────────
             Button {
@@ -124,6 +135,37 @@ struct WishResultCard: View {
             .buttonStyle(.plain)
         }
         .onAppear { startTypewriter() }
+    }
+
+    private var heartButton: some View {
+        let isFav = store.isFavorite(text: wish)
+        return Button {
+            store.toggle(text: wish, occasion: occasion, tone: tone, length: length, recipientName: recipientName)
+            heartBurst = true
+            if store.isFavorite(text: wish) {
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            } else {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            }
+            withAnimation(.spring(response: 0.15, dampingFraction: 0.4)) { heartScale = 1.4 }
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.6).delay(0.15)) { heartScale = 0.9 }
+            withAnimation(.spring(response: 0.2, dampingFraction: 0.7).delay(0.35)) { heartScale = 1.0 }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { heartBurst = false }
+        } label: {
+            ZStack {
+                Circle()
+                    .fill(.ultraThinMaterial)
+                    .overlay(Circle().stroke(Color.white.opacity(0.15), lineWidth: 1))
+                    .frame(width: 38, height: 38)
+                Image(systemName: isFav ? "heart.fill" : "heart")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(isFav ? Color(hex: 0xf43f5e) : Color.white.opacity(0.7))
+                    .scaleEffect(heartScale)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isFav ? "Remove from favorites" : "Add to favorites")
+        .overlay { if heartBurst { HeartBurstView() } }
     }
 
     private func startTypewriter() {

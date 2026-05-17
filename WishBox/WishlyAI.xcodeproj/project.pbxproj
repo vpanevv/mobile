@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		AA000001AAAA000100000001 /* Wishly.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wishly.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA000001AAAA000100000001 /* WishlyAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WishlyAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		AA000002AAAA000200000002 /* Wishly */ = {
+		AA000002AAAA000200000002 /* WishlyAI */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Wishly;
+			path = WishlyAI;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,7 +32,7 @@
 		AA000004AAAA000400000004 = {
 			isa = PBXGroup;
 			children = (
-				AA000002AAAA000200000002 /* Wishly */,
+				AA000002AAAA000200000002 /* WishlyAI */,
 				AA000005AAAA000500000005 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -40,7 +40,7 @@
 		AA000005AAAA000500000005 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				AA000001AAAA000100000001 /* Wishly.app */,
+				AA000001AAAA000100000001 /* WishlyAI.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,9 +48,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		AA000006AAAA000600000006 /* Wishly */ = {
+		AA000006AAAA000600000006 /* WishlyAI */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AA00000DAAAA000D0000000D /* Build configuration list for PBXNativeTarget "Wishly" */;
+			buildConfigurationList = AA00000DAAAA000D0000000D /* Build configuration list for PBXNativeTarget "WishlyAI" */;
 			buildPhases = (
 				AA000007AAAA000700000007 /* Sources */,
 				AA000003AAAA000300000003 /* Frameworks */,
@@ -61,13 +61,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				AA000002AAAA000200000002 /* Wishly */,
+				AA000002AAAA000200000002 /* WishlyAI */,
 			);
-			name = Wishly;
+			name = WishlyAI;
 			packageProductDependencies = (
 			);
-			productName = Wishly;
-			productReference = AA000001AAAA000100000001 /* Wishly.app */;
+			productName = WishlyAI;
+			productReference = AA000001AAAA000100000001 /* WishlyAI.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -85,7 +85,7 @@
 					};
 				};
 			};
-			buildConfigurationList = AA00000CAAAA000C0000000C /* Build configuration list for PBXProject "Wishly" */;
+			buildConfigurationList = AA00000CAAAA000C0000000C /* Build configuration list for PBXProject "WishlyAI" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -99,7 +99,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				AA000006AAAA000600000006 /* Wishly */,
+				AA000006AAAA000600000006 /* WishlyAI */,
 			);
 		};
 /* End PBXProject section */
@@ -135,7 +135,7 @@
 				DEVELOPMENT_TEAM = DP5G9GAZQJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Wishly;
+				INFOPLIST_KEY_CFBundleDisplayName = WishlyAI;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -147,8 +147,8 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.vladipanev.wishly;
-				PRODUCT_NAME = Wishly;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vladipanev.wishlyai;
+				PRODUCT_NAME = WishlyAI;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -170,7 +170,7 @@
 				DEVELOPMENT_TEAM = DP5G9GAZQJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Wishly;
+				INFOPLIST_KEY_CFBundleDisplayName = WishlyAI;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -182,8 +182,8 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.vladipanev.wishly;
-				PRODUCT_NAME = Wishly;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vladipanev.wishlyai;
+				PRODUCT_NAME = WishlyAI;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -319,7 +319,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		AA00000CAAAA000C0000000C /* Build configuration list for PBXProject "Wishly" */ = {
+		AA00000CAAAA000C0000000C /* Build configuration list for PBXProject "WishlyAI" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AA000010AAAA001000000010 /* Debug */,
@@ -328,7 +328,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		AA00000DAAAA000D0000000D /* Build configuration list for PBXNativeTarget "Wishly" */ = {
+		AA00000DAAAA000D0000000D /* Build configuration list for PBXNativeTarget "WishlyAI" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AA00000AAAAA000A0000000A /* Debug */,
