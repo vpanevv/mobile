@@ -18,6 +18,9 @@ struct CarDetailView: View {
     @State private var isEditingMileage = false
     @State private var mileageDraft = ""
     @State private var mileageValidationMessage: String?
+    @State private var serviceReportURL: URL?
+    @State private var serviceReportMessage: String?
+    @State private var isGeneratingServiceReport = false
 
     var body: some View {
         ScrollView {
@@ -258,7 +261,10 @@ struct CarDetailView: View {
         case .overview:
             overview
         case .history:
-            ServiceHistoryView(car: car)
+            VStack(alignment: .leading, spacing: 14) {
+                serviceReportControls
+                ServiceHistoryView(car: car)
+            }
         case .notes:
             MechanicNotesView(car: car)
         }
@@ -278,6 +284,8 @@ struct CarDetailView: View {
                 }
             }
 
+            serviceReportControls
+
             if car.upcomingReminders.isEmpty {
                 EmptyStateView(
                     symbolName: "calendar.badge.checkmark",
@@ -293,6 +301,57 @@ struct CarDetailView: View {
                     }
                 }
             }
+        }
+    }
+
+    private var serviceReportControls: some View {
+        GlassCardView(cornerRadius: 20) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 12) {
+                    Image(systemName: "doc.richtext")
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.tint)
+                        .frame(width: 38, height: 38)
+                        .background(.thinMaterial, in: Circle())
+                        .accessibilityHidden(true)
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Services Report")
+                            .font(.headline)
+                        Text("Export records for this car only.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Button {
+                    generateServiceReport()
+                } label: {
+                    Label("Export This Car's Services", systemImage: "square.and.arrow.up")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .buttonBorderShape(.roundedRectangle(radius: 14))
+                .disabled(isGeneratingServiceReport)
+                .accessibilityLabel("Export this car's services")
+
+                if let serviceReportURL {
+                    ShareLink(item: serviceReportURL) {
+                        Label("Share Car Report", systemImage: "doc.badge.arrow.up")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .buttonBorderShape(.roundedRectangle(radius: 14))
+                    .accessibilityLabel("Share car services report")
+                }
+
+                if let serviceReportMessage {
+                    Text(serviceReportMessage)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -340,6 +399,24 @@ struct CarDetailView: View {
             mileageValidationMessage = "Could not save mileage. Try again."
             assertionFailure("Failed to update mileage: \(error)")
         }
+    }
+
+    private func generateServiceReport() {
+        isGeneratingServiceReport = true
+        serviceReportURL = nil
+        serviceReportMessage = nil
+
+        do {
+            let url = try ServiceReportExporter.makePDF(for: car)
+            serviceReportURL = url
+            serviceReportMessage = "Report ready: \(url.lastPathComponent)"
+            HapticsManager.success()
+        } catch {
+            serviceReportMessage = error.localizedDescription
+            HapticsManager.warning()
+        }
+
+        isGeneratingServiceReport = false
     }
 
     private func updatePhoto(from item: PhotosPickerItem?) async {
