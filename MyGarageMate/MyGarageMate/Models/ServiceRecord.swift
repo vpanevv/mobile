@@ -59,6 +59,7 @@ final class ServiceRecord {
     var notes: String?
     var receiptImageData: Data?
     var createdAt: Date
+    var updatedAt: Date?
     var car: Car?
 
     var category: ServiceCategory {
@@ -77,7 +78,8 @@ final class ServiceRecord {
         shopName: String? = nil,
         notes: String? = nil,
         receiptImageData: Data? = nil,
-        createdAt: Date = .now
+        createdAt: Date = .now,
+        updatedAt: Date? = nil
     ) {
         self.id = id
         self.title = title
@@ -90,5 +92,6 @@ final class ServiceRecord {
         self.notes = notes
         self.receiptImageData = receiptImageData
         self.createdAt = createdAt
+        self.updatedAt = updatedAt
     }
 }
