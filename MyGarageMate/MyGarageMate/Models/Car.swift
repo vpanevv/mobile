@@ -1,6 +1,33 @@
 import Foundation
 import SwiftData
 
+enum EngineType: String, CaseIterable, Codable, Identifiable {
+    case gasoline
+    case diesel
+    case hybrid
+    case electric
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .gasoline: "Gasoline"
+        case .diesel: "Diesel"
+        case .hybrid: "Hybrid"
+        case .electric: "Electric"
+        }
+    }
+
+    var symbolName: String {
+        switch self {
+        case .gasoline: "fuelpump.fill"
+        case .diesel: "fuelpump"
+        case .hybrid: "leaf.fill"
+        case .electric: "bolt.car.fill"
+        }
+    }
+}
+
 @Model
 final class Car {
     var id: UUID
@@ -12,6 +39,7 @@ final class Car {
     var vin: String?
     var currentMileage: Double
     var mileageUnit: String
+    var engineTypeRawValue: String = EngineType.gasoline.rawValue
     var photoData: Data?
     var createdAt: Date
     var owner: UserProfile?
@@ -35,6 +63,7 @@ final class Car {
         vin: String? = nil,
         currentMileage: Double = 0,
         mileageUnit: String = "km",
+        engineType: EngineType = .gasoline,
         photoData: Data? = nil,
         createdAt: Date = .now,
         serviceRecords: [ServiceRecord] = [],
@@ -50,6 +79,7 @@ final class Car {
         self.vin = vin
         self.currentMileage = currentMileage
         self.mileageUnit = mileageUnit
+        self.engineTypeRawValue = engineType.rawValue
         self.photoData = photoData
         self.createdAt = createdAt
         self.serviceRecords = serviceRecords
@@ -59,6 +89,11 @@ final class Car {
 
     var displayName: String {
         "\(year) \(make) \(model)"
+    }
+
+    var engineType: EngineType {
+        get { EngineType(rawValue: engineTypeRawValue) ?? .gasoline }
+        set { engineTypeRawValue = newValue.rawValue }
     }
 
     var serviceRecordsNewestFirst: [ServiceRecord] {

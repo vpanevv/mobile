@@ -11,13 +11,14 @@ struct AddCarView: View {
     @State private var selectedMake: CarMake?
     @State private var selectedModel = ""
     @State private var selectedYear = Calendar.current.component(.year, from: .now)
+    @State private var selectedEngineType: EngineType = .gasoline
     @State private var currentMileage = 0.0
     @State private var trim = ""
     @State private var plateNumber = ""
     @State private var vin = ""
     @State private var photoData: Data?
 
-    private let steps = ["Make", "Model", "Year", "Details", "Photo", "Review"]
+    private let steps = ["Make", "Model", "Year", "Engine", "Details", "Photo", "Review"]
 
     var body: some View {
         NavigationStack {
@@ -64,8 +65,10 @@ struct AddCarView: View {
         case 2:
             yearPicker
         case 3:
-            detailsForm
+            engineTypePicker
         case 4:
+            detailsForm
+        case 5:
             ScrollView {
                 CarPhotoPickerView(imageData: $photoData, title: "Car Photo")
                     .padding()
@@ -166,6 +169,45 @@ struct AddCarView: View {
         .scrollContentBackground(.hidden)
     }
 
+    private var engineTypePicker: some View {
+        VStack(spacing: 14) {
+            ForEach(EngineType.allCases) { engineType in
+                Button {
+                    selectedEngineType = engineType
+                    HapticsManager.lightTap()
+                } label: {
+                    HStack(spacing: 14) {
+                        Image(systemName: engineType.symbolName)
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(selectedEngineType == engineType ? Color.white : Color.accentColor)
+                            .frame(width: 42, height: 42)
+                            .background {
+                                Circle()
+                                    .fill(selectedEngineType == engineType ? Color.accentColor : Color.accentColor.opacity(0.12))
+                            }
+
+                        Text(engineType.title)
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+
+                        Spacer()
+
+                        if selectedEngineType == engineType {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.tint)
+                                .font(.title3)
+                        }
+                    }
+                    .padding(16)
+                    .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Select \(engineType.title) engine")
+            }
+        }
+        .padding()
+    }
+
     private var review: some View {
         ScrollView {
             VStack(spacing: 16) {
@@ -178,6 +220,9 @@ struct AddCarView: View {
                             .font(.title2.bold())
                         Text("\(currentMileage.formatted(.number.precision(.fractionLength(0)))) \(profile.mileageUnit)")
                             .foregroundStyle(.secondary)
+                        Label(selectedEngineType.title, systemImage: selectedEngineType.symbolName)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.tint)
 
                         if !trim.isEmpty || !plateNumber.isEmpty || !vin.isEmpty {
                             Divider()
@@ -252,7 +297,7 @@ struct AddCarView: View {
             selectedMake != nil
         case 1:
             !selectedModel.isEmpty
-        case 3:
+        case 4:
             currentMileage >= 0
         default:
             true
@@ -265,7 +310,7 @@ struct AddCarView: View {
             "Choose a make to continue."
         case 1 where selectedModel.isEmpty:
             "Choose a model to continue."
-        case 3 where currentMileage < 0:
+        case 4 where currentMileage < 0:
             "Mileage cannot be negative."
         default:
             nil
@@ -284,6 +329,7 @@ struct AddCarView: View {
             vin: vin.nilIfBlank,
             currentMileage: currentMileage,
             mileageUnit: profile.mileageUnit,
+            engineType: selectedEngineType,
             photoData: photoData
         )
         car.owner = profile

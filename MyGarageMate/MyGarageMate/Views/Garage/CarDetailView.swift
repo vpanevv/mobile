@@ -125,32 +125,54 @@ struct CarDetailView: View {
                         }
                 }
             }
-            .frame(height: 310)
+            .frame(height: 380)
             .clipped()
+            .overlay(alignment: .bottom) {
+                LinearGradient(
+                    colors: [.clear, .black.opacity(0.12), .black.opacity(0.58)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 180)
+            }
 
             VStack(alignment: .leading, spacing: 8) {
                 Text(car.displayName)
                     .font(.largeTitle.bold())
                     .lineLimit(2)
                     .minimumScaleFactor(0.72)
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.35), radius: 8, y: 3)
 
-                Button {
-                    beginEditingMileage()
-                } label: {
-                    HStack(spacing: 8) {
-                        Text("\(car.currentMileage.formatted(.number.precision(.fractionLength(0)))) \(car.mileageUnit)")
-                            .font(.headline)
-                        Image(systemName: "pencil.circle.fill")
-                            .font(.headline)
+                HStack(spacing: 10) {
+                    Button {
+                        beginEditingMileage()
+                    } label: {
+                        HStack(spacing: 8) {
+                            Text("\(car.currentMileage.formatted(.number.precision(.fractionLength(0)))) \(car.mileageUnit)")
+                                .font(.headline)
+                            Image(systemName: "pencil.circle.fill")
+                                .font(.headline)
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(.ultraThinMaterial, in: Capsule())
                     }
-                    .foregroundStyle(.primary)
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Edit current mileage")
+
+                    Label(car.engineType.title, systemImage: car.engineType.symbolName)
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(.ultraThinMaterial, in: Capsule())
+                        .accessibilityLabel("Engine type \(car.engineType.title)")
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Edit current mileage")
             }
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.ultraThinMaterial)
 
             PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
                 Label("Edit Photo", systemImage: "photo.badge.plus")
