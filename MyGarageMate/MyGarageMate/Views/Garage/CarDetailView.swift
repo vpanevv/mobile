@@ -337,12 +337,12 @@ struct CarDetailView: View {
 
                 if let serviceReportURL {
                     ShareLink(item: serviceReportURL) {
-                        Label("Share Car Report", systemImage: "doc.badge.arrow.up")
+                        Label("Download Car Report", systemImage: "doc.badge.arrow.up")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
                     .buttonBorderShape(.roundedRectangle(radius: 14))
-                    .accessibilityLabel("Share car services report")
+                    .accessibilityLabel("Download car report")
                 }
 
                 if let serviceReportMessage {
