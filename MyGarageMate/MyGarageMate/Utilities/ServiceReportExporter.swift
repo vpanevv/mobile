@@ -99,6 +99,7 @@ enum ServiceReportExporter {
             drawText("MyGarageMate Car Service Report", font: .systemFont(ofSize: 28, weight: .bold), spacingAfter: 6)
             drawText("Generated \(Self.displayDateTime(Date()))", font: .systemFont(ofSize: 11), color: .darkGray, spacingAfter: 18)
             drawText("\(car.year) \(car.make) \(car.model)", font: .systemFont(ofSize: 21, weight: .bold), spacingAfter: 4)
+            drawText("Engine: \(car.engineType.title)", font: .systemFont(ofSize: 12), color: .darkGray, spacingAfter: 12)
             drawCarPhotoIfAvailable()
 
             let records = car.serviceRecords.sorted { $0.date > $1.date }
