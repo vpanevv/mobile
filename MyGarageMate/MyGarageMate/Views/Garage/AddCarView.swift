@@ -103,28 +103,87 @@ struct AddCarView: View {
     }
 
     private var searchableModelList: some View {
-        List(filteredModels, id: \.self) { model in
-            Button {
-                selectedModel = model
-                searchText = ""
-                step = 2
-                HapticsManager.lightTap()
-            } label: {
-                HStack {
-                    Text(model)
+        VStack(spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(selectedMake?.name ?? "Selected make")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
                         .font(.headline)
-                    Spacer()
-                    if selectedModel == model {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.tint)
+                        .foregroundStyle(.secondary)
+
+                    TextField("Search \(selectedMake?.name ?? "car") models", text: $searchText)
+                        .textInputAutocapitalization(.words)
+                        .autocorrectionDisabled()
+                        .accessibilityLabel("Search car models")
+
+                    if !searchText.isEmpty {
+                        Button {
+                            searchText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Clear model search")
                     }
                 }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 13)
+                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
-            .foregroundStyle(.primary)
-            .listRowBackground(Color.clear)
+            .padding(.horizontal)
+            .padding(.top, 12)
+
+            if filteredModels.isEmpty {
+                EmptyStateView(
+                    symbolName: "magnifyingglass",
+                    title: "No models found",
+                    message: "Try a shorter search or go back and choose another make."
+                )
+                .padding(.horizontal)
+                .padding(.top, 34)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 10) {
+                        ForEach(filteredModels, id: \.self) { model in
+                            Button {
+                                selectedModel = model
+                                searchText = ""
+                                step = 2
+                                HapticsManager.lightTap()
+                            } label: {
+                                HStack(spacing: 12) {
+                                    Image(systemName: selectedModel == model ? "checkmark.circle.fill" : "car.side.fill")
+                                        .font(.title3)
+                                        .foregroundStyle(selectedModel == model ? Color.accentColor : Color.secondary)
+                                        .frame(width: 28)
+
+                                    Text(model)
+                                        .font(.headline)
+                                        .foregroundStyle(.primary)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                                    Image(systemName: "chevron.right")
+                                        .font(.footnote.weight(.bold))
+                                        .foregroundStyle(.tertiary)
+                                }
+                                .padding(16)
+                                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Select \(model)")
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 12)
+                }
+                .scrollIndicators(.hidden)
+            }
         }
-        .searchable(text: $searchText, prompt: "Search models")
-        .scrollContentBackground(.hidden)
     }
 
     private var yearPicker: some View {
