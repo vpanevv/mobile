@@ -1,6 +1,8 @@
+import CoreTransferable
 import PhotosUI
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 
 struct CarPhotoPickerView: View {
     @Binding var imageData: Data?
@@ -8,6 +10,8 @@ struct CarPhotoPickerView: View {
     var systemImage: String = "car.side.fill"
 
     @State private var selectedItem: PhotosPickerItem?
+    @State private var isLoadingImage = false
+    @State private var imageErrorMessage: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -20,12 +24,41 @@ struct CarPhotoPickerView: View {
                         .fill(.thinMaterial)
                         .frame(height: 210)
 
-                    if let imageData, let uiImage = UIImage(data: imageData) {
+                    if isLoadingImage {
+                        VStack(spacing: 12) {
+                            ProgressView()
+                            Text("Preparing image")
+                                .font(.headline)
+                            Text("Your photo will appear here before you continue.")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    } else if let imageData, let uiImage = UIImage(data: imageData) {
                         Image(uiImage: uiImage)
                             .resizable()
                             .scaledToFill()
                             .frame(height: 210)
                             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+
+                        LinearGradient(
+                            colors: [.clear, .black.opacity(0.45)],
+                            startPoint: .center,
+                            endPoint: .bottom
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+
+                        VStack {
+                            Spacer()
+                            HStack {
+                                Label("Photo selected", systemImage: "checkmark.circle.fill")
+                                    .font(.subheadline.weight(.semibold))
+                                Spacer()
+                                Text("Change")
+                                    .font(.subheadline.weight(.semibold))
+                            }
+                            .foregroundStyle(.white)
+                            .padding(14)
+                        }
                     } else {
                         VStack(spacing: 10) {
                             Image(systemName: systemImage)
@@ -46,23 +79,65 @@ struct CarPhotoPickerView: View {
                         .background(.ultraThinMaterial, in: Circle())
                         .padding(12)
                 }
+                .animation(.snappy(duration: 0.22), value: imageData)
+                .animation(.snappy(duration: 0.18), value: isLoadingImage)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Choose \(title.lowercased())")
+
+            if let imageErrorMessage {
+                Text(imageErrorMessage)
+                    .font(.footnote)
+                    .foregroundStyle(.red)
+                    .accessibilityLabel(imageErrorMessage)
+            }
         }
         .onChange(of: selectedItem) { _, newValue in
             Task {
-                guard
-                    let data = try? await newValue?.loadTransferable(type: Data.self),
-                    let image = UIImage(data: data),
-                    let jpegData = image.jpegData(compressionQuality: 0.82)
-                else { return }
+                guard let newValue else {
+                    await MainActor.run {
+                        isLoadingImage = false
+                        imageErrorMessage = nil
+                    }
+                    return
+                }
 
                 await MainActor.run {
-                    imageData = jpegData
+                    isLoadingImage = true
+                    imageErrorMessage = nil
+                }
+
+                guard
+                    let photo = try? await newValue.loadTransferable(type: PickedPhoto.self),
+                    let image = UIImage(data: photo.data),
+                    let jpegData = image.jpegData(compressionQuality: 0.82)
+                else {
+                    await MainActor.run {
+                        isLoadingImage = false
+                        imageErrorMessage = "Could not load that photo. Please try another image."
+                        HapticsManager.warning()
+                    }
+                    return
+                }
+
+                await MainActor.run {
+                    withAnimation(.snappy(duration: 0.22)) {
+                        imageData = jpegData
+                        isLoadingImage = false
+                    }
                     HapticsManager.lightTap()
                 }
             }
+        }
+    }
+}
+
+private struct PickedPhoto: Transferable {
+    let data: Data
+
+    static var transferRepresentation: some TransferRepresentation {
+        DataRepresentation(importedContentType: .image) { data in
+            PickedPhoto(data: data)
         }
     }
 }
