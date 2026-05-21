@@ -188,8 +188,6 @@ struct ContentView: View {
     @AppStorage("wishlyai.isDark") private var isDark: Bool = true
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
 
-    @State private var toneVisible   = false
-    @State private var lengthVisible = false
     @State private var showFavorites = false
     @State private var favButtonPulse = false
 
@@ -218,33 +216,27 @@ struct ContentView: View {
                     NameToggleField(includeName: $viewModel.includeName, name: $viewModel.name)
                         .padding(.horizontal, 20)
 
-                    Divider().opacity(0.15).padding(.horizontal, 20)
-
                     // Tone
-                    ToneSelectorView(
-                        selectedTone: Binding(
-                            get: { viewModel.selectedTone },
-                            set: { viewModel.selectedTone = $0; softClearWish() }
+                    VStack(alignment: .leading, spacing: 10) {
+                        SectionLabel("TONE")
+                        TonePicker(
+                            selected: Binding(
+                                get: { viewModel.selectedTone },
+                                set: { viewModel.selectedTone = $0; softClearWish() }
+                            )
                         )
-                    )
-                    .padding(.horizontal, 20)
-                    .offset(y: toneVisible ? 0 : 20)
-                    .opacity(toneVisible ? 1 : 0)
-
-                    Divider().opacity(0.15).padding(.horizontal, 20)
+                    }
 
                     // Wish Length
-                    WishLengthSelectorView(
-                        selectedLength: Binding(
-                            get: { viewModel.selectedLength },
-                            set: { viewModel.selectedLength = $0; softClearWish() }
+                    VStack(alignment: .leading, spacing: 10) {
+                        SectionLabel("LENGTH")
+                        LengthPicker(
+                            selected: Binding(
+                                get: { viewModel.selectedLength },
+                                set: { viewModel.selectedLength = $0; softClearWish() }
+                            )
                         )
-                    )
-                    .padding(.horizontal, 20)
-                    .offset(y: lengthVisible ? 0 : 20)
-                    .opacity(lengthVisible ? 1 : 0)
-
-                    Divider().opacity(0.15).padding(.horizontal, 20)
+                    }
 
                     // Generate
                     GenerateButton(isLoading: viewModel.isLoading) {
@@ -367,10 +359,6 @@ struct ContentView: View {
         }
         .animation(.spring(response: 0.45, dampingFraction: 0.72), value: viewModel.generatedWish != nil)
         .animation(.spring(response: 0.45, dampingFraction: 0.72), value: viewModel.isLoading)
-        .onAppear {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.8).delay(0.1)) { toneVisible   = true }
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.8).delay(0.2)) { lengthVisible = true }
-        }
     }
 
     // Fade out the result card when tone or length changes — hint that a new wish is needed
