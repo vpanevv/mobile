@@ -55,7 +55,7 @@ struct FavoriteWishCard: View {
                 Spacer(minLength: 0)
 
                 // Date — right aligned
-                Text(wish.dateAdded, style: .relative)
+                Text(wish.dateAdded, format: .dateTime.day().month())
                     .font(.system(size: 11, weight: .regular, design: .rounded))
                     .foregroundStyle(.secondary.opacity(0.55))
                     .multilineTextAlignment(.trailing)
