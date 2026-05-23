@@ -21,6 +21,7 @@ struct CarDetailView: View {
     @State private var serviceReportURL: URL?
     @State private var serviceReportMessage: String?
     @State private var isGeneratingServiceReport = false
+    @State private var isShowingThisYearServices = false
 
     var body: some View {
         ScrollView {
@@ -89,6 +90,9 @@ struct CarDetailView: View {
         }
         .sheet(isPresented: $isEditingMileage) {
             mileageEditor
+        }
+        .sheet(isPresented: $isShowingThisYearServices) {
+            ThisYearServicesView(car: car, records: paidServicesThisYear)
         }
         .onChange(of: selectedPhotoItem) { _, newValue in
             Task {
@@ -233,11 +237,18 @@ struct CarDetailView: View {
 
     private var summaryCards: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-            summaryCard(
-                title: "This year",
-                value: CurrencyFormatter.string(fromMinor: car.totalSpentThisYear(currencyCode: profile.preferredCurrencyCode), currencyCode: profile.preferredCurrencyCode),
-                symbol: "creditcard.fill"
-            )
+            Button {
+                HapticsManager.lightTap()
+                isShowingThisYearServices = true
+            } label: {
+                summaryCard(
+                    title: "This year",
+                    value: CurrencyFormatter.string(fromMinor: car.totalSpentThisYear(currencyCode: profile.preferredCurrencyCode), currencyCode: profile.preferredCurrencyCode),
+                    symbol: "creditcard.fill"
+                )
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Show paid services this year")
 
             summaryCard(
                 title: "Last service",
@@ -257,6 +268,15 @@ struct CarDetailView: View {
                 symbol: "list.bullet.rectangle.fill"
             )
         }
+    }
+
+    private var paidServicesThisYear: [ServiceRecord] {
+        car.serviceRecords
+            .filter { record in
+                record.amountMinor > 0 &&
+                Calendar.current.isDate(record.date, equalTo: .now, toGranularity: .year)
+            }
+            .sorted { $0.date > $1.date }
     }
 
     private func summaryCard(title: String, value: String, symbol: String) -> some View {
@@ -489,5 +509,65 @@ private enum DetailSection: String, CaseIterable, Identifiable {
         case .history: "History"
         case .notes: "Notes"
         }
+    }
+}
+
+private struct ThisYearServicesView: View {
+    @Environment(\.dismiss) private var dismiss
+    let car: Car
+    let records: [ServiceRecord]
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if records.isEmpty {
+                    EmptyStateView(
+                        symbolName: "creditcard",
+                        title: "No paid services this year",
+                        message: "Paid services for \(car.make) \(car.model) will appear here."
+                    )
+                    .padding()
+                } else {
+                    List {
+                        ForEach(records, id: \.id) { record in
+                            HStack(spacing: 12) {
+                                Image(systemName: record.category.symbolName)
+                                    .font(.headline.weight(.semibold))
+                                    .foregroundStyle(.tint)
+                                    .frame(width: 38, height: 38)
+                                    .background(.thinMaterial, in: Circle())
+                                    .accessibilityHidden(true)
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(record.title)
+                                        .font(.headline)
+                                        .lineLimit(2)
+                                    Text(record.date.formatted(date: .abbreviated, time: .omitted))
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                }
+
+                                Spacer()
+
+                                CurrencyAmountView(amountMinor: record.amountMinor, currencyCode: record.currencyCode)
+                            }
+                            .padding(.vertical, 6)
+                            .accessibilityElement(children: .combine)
+                        }
+                    }
+                    .listStyle(.insetGrouped)
+                }
+            }
+            .navigationTitle("This Year")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 }
