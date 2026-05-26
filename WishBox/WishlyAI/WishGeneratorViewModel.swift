@@ -13,9 +13,9 @@ final class WishGeneratorViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var showError = false
 
-    // Persisted selections
-    @AppStorage("lastTone")   var selectedToneRaw:   String = WishTone.friendly.rawValue
-    @AppStorage("lastLength") var selectedLengthRaw: String = WishLength.medium.rawValue
+    // Persisted selections (tone is now Int-backed; length stays String)
+    @AppStorage("lastToneRaw") var selectedToneRaw:   Int    = WishTone.friendly.rawValue
+    @AppStorage("lastLength")  var selectedLengthRaw: String = WishLength.medium.rawValue
 
     var selectedTone: WishTone {
         get { WishTone(rawValue: selectedToneRaw) ?? .friendly }

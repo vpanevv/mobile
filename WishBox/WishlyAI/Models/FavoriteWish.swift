@@ -13,7 +13,7 @@ struct FavoriteWish: Identifiable, Codable, Equatable {
         self.id = UUID()
         self.text = text
         self.occasion = occasion.rawValue
-        self.tone = tone.rawValue
+        self.tone = tone.label  // store human label, not Int rawValue
         self.length = length.rawValue
         self.recipientName = recipientName
         self.dateAdded = Date()

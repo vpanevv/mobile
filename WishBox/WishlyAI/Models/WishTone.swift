@@ -1,51 +1,62 @@
 import SwiftUI
 
-enum WishTone: String, CaseIterable, Identifiable {
-    case heartfelt = "Heartfelt"
-    case friendly  = "Friendly"
-    case funny     = "Funny"
-    case formal    = "Formal"
-    case poetic    = "Poetic"
+enum WishTone: Int, CaseIterable, Identifiable {
+    case formal       = 0
+    case professional = 1
+    case warm         = 2
+    case friendly     = 3
+    case playful      = 4
+    case funny        = 5
 
-    var id: String { rawValue }
+    var id: Int { rawValue }
 
-    var icon: String {
+    var label: String {
         switch self {
-        case .heartfelt: return "heart.fill"
-        case .friendly:  return "face.smiling.fill"
-        case .funny:     return "theatermasks.fill"
-        case .formal:    return "briefcase.fill"
-        case .poetic:    return "text.quote"
+        case .formal:       return "Formal"
+        case .professional: return "Professional"
+        case .warm:         return "Warm"
+        case .friendly:     return "Friendly"
+        case .playful:      return "Playful"
+        case .funny:        return "Funny"
+        }
+    }
+
+    var emoji: String {
+        switch self {
+        case .formal:       return "🎩"
+        case .professional: return "💼"
+        case .warm:         return "🤍"
+        case .friendly:     return "😊"
+        case .playful:      return "✨"
+        case .funny:        return "😄"
         }
     }
 
     var color: Color {
         switch self {
-        case .heartfelt: return Color(hex: 0xf43f5e)
-        case .friendly:  return Color(hex: 0xf59e0b)
-        case .funny:     return Color(hex: 0xa855f7)
-        case .formal:    return Color(hex: 0x3b82f6)
-        case .poetic:    return Color(hex: 0xc084fc)
-        }
-    }
-
-    var description: String {
-        switch self {
-        case .heartfelt: return "Warm & sincere"
-        case .friendly:  return "Casual & warm"
-        case .funny:     return "Light & humorous"
-        case .formal:    return "Professional"
-        case .poetic:    return "Lyrical & beautiful"
+        case .formal:       return Color(hex: 0x3b82f6)
+        case .professional: return Color(hex: 0x6366f1)
+        case .warm:         return Color(hex: 0x8b5cf6)
+        case .friendly:     return Color(hex: 0xa855f7)
+        case .playful:      return Color(hex: 0xc084fc)
+        case .funny:        return Color(hex: 0xe879f9)
         }
     }
 
     var apiInstruction: String {
         switch self {
-        case .heartfelt: return "Write in a warm, sincere, emotionally touching tone. Express genuine care and deep feeling."
-        case .friendly:  return "Write in a casual, upbeat, friendly tone — like a good friend texting. Natural and warm."
-        case .funny:     return "Write in a light, humorous tone with a witty joke or playful twist. Keep it tasteful and fun."
-        case .formal:    return "Write in a professional, respectful, eloquent tone. Suitable for colleagues or formal relationships."
-        case .poetic:    return "Write in a lyrical, poetic style with beautiful imagery and flowing language. Metaphors welcome."
+        case .formal:
+            return "Write in a formal, respectful, eloquent tone. Suitable for official or ceremonial relationships. Use refined language."
+        case .professional:
+            return "Write in a polished, professional tone. Appropriate for colleagues, clients, or business acquaintances. Courteous and composed."
+        case .warm:
+            return "Write in a warm, sincere, heartfelt tone. Express genuine care and affection without being overly casual."
+        case .friendly:
+            return "Write in a casual, friendly tone — like a good friend speaking naturally. Approachable and kind."
+        case .playful:
+            return "Write in a light, playful tone with cheerful energy and a touch of whimsy. Upbeat and fun."
+        case .funny:
+            return "Write in a humorous, witty tone with a clever joke or playful twist. Keep it tasteful and genuinely funny."
         }
     }
 }
