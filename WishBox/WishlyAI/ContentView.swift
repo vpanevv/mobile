@@ -217,15 +217,12 @@ struct ContentView: View {
                         .padding(.horizontal, 20)
 
                     // Tone
-                    VStack(alignment: .leading, spacing: 10) {
-                        SectionLabel("TONE")
-                        TonePicker(
-                            selected: Binding(
-                                get: { viewModel.selectedTone },
-                                set: { viewModel.selectedTone = $0; softClearWish() }
-                            )
-                        )
-                    }
+                    ToneSlider(selectedTone: Binding(
+                        get: { viewModel.selectedTone },
+                        set: { viewModel.selectedTone = $0; softClearWish() }
+                    ))
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 4)
 
                     // Wish Length
                     VStack(alignment: .leading, spacing: 10) {

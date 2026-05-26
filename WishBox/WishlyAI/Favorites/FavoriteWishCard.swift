@@ -12,7 +12,7 @@ struct FavoriteWishCard: View {
     @State private var showDeleteConfirm = false
 
     private var occasionType: HolidayType? { HolidayType(rawValue: wish.occasion) }
-    private var toneType: WishTone?         { WishTone(rawValue: wish.tone) }
+    private var toneType: WishTone?         { WishTone.allCases.first { $0.label == wish.tone } }
 
     var body: some View {
         Button { showDetail = true } label: {
@@ -36,7 +36,7 @@ struct FavoriteWishCard: View {
                             pill(occ.rawValue, color: Color.neonCyan)
                         }
                         if let tone = toneType {
-                            pill(tone.rawValue, color: tone.color)
+                            pill(tone.label, color: tone.color)
                         }
                     }
 
@@ -111,7 +111,7 @@ struct FavoriteWishDetailView: View {
     @State private var showDeleteConfirm = false
 
     private var occasionType: HolidayType? { HolidayType(rawValue: wish.occasion) }
-    private var toneType: WishTone?         { WishTone(rawValue: wish.tone) }
+    private var toneType: WishTone?         { WishTone.allCases.first { $0.label == wish.tone } }
     private var lengthType: WishLength?     { WishLength(rawValue: wish.length) }
 
     var body: some View {
@@ -166,7 +166,7 @@ struct FavoriteWishDetailView: View {
                         // Metadata pills row
                         HStack(spacing: 8) {
                             if let tone = toneType {
-                                detailPill(tone.rawValue, icon: tone.icon, color: tone.color)
+                                detailPill(tone.label, icon: tone.emoji, color: tone.color)
                             }
                             if let len = lengthType {
                                 detailPill(len.rawValue, icon: len.icon, color: len.color)
