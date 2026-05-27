@@ -109,6 +109,7 @@ struct FavoriteWishDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var copied = false
     @State private var showDeleteConfirm = false
+    @State private var showCardEditor = false
 
     private var occasionType: HolidayType? { HolidayType(rawValue: wish.occasion) }
     private var toneType: WishTone?         { WishTone.allCases.first { $0.label == wish.tone } }
@@ -189,59 +190,86 @@ struct FavoriteWishDetailView: View {
                         Divider()
 
                         // Actions
-                        HStack(spacing: 12) {
-                            // Copy
-                            Button {
-                                UIPasteboard.general.string = wish.text
-                                UINotificationFeedbackGenerator().notificationOccurred(.success)
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { copied = true }
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                    withAnimation { copied = false }
+                        VStack(spacing: 10) {
+                            HStack(spacing: 10) {
+                                // Copy
+                                Button {
+                                    UIPasteboard.general.string = wish.text
+                                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { copied = true }
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                        withAnimation { copied = false }
+                                    }
+                                } label: {
+                                    HStack(spacing: 7) {
+                                        Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .contentTransition(.symbolEffect(.replace))
+                                        Text(copied ? "Copied!" : "Copy Wish")
+                                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                    }
+                                    .foregroundStyle(copied ? .green : Color.neonCyan)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 48)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                            .fill(copied ? Color.green.opacity(0.10) : Color.neonCyan.opacity(0.10))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                                    .stroke(copied ? Color.green.opacity(0.35) : Color.neonCyan.opacity(0.35), lineWidth: 1)
+                                            )
+                                    )
                                 }
+                                .buttonStyle(.plain)
+
+                                // Delete
+                                Button { showDeleteConfirm = true } label: {
+                                    Image(systemName: "trash")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundStyle(Color.red.opacity(0.8))
+                                        .frame(width: 48, height: 48)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                                .fill(Color.red.opacity(0.08))
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                                        .stroke(Color.red.opacity(0.25), lineWidth: 1)
+                                                )
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                                .confirmationDialog("Remove from favorites?", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
+                                    Button("Remove", role: .destructive) { onDelete() }
+                                    Button("Cancel", role: .cancel) {}
+                                } message: {
+                                    Text("This wish will be permanently removed.")
+                                }
+                            }
+
+                            // Create Card
+                            Button {
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                showCardEditor = true
                             } label: {
-                                HStack(spacing: 7) {
-                                    Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                                HStack(spacing: 8) {
+                                    Image(systemName: "wand.and.stars")
                                         .font(.system(size: 14, weight: .semibold))
-                                        .contentTransition(.symbolEffect(.replace))
-                                    Text(copied ? "Copied!" : "Copy Wish")
+                                    Text("Create Card")
                                         .font(.system(size: 15, weight: .semibold, design: .rounded))
                                 }
-                                .foregroundStyle(copied ? .green : Color.neonCyan)
+                                .foregroundStyle(Color(hex: 0xc084fc))
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 48)
                                 .background(
                                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                        .fill(copied ? Color.green.opacity(0.10) : Color.neonCyan.opacity(0.10))
+                                        .fill(Color(hex: 0xc084fc).opacity(0.10))
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                                .stroke(copied ? Color.green.opacity(0.35) : Color.neonCyan.opacity(0.35), lineWidth: 1)
+                                                .stroke(Color(hex: 0xc084fc).opacity(0.40), lineWidth: 1)
                                         )
                                 )
                             }
                             .buttonStyle(.plain)
-
-                            // Delete
-                            Button { showDeleteConfirm = true } label: {
-                                Image(systemName: "trash")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundStyle(Color.red.opacity(0.8))
-                                    .frame(width: 48, height: 48)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                            .fill(Color.red.opacity(0.08))
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                                    .stroke(Color.red.opacity(0.25), lineWidth: 1)
-                                            )
-                                    )
-                            }
-                            .buttonStyle(.plain)
-                            .confirmationDialog("Remove from favorites?", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
-                                Button("Remove", role: .destructive) { onDelete() }
-                                Button("Cancel", role: .cancel) {}
-                            } message: {
-                                Text("This wish will be permanently removed.")
-                            }
                         }
                     }
                     .padding(.horizontal, 20)
@@ -252,6 +280,13 @@ struct FavoriteWishDetailView: View {
         .presentationDetents([.medium, .large])
         .presentationCornerRadius(32)
         .presentationDragIndicator(.hidden) // we draw our own
+        .fullScreenCover(isPresented: $showCardEditor) {
+            CardEditorView(
+                wishText: wish.text,
+                occasion: wish.occasion,
+                recipientName: wish.recipientName
+            )
+        }
     }
 
     private func detailPill(_ text: String, icon: String, color: Color) -> some View {

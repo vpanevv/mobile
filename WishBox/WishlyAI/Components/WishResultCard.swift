@@ -16,6 +16,7 @@ struct WishResultCard: View {
     @State private var typewriterTask: Task<Void, Never>?
     @State private var heartBurst = false
     @State private var heartScale: CGFloat = 1.0
+    @State private var showCardEditor = false
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
@@ -49,44 +50,71 @@ struct WishResultCard: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .animation(nil, value: displayedText)
 
-                // Copy button — shown after typing
+                // Action buttons — shown after typing
                 if !isTyping {
-                    Button {
-                        UIPasteboard.general.string = wish
-                        UINotificationFeedbackGenerator().notificationOccurred(.success)
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.72)) {
-                            copied = true
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    HStack(spacing: 10) {
+                        // Copy
+                        Button {
+                            UIPasteboard.general.string = wish
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
                             withAnimation(.spring(response: 0.35, dampingFraction: 0.72)) {
-                                copied = false
+                                copied = true
                             }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                withAnimation(.spring(response: 0.35, dampingFraction: 0.72)) {
+                                    copied = false
+                                }
+                            }
+                        } label: {
+                            HStack(spacing: 7) {
+                                Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .contentTransition(.symbolEffect(.replace))
+                                Text(copied ? "Copied!" : "Copy")
+                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            }
+                            .foregroundStyle(copied ? .green : Color.neonCyan)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 46)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(copied ? Color.green.opacity(0.08) : Color.neonCyan.opacity(0.08))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                            .stroke(
+                                                copied ? Color.green.opacity(0.35) : Color.neonCyan.opacity(0.35),
+                                                lineWidth: 1
+                                            )
+                                    )
+                            )
                         }
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: copied ? "checkmark" : "doc.on.doc")
-                                .font(.system(size: 14, weight: .semibold))
-                                .contentTransition(.symbolEffect(.replace))
-                            Text(copied ? "Copied!" : "Copy Wish")
-                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .buttonStyle(.plain)
+
+                        // Create Card
+                        Button {
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            showCardEditor = true
+                        } label: {
+                            HStack(spacing: 7) {
+                                Image(systemName: "wand.and.stars")
+                                    .font(.system(size: 13, weight: .semibold))
+                                Text("Create Card")
+                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            }
+                            .foregroundStyle(Color(hex: 0xc084fc))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 46)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(Color(hex: 0xc084fc).opacity(0.10))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                            .stroke(Color(hex: 0xc084fc).opacity(0.40), lineWidth: 1)
+                                    )
+                            )
                         }
-                        .foregroundStyle(copied ? .green : Color.neonCyan)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 46)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(copied ? Color.green.opacity(0.08) : Color.neonCyan.opacity(0.08))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .stroke(
-                                            copied ? Color.green.opacity(0.35) : Color.neonCyan.opacity(0.35),
-                                            lineWidth: 1
-                                        )
-                                )
-                        )
-                        .shadow(color: copied ? Color.green.opacity(0.12) : Color.neonCyan.opacity(0.12), radius: 8)
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
                 }
             }
@@ -135,6 +163,13 @@ struct WishResultCard: View {
             .buttonStyle(.plain)
         }
         .onAppear { startTypewriter() }
+        .fullScreenCover(isPresented: $showCardEditor) {
+            CardEditorView(
+                wishText: wish,
+                occasion: occasion.rawValue,
+                recipientName: recipientName
+            )
+        }
     }
 
     private var heartButton: some View {
