@@ -115,18 +115,20 @@ struct AddPersonView: View {
             }
         }
         .onAppear { prefill() }
+        .presentationDetents([.large])
+        .presentationCornerRadius(32)
+        .presentationDragIndicator(.hidden)
+        // Contact picker presented on top of AddPersonView — populates fields, does NOT dismiss AddPersonView
         .sheet(isPresented: $showContactPicker) {
             ContactPicker { pickedName, pickedDay, pickedMonth in
                 name = pickedName
                 if let d = pickedDay   { day   = d }
                 if let m = pickedMonth { month = m }
-                showContactPicker = false
-                entryMode = .manual   // switch to manual after import so user can edit
+                entryMode = .manual          // switch to manual so user can review/edit
+                showContactPicker = false    // dismiss only the contact picker
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
             }
         }
-        .presentationDetents([.large])
-        .presentationCornerRadius(32)
-        .presentationDragIndicator(.hidden)
     }
 
     // MARK: - Subviews
