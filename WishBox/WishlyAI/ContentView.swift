@@ -222,13 +222,19 @@ struct ContentView: View {
                                 babyName:   $viewModel.babyName
                             )
                             .transition(.opacity.combined(with: .move(edge: .top)))
+                        } else if viewModel.selectedHoliday == .wedding {
+                            WeddingNameFields(
+                                partner1Name: $viewModel.partner1Name,
+                                partner2Name: $viewModel.partner2Name
+                            )
+                            .transition(.opacity.combined(with: .move(edge: .top)))
                         } else {
                             NameToggleField(includeName: $viewModel.includeName, name: $viewModel.name)
                                 .transition(.opacity.combined(with: .move(edge: .top)))
                         }
                     }
                     .padding(.horizontal, 20)
-                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.selectedHoliday == .newBaby)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.selectedHoliday)
 
                     // Tone
                     ToneSlider(selectedTone: Binding(
@@ -269,7 +275,7 @@ struct ContentView: View {
                             occasion: viewModel.selectedHoliday,
                             tone: viewModel.selectedTone,
                             length: viewModel.selectedLength,
-                            recipientName: newBabyRecipientName ?? (viewModel.includeName ? viewModel.name : nil)
+                            recipientName: specialOccasionRecipientName ?? (viewModel.includeName ? viewModel.name : nil)
                         ) {
                             viewModel.generateWish()
                         }
@@ -411,16 +417,29 @@ struct ContentView: View {
         }
     }
 
-    /// Combined display name for the New Baby occasion used by WishResultCard, Favorites, and Card Mode.
-    private var newBabyRecipientName: String? {
-        guard viewModel.selectedHoliday == .newBaby else { return nil }
-        let p = viewModel.parentName.trimmingCharacters(in: .whitespaces)
-        let b = viewModel.babyName.trimmingCharacters(in: .whitespaces)
-        switch (p.isEmpty, b.isEmpty) {
-        case (false, false): return "\(p) & baby \(b)"
-        case (false, true):  return p
-        case (true,  false): return "baby \(b)"
-        case (true,  true):  return nil
+    /// Combined display name for occasions with special name fields (New Baby, Wedding).
+    private var specialOccasionRecipientName: String? {
+        switch viewModel.selectedHoliday {
+        case .newBaby:
+            let p = viewModel.parentName.trimmingCharacters(in: .whitespaces)
+            let b = viewModel.babyName.trimmingCharacters(in: .whitespaces)
+            switch (p.isEmpty, b.isEmpty) {
+            case (false, false): return "\(p) & baby \(b)"
+            case (false, true):  return p
+            case (true,  false): return "baby \(b)"
+            case (true,  true):  return nil
+            }
+        case .wedding:
+            let a = viewModel.partner1Name.trimmingCharacters(in: .whitespaces)
+            let b = viewModel.partner2Name.trimmingCharacters(in: .whitespaces)
+            switch (a.isEmpty, b.isEmpty) {
+            case (false, false): return "\(a) & \(b)"
+            case (false, true):  return a
+            case (true,  false): return b
+            case (true,  true):  return nil
+            }
+        default:
+            return nil
         }
     }
 }
