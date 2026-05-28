@@ -208,100 +208,95 @@ struct CardEditorView: View {
         .padding(.horizontal, 32)
     }
 
+    // 2-row × 5-column grid — all 10 backgrounds visible at once, no scrolling
     private var backgroundPicker: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(CardBackground.allCases) { bg in
-                    let isSelected = bg == selectedBackground
-
-                    Button {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        withAnimation(reduceMotion ? .none : .easeInOut(duration: 0.35)) {
-                            selectedBackground = bg
-                            savedBackground = bg.rawValue
-                        }
-                    } label: {
-                        ZStack(alignment: .bottom) {
-                            // Swatch
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(bg.gradient)
-                                .frame(width: 56, height: 70)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .stroke(isSelected ? Color.white : Color.clear, lineWidth: 2)
-                                )
-                                .scaleEffect(isSelected ? 1.05 : 1.0)
-                                .shadow(color: isSelected ? Color.black.opacity(0.3) : .clear, radius: 6, y: 3)
-
-                            // Checkmark
-                            if isSelected {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundStyle(.white)
-                                    .shadow(color: .black.opacity(0.4), radius: 3)
-                                    .offset(y: -6)
-                                    .transition(.scale.combined(with: .opacity))
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 5)
+        return LazyVGrid(columns: columns, spacing: 10) {
+            ForEach(CardBackground.allCases) { bg in
+                let isSelected = bg == selectedBackground
+                Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    withAnimation(reduceMotion ? .none : .easeInOut(duration: 0.35)) {
+                        selectedBackground = bg
+                        savedBackground = bg.rawValue
+                    }
+                } label: {
+                    VStack(spacing: 5) {
+                        ZStack {
+                            GeometryReader { g in
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(bg.gradient)
+                                    .frame(width: g.size.width, height: g.size.width * 1.22)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                            .stroke(isSelected ? Color.white : Color.clear, lineWidth: 2)
+                                    )
+                                    .scaleEffect(isSelected ? 1.05 : 1.0)
+                                    .shadow(color: isSelected ? Color.black.opacity(0.28) : .clear, radius: 5, y: 2)
+                                    .overlay(alignment: .center) {
+                                        if isSelected {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .font(.system(size: 15, weight: .semibold))
+                                                .foregroundStyle(.white)
+                                                .shadow(color: .black.opacity(0.35), radius: 3)
+                                                .transition(.scale.combined(with: .opacity))
+                                        }
+                                    }
                             }
+                            .aspectRatio(1 / 1.22, contentMode: .fit)
                         }
                         .animation(.spring(response: 0.3, dampingFraction: 0.72), value: isSelected)
 
-                        // Name label
                         Text(bg.name)
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                            .font(.system(size: 9, weight: .medium, design: .rounded))
                             .foregroundStyle(isSelected ? Color(hex: 0xc084fc) : .secondary)
-                            .padding(.top, 5)
+                            .lineLimit(1)
                     }
-                    .buttonStyle(.plain)
-                    .frame(width: 56)
                 }
+                .buttonStyle(.plain)
             }
-            .padding(.horizontal, 2)
-            .padding(.vertical, 4)
         }
     }
 
+    // Equal-width chips in a single non-scrolling row — all 5 fonts always visible
     private var fontPicker: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(CardFont.allCases) { cf in
-                    let isSelected = cf == selectedFont
-
-                    Button {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        withAnimation(reduceMotion ? .none : .spring(response: 0.3, dampingFraction: 0.72)) {
-                            selectedFont = cf
-                            savedFont    = cf.rawValue
-                        }
-                    } label: {
-                        VStack(spacing: 4) {
-                            Text(cf.previewLabel)
-                                .font(cf.font(size: 22))
-                                .foregroundStyle(isSelected ? Color(hex: 0xc084fc) : .primary)
-                                .frame(height: 32)
-                            Text(cf.name)
-                                .font(.system(size: 10, weight: .medium, design: .rounded))
-                                .foregroundStyle(isSelected ? Color(hex: 0xc084fc) : .secondary)
-                        }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(isSelected
-                                    ? Color(hex: 0xc084fc).opacity(0.12)
-                                    : Color.primary.opacity(0.06))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .stroke(isSelected ? Color(hex: 0xc084fc).opacity(0.5) : Color.clear, lineWidth: 1.5)
-                                )
-                        )
-                        .scaleEffect(isSelected ? 1.04 : 1.0)
-                        .animation(.spring(response: 0.28, dampingFraction: 0.7), value: isSelected)
+        HStack(spacing: 8) {
+            ForEach(CardFont.allCases) { cf in
+                let isSelected = cf == selectedFont
+                Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    withAnimation(reduceMotion ? .none : .spring(response: 0.3, dampingFraction: 0.72)) {
+                        selectedFont = cf
+                        savedFont    = cf.rawValue
                     }
-                    .buttonStyle(.plain)
+                } label: {
+                    VStack(spacing: 3) {
+                        Text(cf.previewLabel)
+                            .font(cf.font(size: 20))
+                            .foregroundStyle(isSelected ? Color(hex: 0xc084fc) : .primary)
+                            .frame(height: 28)
+                        Text(cf.name)
+                            .font(.system(size: 9, weight: .medium, design: .rounded))
+                            .foregroundStyle(isSelected ? Color(hex: 0xc084fc) : .secondary)
+                            .lineLimit(1)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(isSelected
+                                ? Color(hex: 0xc084fc).opacity(0.12)
+                                : Color.primary.opacity(0.06))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(isSelected ? Color(hex: 0xc084fc).opacity(0.5) : Color.clear, lineWidth: 1.5)
+                            )
+                    )
+                    .scaleEffect(isSelected ? 1.04 : 1.0)
+                    .animation(.spring(response: 0.28, dampingFraction: 0.7), value: isSelected)
                 }
+                .buttonStyle(.plain)
             }
-            .padding(.horizontal, 2)
-            .padding(.vertical, 4)
         }
     }
 
