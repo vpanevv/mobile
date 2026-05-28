@@ -8,6 +8,8 @@ final class WishGeneratorViewModel: ObservableObject {
     @Published var selectedLanguage: WishLanguage = .english
     @Published var includeName = false
     @Published var name = ""
+    @Published var parentName = ""   // New Baby — parent
+    @Published var babyName   = ""   // New Baby — baby
     @Published var generatedWish: String?
     @Published var isLoading = false
     @Published var errorMessage: String?
@@ -36,12 +38,16 @@ final class WishGeneratorViewModel: ObservableObject {
 
         Task {
             do {
+                let isNewBaby = selectedHoliday == .newBaby
                 let wish = try await service.generateWish(
                     holidayType: selectedHoliday.label,
-                    name: includeName ? name : nil,
-                    language: selectedLanguage,
-                    tone: selectedTone,
-                    length: selectedLength
+                    occasion:    selectedHoliday,
+                    name:        (!isNewBaby && includeName) ? name : nil,
+                    parentName:  isNewBaby ? parentName : nil,
+                    babyName:    isNewBaby ? babyName   : nil,
+                    language:    selectedLanguage,
+                    tone:        selectedTone,
+                    length:      selectedLength
                 )
                 withAnimation(.spring(response: 0.45, dampingFraction: 0.72)) {
                     generatedWish = wish

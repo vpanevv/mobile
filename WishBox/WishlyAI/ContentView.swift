@@ -214,9 +214,21 @@ struct ContentView: View {
                         LanguagePicker(selected: $viewModel.selectedLanguage)
                     }
 
-                    // Name
-                    NameToggleField(includeName: $viewModel.includeName, name: $viewModel.name)
-                        .padding(.horizontal, 20)
+                    // Name — conditional on occasion
+                    Group {
+                        if viewModel.selectedHoliday == .newBaby {
+                            NewBabyNameFields(
+                                parentName: $viewModel.parentName,
+                                babyName:   $viewModel.babyName
+                            )
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                        } else {
+                            NameToggleField(includeName: $viewModel.includeName, name: $viewModel.name)
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.selectedHoliday == .newBaby)
 
                     // Tone
                     ToneSlider(selectedTone: Binding(
@@ -257,7 +269,7 @@ struct ContentView: View {
                             occasion: viewModel.selectedHoliday,
                             tone: viewModel.selectedTone,
                             length: viewModel.selectedLength,
-                            recipientName: viewModel.includeName ? viewModel.name : nil
+                            recipientName: newBabyRecipientName ?? (viewModel.includeName ? viewModel.name : nil)
                         ) {
                             viewModel.generateWish()
                         }
@@ -396,6 +408,19 @@ struct ContentView: View {
         guard viewModel.generatedWish != nil else { return }
         withAnimation(.easeOut(duration: 0.25)) {
             viewModel.generatedWish = nil
+        }
+    }
+
+    /// Combined display name for the New Baby occasion used by WishResultCard, Favorites, and Card Mode.
+    private var newBabyRecipientName: String? {
+        guard viewModel.selectedHoliday == .newBaby else { return nil }
+        let p = viewModel.parentName.trimmingCharacters(in: .whitespaces)
+        let b = viewModel.babyName.trimmingCharacters(in: .whitespaces)
+        switch (p.isEmpty, b.isEmpty) {
+        case (false, false): return "\(p) & baby \(b)"
+        case (false, true):  return p
+        case (true,  false): return "baby \(b)"
+        case (true,  true):  return nil
         }
     }
 }

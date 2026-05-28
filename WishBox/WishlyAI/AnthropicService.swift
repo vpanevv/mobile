@@ -45,7 +45,10 @@ struct AnthropicService {
 
     func generateWish(
         holidayType: String,
-        name: String?,
+        occasion: HolidayType = .birthday,
+        name: String? = nil,
+        parentName: String? = nil,
+        babyName: String? = nil,
         language: WishLanguage = .english,
         tone: WishTone = .friendly,
         length: WishLength = .medium
@@ -53,7 +56,13 @@ struct AnthropicService {
         let systemPrompt = "You are WishlyAI, a creative wish generator. \(tone.apiInstruction) \(length.apiInstruction) Never use clichés like 'May your day be filled with joy'. Be original and specific. Return ONLY the wish text — no quotes, no labels, no extra formatting."
 
         let basePrompt: String
-        if let name, !name.isEmpty {
+        if occasion == .newBaby {
+            let clause = newBabyClause(
+                parent: parentName ?? "",
+                baby:   babyName  ?? ""
+            )
+            basePrompt = "Generate a new baby congratulations message. \(clause)"
+        } else if let name, !name.isEmpty {
             basePrompt = "Generate a \(holidayType.lowercased()) wish for \(name)."
         } else {
             basePrompt = "Generate a \(holidayType.lowercased()) wish."
@@ -94,6 +103,17 @@ struct AnthropicService {
         }
 
         return text
+    }
+
+    private func newBabyClause(parent: String, baby: String) -> String {
+        let p = parent.trimmingCharacters(in: .whitespaces)
+        let b = baby.trimmingCharacters(in: .whitespaces)
+        switch (p.isEmpty, b.isEmpty) {
+        case (false, false): return "Congratulate \(p) on the arrival of their new baby \(b). Use both names naturally."
+        case (false, true):  return "Congratulate \(p) on the arrival of their new baby. Use the parent's name \(p)."
+        case (true,  false): return "Congratulate the family on the arrival of baby \(b). Use the baby's name \(b)."
+        case (true,  true):  return "Congratulate the family on the arrival of their new baby. No specific names — keep it warm and general."
+        }
     }
 }
 
