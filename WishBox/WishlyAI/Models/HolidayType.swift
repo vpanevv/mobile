@@ -26,4 +26,17 @@ enum HolidayType: String, CaseIterable, Identifiable {
     }
 
     var label: String { rawValue }
+
+    var emoji: String {
+        switch self {
+        case .birthday:    return "🎂"
+        case .nameDay:     return "🌸"
+        case .anniversary: return "💑"
+        case .graduation:  return "🎓"
+        case .newBaby:     return "👶"
+        case .newJob:      return "💼"
+        case .christmas:   return "🎄"
+        case .newYear:     return "🎆"
+        }
+    }
 }

@@ -185,10 +185,12 @@ private struct AIHeader: View {
 struct ContentView: View {
     @StateObject private var viewModel = WishGeneratorViewModel()
     @EnvironmentObject var store: FavoritesStore
+    @EnvironmentObject var router: AppRouter
     @AppStorage("wishlyai.isDark") private var isDark: Bool = true
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
 
     @State private var showFavorites = false
+    @State private var showPeople    = false
     @State private var favButtonPulse = false
 
     var body: some View {
@@ -342,6 +344,29 @@ struct ContentView: View {
                     FavoritesView()
                         .environmentObject(store)
                 }
+
+                // People & Reminders
+                Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    showPeople = true
+                } label: {
+                    Image(systemName: "person.2.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color(hex: 0xc084fc))
+                        .frame(width: 38, height: 38)
+                        .background(
+                            isDark
+                                ? Color.surface.opacity(0.9)
+                                : Color(UIColor.systemBackground).opacity(0.9)
+                        )
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color(hex: 0xc084fc).opacity(0.30), lineWidth: 1))
+                        .shadow(color: Color(hex: 0xc084fc).opacity(0.12), radius: 8)
+                }
+                .buttonStyle(.plain)
+                .sheet(isPresented: $showPeople) {
+                    PeopleView()
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.top, 12)
@@ -356,6 +381,14 @@ struct ContentView: View {
         }
         .animation(.spring(response: 0.45, dampingFraction: 0.72), value: viewModel.generatedWish != nil)
         .animation(.spring(response: 0.45, dampingFraction: 0.72), value: viewModel.isLoading)
+        // Deep-link from notification tap
+        .onChange(of: router.pendingWish) { _, pending in
+            guard let p = pending else { return }
+            viewModel.selectedHoliday = p.occasion
+            viewModel.includeName = true
+            viewModel.name = p.name
+            router.pendingWish = nil
+        }
     }
 
     // Fade out the result card when tone or length changes — hint that a new wish is needed
