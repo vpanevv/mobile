@@ -63,6 +63,7 @@ struct DropdownMenu<Item: Identifiable & Equatable, Row: View>: View {
                             .padding(.horizontal, 16)
                             .padding(.vertical, 12)
                             .background(isSelected ? accentColor.opacity(0.07) : Color.clear)
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
 

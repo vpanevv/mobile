@@ -18,7 +18,7 @@ enum HolidayType: String, CaseIterable, Identifiable {
         case .birthday:    return "birthday.cake.fill"
         case .nameDay:     return "person.text.rectangle.fill"
         case .anniversary: return "heart.fill"
-        case .wedding:     return "rings.wedding"
+        case .wedding:     return "sparkles"
         case .graduation:  return "graduationcap.fill"
         case .newBaby:     return "heart.circle.fill"
         case .newJob:      return "briefcase.fill"
