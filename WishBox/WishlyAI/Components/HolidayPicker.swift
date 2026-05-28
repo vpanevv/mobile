@@ -10,9 +10,8 @@ struct HolidayPicker: View {
             accentColor: Color.neonCyan
         ) { item, isSelected in
             HStack(spacing: 10) {
-                Image(systemName: item.icon)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(isSelected ? Color.neonCyan : .primary.opacity(0.5))
+                Text(item.emoji)
+                    .font(.system(size: 18))
                     .frame(width: 22)
                 Text(item.label)
                     .font(.system(size: 15, weight: .medium, design: .rounded))
