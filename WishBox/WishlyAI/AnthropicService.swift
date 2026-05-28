@@ -49,6 +49,8 @@ struct AnthropicService {
         name: String? = nil,
         parentName: String? = nil,
         babyName: String? = nil,
+        partner1Name: String? = nil,
+        partner2Name: String? = nil,
         language: WishLanguage = .english,
         tone: WishTone = .friendly,
         length: WishLength = .medium
@@ -57,11 +59,11 @@ struct AnthropicService {
 
         let basePrompt: String
         if occasion == .newBaby {
-            let clause = newBabyClause(
-                parent: parentName ?? "",
-                baby:   babyName  ?? ""
-            )
+            let clause = newBabyClause(parent: parentName ?? "", baby: babyName ?? "")
             basePrompt = "Generate a new baby congratulations message. \(clause)"
+        } else if occasion == .wedding {
+            let clause = weddingClause(p1: partner1Name ?? "", p2: partner2Name ?? "")
+            basePrompt = "Generate a wedding congratulations message. \(clause)"
         } else if let name, !name.isEmpty {
             basePrompt = "Generate a \(holidayType.lowercased()) wish for \(name)."
         } else {
@@ -103,6 +105,17 @@ struct AnthropicService {
         }
 
         return text
+    }
+
+    private func weddingClause(p1: String, p2: String) -> String {
+        let a = p1.trimmingCharacters(in: .whitespaces)
+        let b = p2.trimmingCharacters(in: .whitespaces)
+        switch (a.isEmpty, b.isEmpty) {
+        case (false, false): return "Congratulate \(a) and \(b) on their wedding. Use both names naturally."
+        case (false, true):  return "Congratulate \(a) on their wedding. Use the name \(a)."
+        case (true,  false): return "Congratulate \(b) on their wedding. Use the name \(b)."
+        case (true,  true):  return "Congratulate the couple on their wedding. No specific names — keep it warm and celebratory."
+        }
     }
 
     private func newBabyClause(parent: String, baby: String) -> String {

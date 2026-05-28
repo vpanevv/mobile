@@ -8,8 +8,10 @@ final class WishGeneratorViewModel: ObservableObject {
     @Published var selectedLanguage: WishLanguage = .english
     @Published var includeName = false
     @Published var name = ""
-    @Published var parentName = ""   // New Baby — parent
-    @Published var babyName   = ""   // New Baby — baby
+    @Published var parentName   = ""   // New Baby — parent
+    @Published var babyName     = ""   // New Baby — baby
+    @Published var partner1Name = ""   // Wedding — first partner
+    @Published var partner2Name = ""   // Wedding — second partner
     @Published var generatedWish: String?
     @Published var isLoading = false
     @Published var errorMessage: String?
@@ -38,16 +40,19 @@ final class WishGeneratorViewModel: ObservableObject {
 
         Task {
             do {
-                let isNewBaby = selectedHoliday == .newBaby
+                let isNewBaby  = selectedHoliday == .newBaby
+                let isWedding  = selectedHoliday == .wedding
                 let wish = try await service.generateWish(
-                    holidayType: selectedHoliday.label,
-                    occasion:    selectedHoliday,
-                    name:        (!isNewBaby && includeName) ? name : nil,
-                    parentName:  isNewBaby ? parentName : nil,
-                    babyName:    isNewBaby ? babyName   : nil,
-                    language:    selectedLanguage,
-                    tone:        selectedTone,
-                    length:      selectedLength
+                    holidayType:  selectedHoliday.label,
+                    occasion:     selectedHoliday,
+                    name:         (!isNewBaby && !isWedding && includeName) ? name : nil,
+                    parentName:   isNewBaby  ? parentName   : nil,
+                    babyName:     isNewBaby  ? babyName     : nil,
+                    partner1Name: isWedding  ? partner1Name : nil,
+                    partner2Name: isWedding  ? partner2Name : nil,
+                    language:     selectedLanguage,
+                    tone:         selectedTone,
+                    length:       selectedLength
                 )
                 withAnimation(.spring(response: 0.45, dampingFraction: 0.72)) {
                     generatedWish = wish
