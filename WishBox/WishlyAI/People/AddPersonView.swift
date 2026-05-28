@@ -15,6 +15,9 @@ struct AddPersonView: View {
     // Entry mode
     @State private var entryMode: EntryMode = .manual
     @State private var showContactPicker = false
+    // Staging area: CNContactPickerVC auto-dismisses itself, so we capture the result
+    // here and apply it in onDismiss (never call showContactPicker = false in the callback)
+    @State private var pendingContact: (name: String, day: Int?, month: Int?)? = nil
 
     // Fields
     @State private var name     = ""
@@ -118,15 +121,22 @@ struct AddPersonView: View {
         .presentationDetents([.large])
         .presentationCornerRadius(32)
         .presentationDragIndicator(.hidden)
-        // Contact picker presented on top of AddPersonView — populates fields, does NOT dismiss AddPersonView
-        .sheet(isPresented: $showContactPicker) {
+        // CNContactPickerViewController auto-dismisses itself at the UIKit level when a
+        // contact is tapped. We must NOT call showContactPicker = false inside the callback —
+        // doing so confuses SwiftUI into collapsing the whole sheet stack.
+        // Instead: store the result in pendingContact, then apply it in onDismiss.
+        .sheet(isPresented: $showContactPicker, onDismiss: {
+            guard let contact = pendingContact else { return }
+            name = contact.name
+            if let d = contact.day   { day   = d }
+            if let m = contact.month { month = m }
+            entryMode = .manual
+            pendingContact = nil
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        }) {
             ContactPicker { pickedName, pickedDay, pickedMonth in
-                name = pickedName
-                if let d = pickedDay   { day   = d }
-                if let m = pickedMonth { month = m }
-                entryMode = .manual          // switch to manual so user can review/edit
-                showContactPicker = false    // dismiss only the contact picker
-                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                // Just stage — do NOT touch showContactPicker here
+                pendingContact = (pickedName, pickedDay, pickedMonth)
             }
         }
     }
