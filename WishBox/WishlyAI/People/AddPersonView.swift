@@ -22,6 +22,9 @@ struct AddPersonView: View {
     @State private var day      = 1
     @State private var month    = 1
 
+    // Occasion dropdown
+    @State private var occasionExpanded = false
+
     // Feedback
     @State private var isSaving             = false
     @State private var showNotifDeniedNote  = false
@@ -82,11 +85,12 @@ struct AddPersonView: View {
                         }
                         .padding(.horizontal, 24)
 
-                        // ── Occasion picker ──────────────────────────
+                        // ── Occasion picker (dropdown) ───────────────
                         VStack(alignment: .leading, spacing: 10) {
                             sectionLabel("OCCASION")
-                            occasionPicker
+                            occasionDropdown
                         }
+                        .padding(.horizontal, 24)
 
                         // ── Date picker ──────────────────────────────
                         VStack(alignment: .leading, spacing: 10) {
@@ -160,43 +164,95 @@ struct AddPersonView: View {
         .padding(.horizontal, 24)
     }
 
-    private var occasionPicker: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(HolidayType.allCases) { occ in
-                    let isSelected = occ == occasion
-                    Button {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        withAnimation(.spring(response: 0.28, dampingFraction: 0.72)) {
-                            occasion = occ
-                        }
-                    } label: {
-                        HStack(spacing: 6) {
-                            Text(occ.emoji)
-                                .font(.system(size: 14))
-                            Text(occ.rawValue)
-                                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                                .foregroundStyle(isSelected ? Color(hex: 0xc084fc) : .secondary)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(isSelected ? Color(hex: 0xc084fc).opacity(0.12) : Color.primary.opacity(0.06))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                        .stroke(isSelected ? Color(hex: 0xc084fc).opacity(0.45) : Color.clear, lineWidth: 1)
-                                )
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .scaleEffect(isSelected ? 1.04 : 1.0)
-                    .animation(.spring(response: 0.25, dampingFraction: 0.7), value: isSelected)
+    private var occasionDropdown: some View {
+        VStack(spacing: 0) {
+            // ── Trigger row ─────────────────────────────────────────
+            Button {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.78)) {
+                    occasionExpanded.toggle()
                 }
+            } label: {
+                HStack(spacing: 10) {
+                    Text(occasion.emoji)
+                        .font(.system(size: 18))
+                    Text(occasion.rawValue)
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color(hex: 0xc084fc).opacity(0.7))
+                        .rotationEffect(.degrees(occasionExpanded ? -180 : 0))
+                        .animation(.spring(response: 0.35, dampingFraction: 0.78), value: occasionExpanded)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .contentShape(Rectangle())
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 2)
+            .buttonStyle(.plain)
+
+            // ── Option list ─────────────────────────────────────────
+            if occasionExpanded {
+                Divider()
+                    .background(Color(hex: 0xc084fc).opacity(0.15))
+
+                VStack(spacing: 0) {
+                    ForEach(Array(HolidayType.allCases.enumerated()), id: \.element.id) { idx, occ in
+                        let isSelected = occ == occasion
+                        Button {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.78)) {
+                                occasion = occ
+                                occasionExpanded = false
+                            }
+                        } label: {
+                            HStack(spacing: 10) {
+                                Text(occ.emoji)
+                                    .font(.system(size: 16))
+                                Text(occ.rawValue)
+                                    .font(.system(size: 15, weight: isSelected ? .semibold : .regular, design: .rounded))
+                                    .foregroundStyle(isSelected ? Color(hex: 0xc084fc) : .primary)
+                                Spacer()
+                                if isSelected {
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundStyle(Color(hex: 0xc084fc))
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .background(isSelected ? Color(hex: 0xc084fc).opacity(0.07) : Color.clear)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+
+                        if idx < HolidayType.allCases.count - 1 {
+                            Divider()
+                                .background(Color.primary.opacity(0.05))
+                                .padding(.horizontal, 16)
+                        }
+                    }
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
         }
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            Color(hex: 0xc084fc).opacity(occasionExpanded ? 0.50 : 0.25),
+                            Color(hex: 0xa78bfa).opacity(occasionExpanded ? 0.30 : 0.12)
+                        ],
+                        startPoint: .topLeading, endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+        )
+        .shadow(color: Color(hex: 0xc084fc).opacity(occasionExpanded ? 0.12 : 0.05), radius: occasionExpanded ? 16 : 8)
     }
 
     private var datePicker: some View {
