@@ -50,12 +50,23 @@ struct PersonCard: View {
 
                 Spacer(minLength: 0)
 
-                // ── Right: countdown ─────────────────────────────────
+                // ── Right: countdown + edit ──────────────────────────
                 VStack(alignment: .trailing, spacing: 4) {
                     countdownLabel
                     Text(person.shortDateLabel)
                         .font(.system(size: 11, weight: .regular, design: .rounded))
                         .foregroundStyle(.secondary.opacity(0.6))
+
+                    Button(action: onEdit) {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Color(hex: 0xc084fc).opacity(0.7))
+                            .frame(width: 26, height: 26)
+                            .background(Color(hex: 0xc084fc).opacity(0.10))
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 2)
                 }
             }
             .padding(.horizontal, 16)

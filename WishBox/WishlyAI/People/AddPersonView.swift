@@ -68,8 +68,10 @@ struct AddPersonView: View {
                             .foregroundStyle(.primary)
                             .padding(.horizontal, 24)
 
-                        // ── Entry mode picker ────────────────────────
-                        entryModePicker
+                        // ── Entry mode picker (hidden when editing) ──
+                        if editingPerson == nil {
+                            entryModePicker
+                        }
 
                         // ── Name field ───────────────────────────────
                         VStack(alignment: .leading, spacing: 6) {
