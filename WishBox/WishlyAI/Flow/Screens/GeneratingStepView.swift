@@ -135,9 +135,9 @@ struct GeneratingStepView: View {
             Spacer()
         }
         .background(Color.clear)
-        .navigationBarHidden(true)
-        // Disable interactive back swipe during generation
-        .interactiveDismissDisabled(errorMessage == nil)
+        // Hide nav bar entirely during generation — no back affordance while generating
+        .navigationBarBackButtonHidden(true)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .onAppear {
             withAnimation { appeared = true }
             startAnimations()

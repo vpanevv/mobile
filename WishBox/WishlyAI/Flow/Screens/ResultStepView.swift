@@ -165,7 +165,8 @@ struct ResultStepView: View {
             .animation(.spring(response: 0.45, dampingFraction: 0.8).delay(0.30), value: cardAppeared)
         }
         .background(Color.clear)
-        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                 withAnimation { cardAppeared = true }

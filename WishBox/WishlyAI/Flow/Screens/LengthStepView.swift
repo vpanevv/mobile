@@ -56,7 +56,8 @@ struct LengthStepView: View {
             .padding(.bottom, 40)
         }
         .background(Color.clear)
-        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 FlowGlassBackButton()
