@@ -59,8 +59,13 @@ struct LanguageStepView: View {
                         }
                     }
                     .padding(.horizontal, 20)
+                    // Extra top padding so the first-row tiles' shadows and
+                    // scale-on-selection aren't clipped by the ScrollView boundary
+                    .padding(.top, 10)
                     .padding(.bottom, 12)
                 }
+                // Don't clip the scroll content — lets shadows/scale breathe
+                .clipped(antialiased: false)
 
                 Spacer(minLength: 0)
 
