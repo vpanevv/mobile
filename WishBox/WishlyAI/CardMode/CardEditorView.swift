@@ -41,10 +41,11 @@ struct CardEditorView: View {
 
                 GeometryReader { geo in
                     VStack(spacing: 12) {
-                        // Card preview — capped so controls always fit below
-                        let cardW   = geo.size.width - 48
-                        let maxCardH = geo.size.height * 0.40
-                        let cardH   = min(cardW * 1.25, maxCardH)
+                        // Card preview — derive cardWidth from a capped height so
+                        // WishCardView's internal frame is correct from the start.
+                        // Target: card takes ≤ 38 % of available height, max 260 pt wide.
+                        let maxCardH = min(geo.size.height * 0.38, 310)
+                        let cardW    = min(maxCardH / 1.25, geo.size.width - 80)
 
                         WishCardView(
                             wishText: wishText,
@@ -52,12 +53,11 @@ struct CardEditorView: View {
                             occasion: occasion,
                             background: selectedBackground,
                             font: selectedFont,
-                            cardWidth: cardW
+                            cardWidth: cardW           // WishCardView self-sizes from this
                         )
-                        .frame(width: cardW, height: cardH)
                         .scaleEffect(cardScale)
                         .opacity(cardOpacity)
-                        .shadow(color: .black.opacity(0.35), radius: 28, y: 10)
+                        .shadow(color: .black.opacity(0.42), radius: 24, y: 10)
                         .frame(maxWidth: .infinity)
 
                         // ── Controls ───────────────────────────────────
@@ -119,7 +119,7 @@ struct CardEditorView: View {
                         }
                         .padding(.horizontal, 20)
                     }
-                    .padding(.top, 8)
+                    .padding(.top, 14)
                 }
             }
 
