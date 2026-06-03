@@ -12,128 +12,137 @@ struct CardEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    // Persisted selections
     @AppStorage("cardLastBackground") private var savedBackground: String = CardBackground.auroraPurple.rawValue
     @AppStorage("cardLastFont")       private var savedFont:       String = CardFont.rounded.rawValue
+    @AppStorage("wishlyai.isDark")    private var isDark: Bool = true
 
     @State private var selectedBackground: CardBackground = .auroraPurple
     @State private var selectedFont:       CardFont       = .rounded
-
     @State private var showName: Bool = true
-    @State private var cardScale: CGFloat = 0.9
-    @State private var cardOpacity: Double = 0
-    @State private var showShareSheet = false
-    @State private var renderedImage: UIImage? = nil
-    @State private var isRendering = false
-    @State private var showErrorToast = false
+    @State private var cardScale:   CGFloat = 0.9
+    @State private var cardOpacity: Double  = 0
+    @State private var showShareSheet  = false
+    @State private var renderedImage:  UIImage? = nil
+    @State private var isRendering     = false
+    @State private var showErrorToast  = false
     @State private var showSaveSuccess = false
-    @State private var savePhotoError: String? = nil
-
-    // Shimmer phase for Share button
-    @State private var shimmerPhase: CGFloat = -1
+    @State private var shimmerPhase:   CGFloat = -1
 
     var body: some View {
         ZStack {
-            Color(UIColor.systemGroupedBackground).ignoresSafeArea()
+            // ── Atmosphere ─────────────────────────────────────────────
+            NeuralBackground().ignoresSafeArea()
+            FlowAmbientLayer()
+            ParticleSystemView()
 
+            // ── Layout ─────────────────────────────────────────────────
             VStack(spacing: 0) {
-                // ── Top bar ───────────────────────────────────────────
                 topBar
 
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 28) {
+                GeometryReader { geo in
+                    VStack(spacing: 12) {
+                        // Card preview — derive cardWidth from a capped height so
+                        // WishCardView's internal frame is correct from the start.
+                        // Target: card takes ≤ 38 % of available height, max 260 pt wide.
+                        let maxCardH = min(geo.size.height * 0.38, 310)
+                        let cardW    = min(maxCardH / 1.25, geo.size.width - 80)
 
-                        // ── Card preview ──────────────────────────────
-                        cardPreview
-                            .padding(.top, 20)
+                        WishCardView(
+                            wishText: wishText,
+                            recipientName: showName ? recipientName : nil,
+                            occasion: occasion,
+                            background: selectedBackground,
+                            font: selectedFont,
+                            cardWidth: cardW           // WishCardView self-sizes from this
+                        )
+                        .scaleEffect(cardScale)
+                        .opacity(cardOpacity)
+                        .shadow(color: .black.opacity(0.42), radius: 24, y: 10)
+                        .frame(maxWidth: .infinity)
 
-                        // ── Background picker ─────────────────────────
-                        VStack(alignment: .leading, spacing: 12) {
-                            sectionLabel("BACKGROUND")
-                            backgroundPicker
-                        }
-                        .padding(.horizontal, 20)
+                        // ── Controls ───────────────────────────────────
+                        VStack(spacing: 10) {
 
-                        // ── Font picker ───────────────────────────────
-                        VStack(alignment: .leading, spacing: 12) {
-                            sectionLabel("FONT STYLE")
-                            fontPicker
-                        }
-                        .padding(.horizontal, 20)
+                            // Background
+                            VStack(alignment: .leading, spacing: 7) {
+                                controlLabel("BACKGROUND")
+                                backgroundPicker
+                            }
 
-                        // ── Show name toggle ──────────────────────────
-                        if let name = recipientName, !name.isEmpty {
-                            Toggle(isOn: $showName) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "person.fill")
-                                        .foregroundStyle(Color(hex: 0xc084fc))
-                                    Text("Show name (\(name))")
-                                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                            // Font
+                            VStack(alignment: .leading, spacing: 7) {
+                                controlLabel("FONT STYLE")
+                                fontPicker
+                            }
+
+                            // Name toggle (only when a name exists)
+                            if let name = recipientName, !name.isEmpty {
+                                Toggle(isOn: $showName) {
+                                    HStack(spacing: 7) {
+                                        Image(systemName: "person.fill")
+                                            .foregroundStyle(Color(hex: 0xc084fc))
+                                            .font(.system(size: 13))
+                                        Text("Show name (\(name))")
+                                            .font(.system(size: 14, weight: .medium, design: .rounded))
+                                    }
                                 }
+                                .tint(Color(hex: 0xc084fc))
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 10)
+                                .background(.ultraThinMaterial)
+                                .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                        .stroke(Color.white.opacity(0.10), lineWidth: 1)
+                                )
                             }
-                            .tint(Color(hex: 0xc084fc))
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 14)
-                            .background(.ultraThinMaterial)
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            .padding(.horizontal, 20)
-                        }
 
-                        // Save to Photos button
-                        Button { saveToPhotos() } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "square.and.arrow.down")
-                                    .font(.system(size: 14, weight: .semibold))
-                                Text("Save to Photos")
-                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            // Save to Photos
+                            Button { saveToPhotos() } label: {
+                                HStack(spacing: 7) {
+                                    Image(systemName: "square.and.arrow.down")
+                                        .font(.system(size: 13, weight: .semibold))
+                                    Text("Save to Photos")
+                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                }
+                                .foregroundStyle(Color(hex: 0xc084fc))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 46)
+                                .background(.ultraThinMaterial)
+                                .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                        .stroke(Color(hex: 0xc084fc).opacity(0.35), lineWidth: 1)
+                                )
                             }
-                            .foregroundStyle(Color(hex: 0xc084fc))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .background(.ultraThinMaterial)
-                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .stroke(Color(hex: 0xc084fc).opacity(0.35), lineWidth: 1)
-                            )
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                         .padding(.horizontal, 20)
-
-                        Spacer(minLength: 40)
                     }
+                    .padding(.top, 14)
                 }
             }
 
             // ── Toasts ─────────────────────────────────────────────────
-            if showErrorToast {
-                toastBanner("Couldn't render card. Try again.", isError: true)
-            }
-            if showSaveSuccess {
-                toastBanner("Saved to Photos!", isError: false)
-            }
+            if showErrorToast  { toastBanner("Couldn't render card. Try again.", isError: true) }
+            if showSaveSuccess { toastBanner("Saved to Photos!", isError: false) }
         }
+        .preferredColorScheme(isDark ? .dark : .light)
         .onAppear {
-            // Restore persisted selections
             selectedBackground = CardBackground(rawValue: savedBackground) ?? .auroraPurple
-            selectedFont       = CardFont(rawValue: savedFont)             ?? .rounded
-
-            // Entrance spring
+            selectedFont       = CardFont(rawValue: savedFont) ?? .rounded
             withAnimation(reduceMotion ? .none : .spring(response: 0.5, dampingFraction: 0.72)) {
                 cardScale   = 1.0
                 cardOpacity = 1.0
             }
-            // Shimmer loop
             startShimmer()
         }
         .sheet(isPresented: $showShareSheet) {
-            if let img = renderedImage {
-                ShareSheet(items: [img])
-            }
+            if let img = renderedImage { ShareSheet(items: [img]) }
         }
     }
 
-    // MARK: - Subviews
+    // MARK: - Top bar
 
     private var topBar: some View {
         HStack {
@@ -149,7 +158,6 @@ struct CardEditorView: View {
 
             Spacer()
 
-            // Share button with shimmer
             Button {
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 shareCard()
@@ -169,7 +177,6 @@ struct CardEditorView: View {
                             colors: [Color(hex: 0x9333ea), Color(hex: 0xc084fc)],
                             startPoint: .leading, endPoint: .trailing
                         )
-                        // Shimmer sweep
                         LinearGradient(
                             colors: [.clear, Color.white.opacity(0.25), .clear],
                             startPoint: .init(x: shimmerPhase, y: 0),
@@ -185,82 +192,57 @@ struct CardEditorView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 14)
-        .background(Color(UIColor.systemGroupedBackground))
-    }
-
-    private var cardPreview: some View {
-        GeometryReader { geo in
-            let w = geo.size.width - 64
-            WishCardView(
-                wishText: wishText,
-                recipientName: showName ? recipientName : nil,
-                occasion: occasion,
-                background: selectedBackground,
-                font: selectedFont,
-                cardWidth: w
-            )
-            .scaleEffect(cardScale)
-            .opacity(cardOpacity)
-            .shadow(color: Color.black.opacity(0.35), radius: 32, x: 0, y: 12)
-            .frame(maxWidth: .infinity)
+        .background(.ultraThinMaterial)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(Color.white.opacity(0.06))
+                .frame(height: 1)
         }
-        .frame(height: (UIScreen.main.bounds.width - 64) * 1.25)
-        .padding(.horizontal, 32)
     }
 
-    // 2-row × 5-column grid — all 10 backgrounds visible at once, no scrolling
+    // MARK: - Background picker (compact swatches, no labels)
+
     private var backgroundPicker: some View {
-        let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 5)
-        return LazyVGrid(columns: columns, spacing: 10) {
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 5)
+        return LazyVGrid(columns: columns, spacing: 6) {
             ForEach(CardBackground.allCases) { bg in
                 let isSelected = bg == selectedBackground
                 Button {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    withAnimation(reduceMotion ? .none : .easeInOut(duration: 0.35)) {
+                    withAnimation(reduceMotion ? .none : .spring(response: 0.3, dampingFraction: 0.72)) {
                         selectedBackground = bg
                         savedBackground = bg.rawValue
                     }
                 } label: {
-                    VStack(spacing: 5) {
-                        ZStack {
-                            GeometryReader { g in
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(bg.gradient)
-                                    .frame(width: g.size.width, height: g.size.width * 1.22)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                            .stroke(isSelected ? Color.white : Color.clear, lineWidth: 2)
-                                    )
-                                    .scaleEffect(isSelected ? 1.05 : 1.0)
-                                    .shadow(color: isSelected ? Color.black.opacity(0.28) : .clear, radius: 5, y: 2)
-                                    .overlay(alignment: .center) {
-                                        if isSelected {
-                                            Image(systemName: "checkmark.circle.fill")
-                                                .font(.system(size: 15, weight: .semibold))
-                                                .foregroundStyle(.white)
-                                                .shadow(color: .black.opacity(0.35), radius: 3)
-                                                .transition(.scale.combined(with: .opacity))
-                                        }
-                                    }
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .fill(bg.gradient)
+                        .aspectRatio(0.82, contentMode: .fit)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                                .stroke(isSelected ? Color.white : Color.white.opacity(0.08), lineWidth: isSelected ? 2 : 1)
+                        )
+                        .overlay {
+                            if isSelected {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .shadow(color: .black.opacity(0.35), radius: 3)
+                                    .transition(.scale.combined(with: .opacity))
                             }
-                            .aspectRatio(1 / 1.22, contentMode: .fit)
                         }
+                        .scaleEffect(isSelected ? 1.05 : 1.0)
+                        .shadow(color: isSelected ? .black.opacity(0.28) : .clear, radius: 5, y: 2)
                         .animation(.spring(response: 0.3, dampingFraction: 0.72), value: isSelected)
-
-                        Text(bg.name)
-                            .font(.system(size: 9, weight: .medium, design: .rounded))
-                            .foregroundStyle(isSelected ? Color(hex: 0xc084fc) : .secondary)
-                            .lineLimit(1)
-                    }
                 }
                 .buttonStyle(.plain)
             }
         }
     }
 
-    // Equal-width chips in a single non-scrolling row — all 5 fonts always visible
+    // MARK: - Font picker (equal-width chips)
+
     private var fontPicker: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             ForEach(CardFont.allCases) { cf in
                 let isSelected = cf == selectedFont
                 Button {
@@ -270,26 +252,26 @@ struct CardEditorView: View {
                         savedFont    = cf.rawValue
                     }
                 } label: {
-                    VStack(spacing: 3) {
+                    VStack(spacing: 2) {
                         Text(cf.previewLabel)
-                            .font(cf.font(size: 20))
+                            .font(cf.font(size: 18))
                             .foregroundStyle(isSelected ? Color(hex: 0xc084fc) : .primary)
-                            .frame(height: 28)
+                            .frame(height: 24)
                         Text(cf.name)
-                            .font(.system(size: 9, weight: .medium, design: .rounded))
+                            .font(.system(size: 8, weight: .medium, design: .rounded))
                             .foregroundStyle(isSelected ? Color(hex: 0xc084fc) : .secondary)
                             .lineLimit(1)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 8)
                     .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        RoundedRectangle(cornerRadius: 11, style: .continuous)
                             .fill(isSelected
-                                ? Color(hex: 0xc084fc).opacity(0.12)
-                                : Color.primary.opacity(0.06))
+                                ? Color(hex: 0xc084fc).opacity(0.14)
+                                : Color.white.opacity(0.06))
                             .overlay(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .stroke(isSelected ? Color(hex: 0xc084fc).opacity(0.5) : Color.clear, lineWidth: 1.5)
+                                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                    .stroke(isSelected ? Color(hex: 0xc084fc).opacity(0.5) : Color.white.opacity(0.08), lineWidth: 1)
                             )
                     )
                     .scaleEffect(isSelected ? 1.04 : 1.0)
@@ -300,9 +282,11 @@ struct CardEditorView: View {
         }
     }
 
-    private func sectionLabel(_ text: String) -> some View {
+    // MARK: - Helpers
+
+    private func controlLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 11, weight: .semibold, design: .rounded))
+            .font(.system(size: 10, weight: .semibold, design: .rounded))
             .foregroundStyle(.secondary)
             .tracking(1.5)
     }
@@ -321,7 +305,7 @@ struct CardEditorView: View {
                 .padding(.bottom, 40)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
         }
-        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isError ? showErrorToast : showSaveSuccess)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showErrorToast || showSaveSuccess)
     }
 
     // MARK: - Actions
@@ -331,9 +315,7 @@ struct CardEditorView: View {
         guard let image = renderCard() else {
             isRendering = false
             withAnimation { showErrorToast = true }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                withAnimation { showErrorToast = false }
-            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { withAnimation { showErrorToast = false } }
             return
         }
         renderedImage = image
@@ -344,9 +326,7 @@ struct CardEditorView: View {
     private func saveToPhotos() {
         guard let image = renderCard() else {
             withAnimation { showErrorToast = true }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                withAnimation { showErrorToast = false }
-            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { withAnimation { showErrorToast = false } }
             return
         }
         PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
@@ -355,14 +335,11 @@ struct CardEditorView: View {
                 UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
                 withAnimation { showSaveSuccess = true }
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                    withAnimation { showSaveSuccess = false }
-                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { withAnimation { showSaveSuccess = false } }
             }
         }
     }
 
-    /// Rasterize WishCardView at 1080×1350 (4:5) retina quality.
     private func renderCard() -> UIImage? {
         let renderer = ImageRenderer(
             content: WishCardView(
@@ -380,11 +357,7 @@ struct CardEditorView: View {
     }
 
     private func startShimmer() {
-        withAnimation(
-            .linear(duration: 1.8)
-            .repeatForever(autoreverses: false)
-            .delay(1.2)
-        ) {
+        withAnimation(.linear(duration: 1.8).repeatForever(autoreverses: false).delay(1.2)) {
             shimmerPhase = 1.4
         }
     }
