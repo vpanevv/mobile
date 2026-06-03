@@ -129,8 +129,15 @@ struct CardEditorView: View {
         }
         .preferredColorScheme(isDark ? .dark : .light)
         .onAppear {
-            selectedBackground = CardBackground(rawValue: savedBackground) ?? .auroraPurple
-            selectedFont       = CardFont(rawValue: savedFont) ?? .rounded
+            // Restore last-used background, but override with a thematic default for
+            // Valentine's Day when the user hasn't previously picked something themselves.
+            let restoredBG = CardBackground(rawValue: savedBackground) ?? .auroraPurple
+            if occasion.lowercased().contains("valentine") && savedBackground == CardBackground.auroraPurple.rawValue {
+                selectedBackground = .sunsetRose
+            } else {
+                selectedBackground = restoredBG
+            }
+            selectedFont = CardFont(rawValue: savedFont) ?? .rounded
             withAnimation(reduceMotion ? .none : .spring(response: 0.5, dampingFraction: 0.72)) {
                 cardScale   = 1.0
                 cardOpacity = 1.0
