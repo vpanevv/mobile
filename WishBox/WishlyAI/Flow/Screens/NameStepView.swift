@@ -9,8 +9,11 @@ struct NameStepView: View {
     @FocusState private var secondFieldFocused: Bool
     @State private var appeared = false
 
-    private var isNewBaby: Bool { coordinator.occasion == .newBaby }
-    private var isWedding: Bool { coordinator.occasion == .wedding }
+    private var isNewBaby:     Bool { coordinator.occasion == .newBaby }
+    private var isWedding:     Bool { coordinator.occasion == .wedding }
+    private var isAnniversary: Bool { coordinator.occasion == .anniversary }
+    /// Occasions that show two name fields (both optional)
+    private var isDualField:   Bool { isNewBaby || isWedding || isAnniversary }
 
     var body: some View {
         ZStack {
@@ -32,9 +35,10 @@ struct NameStepView: View {
                     .padding(.bottom, 36)
 
                 Group {
-                    if isNewBaby      { newBabyFields }
-                    else if isWedding { weddingFields }
-                    else              { standardField  }
+                    if isNewBaby          { newBabyFields }
+                    else if isWedding     { weddingFields }
+                    else if isAnniversary { anniversaryFields }
+                    else                  { standardField }
                 }
                 .opacity(appeared ? 1 : 0)
                 .animation(.spring(response: 0.45, dampingFraction: 0.8).delay(0.08), value: appeared)
@@ -44,14 +48,14 @@ struct NameStepView: View {
 
                 VStack(spacing: 14) {
                     PrimaryFlowButton(label: "Continue", disabled: !canContinue) {
-                        fieldFocused = false
-                        if !isNewBaby && !isWedding {
+                        fieldFocused = false; secondFieldFocused = false
+                        if !isDualField {
                             coordinator.includeName = !coordinator.name.trimmingCharacters(in: .whitespaces).isEmpty
                         }
                         coordinator.goNext(.tone)
                     }
                     SkipButton(label: "Skip — generate without a name") {
-                        fieldFocused = false
+                        fieldFocused = false; secondFieldFocused = false
                         coordinator.name = ""; coordinator.parentName = ""
                         coordinator.babyName = ""; coordinator.includeName = false
                         coordinator.goNext(.tone)
@@ -107,16 +111,26 @@ struct NameStepView: View {
         }
     }
 
+    private var anniversaryFields: some View {
+        VStack(spacing: 16) {
+            GlassTextField(placeholder: "Partner 1's name (optional)", text: $coordinator.name,       focused: $fieldFocused) {}
+            GlassTextField(placeholder: "Partner 2's name (optional)", text: $coordinator.parentName, focused: $secondFieldFocused) {}
+        }
+    }
+
     // MARK: - Helpers
 
     private var titleText: String {
-        if isNewBaby { return "Personalise this wish" }
-        if isWedding { return "Who's getting married?" }
-        return "Who is it for?"
+        switch coordinator.occasion {
+        case .newBaby:     return "Personalise this wish"
+        case .wedding:     return "Who's getting married?"
+        case .anniversary: return "Who's celebrating?"
+        default:           return "Who is it for?"
+        }
     }
 
     private var subtitleText: String {
-        if isNewBaby || isWedding { return "Both names are optional — skip what you don't need" }
+        if isDualField { return "Both names are optional — skip what you don't need" }
         return "Add a name to make it personal — or skip"
     }
 
