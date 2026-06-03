@@ -22,7 +22,11 @@ struct GeneratingStepView: View {
     @State private var errorMessage: String? = nil
 
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack {
+            FlowAmbientLayer()
+            ParticleSystemView()
+
+            VStack(spacing: 0) {
             // ── Progress (shimmer on dot 5) ──────────────────────────────
             FlowProgressBar(currentStep: .generating)
                 .padding(.top, 16)
@@ -133,7 +137,8 @@ struct GeneratingStepView: View {
             }
 
             Spacer()
-        }
+            } // end VStack
+        } // end ZStack
         .background(Color.clear)
         // Hide nav bar entirely during generation — no back affordance while generating
         .navigationBarBackButtonHidden(true)

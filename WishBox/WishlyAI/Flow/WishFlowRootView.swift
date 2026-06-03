@@ -5,6 +5,7 @@ import UIKit
 
 /// Root of the wizard flow. Holds the NavigationStack + single NeuralBackground
 /// that persists across all step transitions (no flicker).
+/// Each screen adds its own FlowAmbientLayer + ParticleSystemView inside its ZStack.
 struct WishFlowRootView: View {
     @StateObject private var coordinator = WishFlowCoordinator()
     @EnvironmentObject private var store:  FavoritesStore
@@ -23,7 +24,7 @@ struct WishFlowRootView: View {
 
     var body: some View {
         ZStack {
-            // ── Persistent background — rendered ONCE, never re-instantiated ──
+            // ── Persistent gradient background ───────────────────────────
             NeuralBackground()
                 .ignoresSafeArea()
 
@@ -45,7 +46,7 @@ struct WishFlowRootView: View {
         }
         .preferredColorScheme(isDark ? .dark : .light)
         .environmentObject(coordinator)
-        // ── Deep-link from notification ──────────────────────────────────────
+        // ── Deep-link from notification ──────────────────────────────────
         .onChange(of: router.pendingWish) { _, pending in
             guard let p = pending else { return }
             coordinator.applyDeepLink(occasion: p.occasion, name: p.name)

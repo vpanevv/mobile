@@ -7,7 +7,6 @@ struct WelcomeScreen: View {
     @EnvironmentObject private var coordinator: WishFlowCoordinator
     @EnvironmentObject private var store:       FavoritesStore
     @AppStorage("wishlyai.isDark")   private var isDark:  Bool = true
-    @StateObject private var motion = MotionManager()
 
     @State private var showFavorites = false
     @State private var showPeople    = false
@@ -20,10 +19,8 @@ struct WelcomeScreen: View {
 
     var body: some View {
         ZStack {
-            // ── Ambient blobs (work in light + dark) ────────────────────
-            WelcomeAmbientLayer(motion: motion)
-
-            // ── Drifting sparks ──────────────────────────────────────────
+            // ── Living atmosphere ────────────────────────────────────────
+            FlowAmbientLayer()
             ParticleSystemView()
 
             // ── Content ──────────────────────────────────────────────────
@@ -302,63 +299,6 @@ struct WelcomeScreen: View {
         }
         .presentationDetents([.medium])
         .presentationCornerRadius(28)
-    }
-}
-
-// MARK: - WelcomeAmbientLayer
-
-private struct WelcomeAmbientLayer: View {
-    @ObservedObject var motion: MotionManager
-    @Environment(\.colorScheme) private var scheme
-
-    @State private var blob1Drift = false
-    @State private var blob2Drift = false
-    @State private var blob3Drift = false
-
-    private var alpha: Double { scheme == .dark ? 1.0 : 0.55 }
-
-    var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                // Top-left violet blob
-                Ellipse()
-                    .fill(Color(hex: 0x6b21a8).opacity(0.50 * alpha))
-                    .frame(width: 300, height: 220)
-                    .blur(radius: 70)
-                    .offset(
-                        x: -geo.size.width * 0.28 + CGFloat(motion.roll * -16),
-                        y: blob1Drift ? -geo.size.height * 0.24 : -geo.size.height * 0.30 + CGFloat(motion.pitch * 12)
-                    )
-
-                // Bottom-right pink blob
-                Ellipse()
-                    .fill(Color(hex: 0xbe185d).opacity(0.42 * alpha))
-                    .frame(width: 280, height: 200)
-                    .blur(radius: 75)
-                    .offset(
-                        x: geo.size.width * 0.25 + CGFloat(motion.roll * 14),
-                        y: blob2Drift ? geo.size.height * 0.28 : geo.size.height * 0.22 + CGFloat(motion.pitch * -10)
-                    )
-
-                // Center cyan shimmer
-                Ellipse()
-                    .fill(Color(hex: 0x0e7490).opacity(0.28 * alpha))
-                    .frame(width: 220, height: 160)
-                    .blur(radius: 60)
-                    .offset(
-                        x: blob3Drift ? -16 : 16 + CGFloat(motion.roll * 8),
-                        y: -geo.size.height * 0.05 + CGFloat(motion.pitch * 6)
-                    )
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-        }
-        .ignoresSafeArea()
-        .allowsHitTesting(false)
-        .onAppear {
-            withAnimation(.easeInOut(duration: 8).repeatForever(autoreverses: true)) { blob1Drift = true }
-            withAnimation(.easeInOut(duration: 11).repeatForever(autoreverses: true)) { blob2Drift = true }
-            withAnimation(.easeInOut(duration: 7).repeatForever(autoreverses: true))  { blob3Drift = true }
-        }
     }
 }
 

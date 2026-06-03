@@ -1,6 +1,56 @@
 import SwiftUI
 import UIKit
 
+// MARK: - FlowAmbientLayer
+// Self-contained drifting blob layer. Add inside any screen's ZStack.
+// No external dependencies — autonomous drift animations work in both modes.
+
+struct FlowAmbientLayer: View {
+    @Environment(\.colorScheme) private var scheme
+    @State private var d1 = false
+    @State private var d2 = false
+    @State private var d3 = false
+
+    // Light mode: dimmed to tinted washes; dark mode: full-strength
+    private var alpha: Double { scheme == .dark ? 1.0 : 0.48 }
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+            let h = geo.size.height
+            ZStack {
+                // Top-left violet
+                Ellipse()
+                    .fill(Color(hex: 0x6b21a8).opacity(0.50 * alpha))
+                    .frame(width: 320, height: 230)
+                    .blur(radius: 72)
+                    .offset(x: -w * 0.26, y: d1 ? -h * 0.22 : -h * 0.30)
+                    .animation(.easeInOut(duration: 8).repeatForever(autoreverses: true), value: d1)
+
+                // Bottom-right pink
+                Ellipse()
+                    .fill(Color(hex: 0xbe185d).opacity(0.42 * alpha))
+                    .frame(width: 290, height: 210)
+                    .blur(radius: 76)
+                    .offset(x: w * 0.26, y: d2 ? h * 0.26 : h * 0.20)
+                    .animation(.easeInOut(duration: 11).repeatForever(autoreverses: true), value: d2)
+
+                // Centre cyan shimmer
+                Ellipse()
+                    .fill(Color(hex: 0x0e7490).opacity(0.28 * alpha))
+                    .frame(width: 240, height: 170)
+                    .blur(radius: 62)
+                    .offset(x: d3 ? -18 : 18, y: -h * 0.04)
+                    .animation(.easeInOut(duration: 7).repeatForever(autoreverses: true), value: d3)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+        .onAppear { d1 = true; d2 = true; d3 = true }
+    }
+}
+
 // MARK: - FlowProgressBar
 
 struct FlowProgressBar: View {

@@ -10,61 +10,58 @@ struct OccasionStepView: View {
     private let columns = [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
 
     var body: some View {
-        VStack(spacing: 0) {
-            // ── Progress ────────────────────────────────────────────────
-            FlowProgressBar(currentStep: .occasion)
-                .padding(.top, 16)
-                .padding(.bottom, 20)
+        ZStack {
+            // ── Living atmosphere ────────────────────────────────────────
+            FlowAmbientLayer()
+            ParticleSystemView()
 
-            // ── Title ───────────────────────────────────────────────────
-            FlowStepTitle(title: "What's the occasion?", subtitle: "Pick one to begin")
-                .opacity(appeared ? 1 : 0)
-                .offset(y: appeared ? 0 : 12)
-                .animation(.spring(response: 0.45, dampingFraction: 0.8), value: appeared)
-                .padding(.bottom, 18)
+            // ── Content ──────────────────────────────────────────────────
+            VStack(spacing: 0) {
+                FlowProgressBar(currentStep: .occasion)
+                    .padding(.top, 16)
+                    .padding(.bottom, 20)
 
-            // ── Grid (no ScrollView — all tiles fit on one screen) ───────
-            LazyVGrid(columns: columns, spacing: 10) {
-                ForEach(Array(HolidayType.allCases.enumerated()), id: \.element.id) { idx, occ in
-                    OccasionTile(
-                        occasion: occ,
-                        isSelected: coordinator.occasion == occ
-                    ) {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.78)) {
-                            coordinator.occasion = occ
-                        }
-                    }
+                FlowStepTitle(title: "What's the occasion?", subtitle: "Pick one to begin")
                     .opacity(appeared ? 1 : 0)
-                    .offset(y: appeared ? 0 : 16)
-                    .animation(
-                        .spring(response: 0.45, dampingFraction: 0.8)
-                            .delay(Double(idx) * 0.035),
-                        value: appeared
-                    )
+                    .offset(y: appeared ? 0 : 12)
+                    .animation(.spring(response: 0.45, dampingFraction: 0.8), value: appeared)
+                    .padding(.bottom, 18)
+
+                LazyVGrid(columns: columns, spacing: 10) {
+                    ForEach(Array(HolidayType.allCases.enumerated()), id: \.element.id) { idx, occ in
+                        OccasionTile(
+                            occasion: occ,
+                            isSelected: coordinator.occasion == occ
+                        ) {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.78)) {
+                                coordinator.occasion = occ
+                            }
+                        }
+                        .opacity(appeared ? 1 : 0)
+                        .offset(y: appeared ? 0 : 16)
+                        .animation(
+                            .spring(response: 0.45, dampingFraction: 0.8).delay(Double(idx) * 0.035),
+                            value: appeared
+                        )
+                    }
                 }
-            }
-            .padding(.horizontal, 20)
+                .padding(.horizontal, 20)
 
-            Spacer(minLength: 0)
+                Spacer(minLength: 0)
 
-            // ── CTA ─────────────────────────────────────────────────────
-            PrimaryFlowButton(
-                label: "Continue",
-                disabled: coordinator.occasion == nil
-            ) {
-                coordinator.goNext(.name)
+                PrimaryFlowButton(label: "Continue", disabled: coordinator.occasion == nil) {
+                    coordinator.goNext(.name)
+                }
+                .padding(.top, 14)
+                .padding(.bottom, 36)
             }
-            .padding(.top, 14)
-            .padding(.bottom, 36)
         }
         .background(Color.clear)
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                FlowGlassBackButton()
-            }
+            ToolbarItem(placement: .navigationBarLeading) { FlowGlassBackButton() }
         }
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
@@ -88,10 +85,8 @@ private struct OccasionTile: View {
                     Circle()
                         .fill(occasion.accentColor.opacity(isSelected ? 0.20 : 0.10))
                         .frame(width: 42, height: 42)
-                    Text(occasion.emoji)
-                        .font(.system(size: 22))
+                    Text(occasion.emoji).font(.system(size: 22))
                 }
-
                 Text(occasion.rawValue)
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .foregroundStyle(isSelected ? occasion.accentColor : .primary.opacity(0.8))

@@ -20,7 +20,11 @@ struct ResultStepView: View {
     private var isFav: Bool  { store.isFavorite(text: wish) }
 
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack {
+            FlowAmbientLayer()
+            ParticleSystemView()
+
+            VStack(spacing: 0) {
             // ── Progress ────────────────────────────────────────────────
             FlowProgressBar(currentStep: .result)
                 .padding(.top, 16)
@@ -163,7 +167,8 @@ struct ResultStepView: View {
             .padding(.bottom, 40)
             .opacity(cardAppeared ? 1 : 0)
             .animation(.spring(response: 0.45, dampingFraction: 0.8).delay(0.30), value: cardAppeared)
-        }
+            } // end VStack
+        } // end ZStack
         .background(Color.clear)
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.hidden, for: .navigationBar)

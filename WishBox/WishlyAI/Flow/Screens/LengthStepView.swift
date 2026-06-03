@@ -8,7 +8,11 @@ struct LengthStepView: View {
     @State private var appeared = false
 
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack {
+            FlowAmbientLayer()
+            ParticleSystemView()
+
+            VStack(spacing: 0) {
             // ── Progress ────────────────────────────────────────────────
             FlowProgressBar(currentStep: .length)
                 .padding(.top, 16)
@@ -54,7 +58,8 @@ struct LengthStepView: View {
             .opacity(appeared ? 1 : 0)
             .animation(.spring(response: 0.45, dampingFraction: 0.8).delay(0.24), value: appeared)
             .padding(.bottom, 40)
-        }
+            } // end VStack
+        } // end ZStack
         .background(Color.clear)
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.hidden, for: .navigationBar)
