@@ -10,7 +10,8 @@ enum HolidayType: String, CaseIterable, Identifiable {
     case newBaby     = "New Baby"
     case newJob      = "New Job"
     case christmas   = "Christmas"
-    case newYear     = "New Year"
+    case newYear       = "New Year"
+    case valentinesDay = "Valentine's Day"
 
     var id: String { rawValue }
 
@@ -24,7 +25,8 @@ enum HolidayType: String, CaseIterable, Identifiable {
         case .newBaby:     return "heart.circle.fill"
         case .newJob:      return "briefcase.fill"
         case .christmas:   return "snowflake"
-        case .newYear:     return "fireworks"
+        case .newYear:       return "fireworks"
+        case .valentinesDay: return "heart.fill"
         }
     }
 
@@ -40,7 +42,8 @@ enum HolidayType: String, CaseIterable, Identifiable {
         case .newBaby:     return "👶"
         case .newJob:      return "💼"
         case .christmas:   return "🎄"
-        case .newYear:     return "🎆"
+        case .newYear:       return "🎆"
+        case .valentinesDay: return "❤️"
         }
     }
 
@@ -54,7 +57,8 @@ enum HolidayType: String, CaseIterable, Identifiable {
         case .newBaby:     return Color(hex: 0x22d3ee)  // cyan
         case .newJob:      return Color(hex: 0x6366f1)  // indigo
         case .christmas:   return Color(hex: 0x22c55e)  // green
-        case .newYear:     return Color(hex: 0xf59e0b)  // amber
+        case .newYear:       return Color(hex: 0xf59e0b)  // amber
+        case .valentinesDay: return Color(hex: 0xf43f5e)  // rose-pink
         }
     }
 }

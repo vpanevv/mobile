@@ -57,6 +57,12 @@ struct AnthropicService {
     ) async throws -> String {
         let systemPrompt = "You are WishlyAI, a creative wish generator. \(tone.apiInstruction) \(length.apiInstruction) Never use clichés like 'May your day be filled with joy'. Be original and specific. Return ONLY the wish text — no quotes, no labels, no extra formatting."
 
+        // Occasion-specific guidance appended to the user prompt
+        var occasionGuidance = ""
+        if occasion == .valentinesDay {
+            occasionGuidance = " This is a Valentine's Day message — romantic, affectionate, and warm. Adapt the level of romance to the chosen tone: Formal/Professional → a tasteful, warm note suitable for friends, family, or coworkers; Warm/Friendly → a sweet, sincere message; Playful/Funny → a flirty, lighthearted message with charm. Do not assume the recipient is a romantic partner unless the context makes it clear — keep the message versatile."
+        }
+
         let basePrompt: String
         if occasion == .newBaby {
             let clause = newBabyClause(parent: parentName ?? "", baby: babyName ?? "")
@@ -69,7 +75,7 @@ struct AnthropicService {
         } else {
             basePrompt = "Generate a \(holidayType.lowercased()) wish."
         }
-        let userPrompt = "\(basePrompt) \(language.promptInstruction)"
+        let userPrompt = "\(basePrompt)\(occasionGuidance) \(language.promptInstruction)"
 
         let requestBody = APIRequest(
             model: model,

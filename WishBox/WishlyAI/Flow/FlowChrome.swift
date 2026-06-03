@@ -55,14 +55,20 @@ struct FlowAmbientLayer: View {
 
 struct FlowProgressBar: View {
     let currentStep: WishFlowCoordinator.Step
-    private let total = 6
+    private let total = 7
+
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         HStack(spacing: 6) {
             ForEach(0..<total, id: \.self) { index in
                 let isActive = index == currentStep.progressIndex
                 Capsule()
-                    .fill(isActive ? Color.white : Color.white.opacity(0.28))
+                    .fill(
+                        isActive
+                            ? (scheme == .dark ? Color.white : Color(hex: 0x9333ea))
+                            : (scheme == .dark ? Color.white.opacity(0.28) : Color(hex: 0x9333ea).opacity(0.22))
+                    )
                     .frame(width: isActive ? 22 : 6, height: 6)
                     .animation(.spring(response: 0.38, dampingFraction: 0.75), value: currentStep.progressIndex)
             }
@@ -78,6 +84,7 @@ struct PrimaryFlowButton: View {
     var disabled: Bool = false
     let action: () -> Void
 
+    @Environment(\.colorScheme) private var scheme
     @State private var pressed = false
 
     var body: some View {
@@ -99,13 +106,39 @@ struct PrimaryFlowButton: View {
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .frame(height: 58)
-            .background(.ultraThinMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 29, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 29, style: .continuous)
-                    .stroke(Color.white.opacity(disabled ? 0.05 : 0.18), lineWidth: 1)
+            .background(
+                Group {
+                    if scheme == .dark {
+                        // Dark mode: glass pill — visible against dark gradient background
+                        AnyView(
+                            RoundedRectangle(cornerRadius: 29, style: .continuous)
+                                .fill(.ultraThinMaterial)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 29, style: .continuous)
+                                        .stroke(Color.white.opacity(disabled ? 0.05 : 0.18), lineWidth: 1)
+                                )
+                        )
+                    } else {
+                        // Light mode: brand gradient — clearly visible on light backgrounds
+                        AnyView(
+                            RoundedRectangle(cornerRadius: 29, style: .continuous)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color(hex: 0x9333ea), Color(hex: 0xc084fc)],
+                                        startPoint: .leading, endPoint: .trailing
+                                    )
+                                )
+                        )
+                    }
+                }
             )
-            .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
+            .clipShape(RoundedRectangle(cornerRadius: 29, style: .continuous))
+            .shadow(
+                color: scheme == .dark
+                    ? .black.opacity(0.2)
+                    : Color(hex: 0x9333ea).opacity(0.35),
+                radius: 12, y: 4
+            )
         }
         .buttonStyle(.plain)
         .opacity(disabled ? 0.38 : 1.0)
@@ -141,25 +174,25 @@ struct SkipButton: View {
 // MARK: - FlowGlassBackButton
 
 struct FlowGlassBackButton: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss)      private var dismiss
+    @Environment(\.colorScheme)  private var scheme
     var overrideAction: (() -> Void)? = nil
 
     var body: some View {
         Button {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            if let action = overrideAction {
-                action()
-            } else {
-                dismiss()
-            }
+            if let action = overrideAction { action() } else { dismiss() }
         } label: {
             Image(systemName: "chevron.left")
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(Color.white.opacity(0.8))
+                .foregroundStyle(scheme == .dark ? Color.white.opacity(0.8) : Color(hex: 0x6b21a8))
                 .frame(width: 40, height: 40)
                 .background(.ultraThinMaterial)
                 .clipShape(Circle())
-                .overlay(Circle().stroke(Color.white.opacity(0.12), lineWidth: 1))
+                .overlay(Circle().stroke(
+                    scheme == .dark ? Color.white.opacity(0.12) : Color(hex: 0x9333ea).opacity(0.25),
+                    lineWidth: 1
+                ))
         }
         .buttonStyle(.plain)
     }

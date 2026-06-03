@@ -56,10 +56,11 @@ final class ReminderManager {
 
     private func occasionTitle(_ p: Person) -> String {
         switch p.occasion {
-        case .birthday:    return "Today is \(p.name)'s birthday!"
-        case .nameDay:     return "Today is \(p.name)'s name day!"
-        case .anniversary: return "\(p.name)'s anniversary is today!"
-        default:           return "\(p.name) has a special day today!"
+        case .birthday:      return "Today is \(p.name)'s birthday!"
+        case .nameDay:       return "Today is \(p.name)'s name day!"
+        case .anniversary:   return "\(p.name)'s anniversary is today!"
+        case .valentinesDay: return "Happy Valentine's Day, \(p.name)! ❤️"
+        default:             return "\(p.name) has a special day today!"
         }
     }
 }

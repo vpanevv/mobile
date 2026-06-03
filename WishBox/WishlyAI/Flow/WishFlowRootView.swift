@@ -33,6 +33,7 @@ struct WishFlowRootView: View {
                     .navigationDestination(for: WishFlowCoordinator.Step.self) { step in
                         switch step {
                         case .occasion:   OccasionStepView()
+                        case .language:   LanguageStepView()
                         case .name:       NameStepView()
                         case .tone:       ToneStepView()
                         case .length:     LengthStepView()
