@@ -42,7 +42,7 @@ final class WishFlowCoordinator: ObservableObject {
 
     // ── Navigation ────────────────────────────────────────────────────
     enum Step: Hashable {
-        case occasion, name, tone, length, generating, result
+        case occasion, language, name, tone, length, generating, result
     }
 
     func goNext(_ step: Step) { path.append(step) }
@@ -120,11 +120,12 @@ extension WishFlowCoordinator.Step {
     var progressIndex: Int {
         switch self {
         case .occasion:   return 0
-        case .name:       return 1
-        case .tone:       return 2
-        case .length:     return 3
-        case .generating: return 4
-        case .result:     return 5
+        case .language:   return 1
+        case .name:       return 2
+        case .tone:       return 3
+        case .length:     return 4
+        case .generating: return 5
+        case .result:     return 6
         }
     }
 }

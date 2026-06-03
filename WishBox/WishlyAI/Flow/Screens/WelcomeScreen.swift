@@ -10,7 +10,6 @@ struct WelcomeScreen: View {
 
     @State private var showFavorites = false
     @State private var showPeople    = false
-    @State private var showLanguage  = false
     @State private var appeared      = false
     @State private var favPulse      = false
     @State private var orbPulse      = false
@@ -100,7 +99,6 @@ struct WelcomeScreen: View {
         }
         .sheet(isPresented: $showFavorites) { FavoritesView().environmentObject(store) }
         .sheet(isPresented: $showPeople)    { PeopleView() }
-        .sheet(isPresented: $showLanguage)  { languageSheet }
     }
 
     // MARK: - Logo area
@@ -239,67 +237,12 @@ struct WelcomeScreen: View {
             }
             .buttonStyle(.plain)
 
-            // Language
-            Button {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                showLanguage = true
-            } label: {
-                Text(coordinator.language.flag)
-                    .font(.system(size: 18))
-                    .glassCircle()
-            }
-            .buttonStyle(.plain)
-
             Spacer()
 
             ThemeToggleButton(isDark: Binding(get: { isDark }, set: { isDark = $0 }))
         }
     }
 
-    // MARK: - Language sheet
-
-    private var languageSheet: some View {
-        VStack(spacing: 0) {
-            Capsule()
-                .fill(Color.primary.opacity(0.18))
-                .frame(width: 36, height: 4)
-                .padding(.top, 12).padding(.bottom, 20)
-
-            Text("Language")
-                .font(.system(size: 22, weight: .bold, design: .rounded))
-                .padding(.bottom, 20)
-
-            VStack(spacing: 0) {
-                ForEach(WishLanguage.allCases) { lang in
-                    let isSelected = coordinator.language == lang
-                    Button {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        coordinator.language = lang
-                        showLanguage = false
-                    } label: {
-                        HStack(spacing: 14) {
-                            Text(lang.flag).font(.system(size: 22))
-                            Text(lang.label)
-                                .font(.system(size: 16, weight: isSelected ? .semibold : .regular, design: .rounded))
-                                .foregroundStyle(isSelected ? Color(hex: 0xc084fc) : .primary)
-                            Spacer()
-                            if isSelected {
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundStyle(Color(hex: 0xc084fc))
-                            }
-                        }
-                        .padding(.horizontal, 24).padding(.vertical, 14)
-                    }
-                    .buttonStyle(.plain)
-                    Divider().padding(.horizontal, 24)
-                }
-            }
-            Spacer()
-        }
-        .presentationDetents([.medium])
-        .presentationCornerRadius(28)
-    }
 }
 
 // MARK: - View helper

@@ -55,7 +55,7 @@ struct FlowAmbientLayer: View {
 
 struct FlowProgressBar: View {
     let currentStep: WishFlowCoordinator.Step
-    private let total = 6
+    private let total = 7
 
     @Environment(\.colorScheme) private var scheme
 

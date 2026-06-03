@@ -51,7 +51,7 @@ struct OccasionStepView: View {
                 Spacer(minLength: 0)
 
                 PrimaryFlowButton(label: "Continue", disabled: coordinator.occasion == nil) {
-                    coordinator.goNext(.name)
+                    coordinator.goNext(.language)
                 }
                 .padding(.top, 14)
                 .padding(.bottom, 36)
