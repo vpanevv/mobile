@@ -75,13 +75,30 @@ final class WishFlowCoordinator: ObservableObject {
         isGenerating    = true
         generationError = nil
 
-        let isNewBaby = occasion == .newBaby
-        let isWedding = occasion == .wedding
+        let isNewBaby     = occasion == .newBaby
+        let isWedding     = occasion == .wedding
+        let isAnniversary = occasion == .anniversary
+
+        // Anniversary: combine both partner names into a single "name" field so the
+        // prompt becomes "Generate an anniversary wish for Maria and John."
+        let anniversaryName: String? = {
+            guard isAnniversary else { return nil }
+            let a = name.trimmingCharacters(in: .whitespaces)
+            let b = parentName.trimmingCharacters(in: .whitespaces)
+            switch (a.isEmpty, b.isEmpty) {
+            case (false, false): return "\(a) and \(b)"
+            case (false, true):  return a
+            case (true,  false): return b
+            case (true,  true):  return nil
+            }
+        }()
 
         return try await service.generateWish(
             holidayType:  occasion.label,
             occasion:     occasion,
-            name:         (!isNewBaby && !isWedding && includeName && !name.isEmpty) ? name : nil,
+            name:         isNewBaby || isWedding ? nil
+                            : isAnniversary      ? anniversaryName
+                            : (includeName && !name.isEmpty) ? name : nil,
             parentName:   isNewBaby ? (parentName.isEmpty ? nil : parentName) : nil,
             babyName:     isNewBaby ? (babyName.isEmpty   ? nil : babyName)   : nil,
             partner1Name: isWedding ? (name.isEmpty        ? nil : name)       : nil,
@@ -103,7 +120,7 @@ final class WishFlowCoordinator: ObservableObject {
             if !p.isEmpty { return p }
             if !b.isEmpty { return "baby \(b)" }
             return nil
-        case .wedding:
+        case .wedding, .anniversary:
             let a = name.trimmingCharacters(in: .whitespaces)
             let b = parentName.trimmingCharacters(in: .whitespaces)
             if !a.isEmpty && !b.isEmpty { return "\(a) & \(b)" }
