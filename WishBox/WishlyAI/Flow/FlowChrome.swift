@@ -2,52 +2,77 @@ import SwiftUI
 import UIKit
 
 // MARK: - FlowAmbientLayer
-// Self-contained drifting blob layer. Add inside any screen's ZStack.
-// No external dependencies — autonomous drift animations work in both modes.
+// Drifting glow-blob layer drawn in a Canvas, driven by a TimelineView clock.
+// Time-based motion (not SwiftUI implicit animation) means it runs at a
+// CONSTANT speed everywhere and is completely immune to sibling `withAnimation`
+// transactions (typewriter, loaders, etc.). Radial-gradient fills are far
+// cheaper than full-screen Gaussian blur, so it stays buttery smooth.
 
 struct FlowAmbientLayer: View {
     @Environment(\.colorScheme) private var scheme
-    @State private var d1 = false
-    @State private var d2 = false
-    @State private var d3 = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // Light mode: dimmed to tinted washes; dark mode: full-strength
-    private var alpha: Double { scheme == .dark ? 1.0 : 0.48 }
+    private var alpha: Double { scheme == .dark ? 1.0 : 0.5 }
 
     var body: some View {
         GeometryReader { geo in
-            let w = geo.size.width
-            let h = geo.size.height
-            ZStack {
-                // Top-left violet
-                Ellipse()
-                    .fill(Color(hex: 0x6b21a8).opacity(0.50 * alpha))
-                    .frame(width: 320, height: 230)
-                    .blur(radius: 72)
-                    .offset(x: -w * 0.26, y: d1 ? -h * 0.22 : -h * 0.30)
-                    .animation(.easeInOut(duration: 8).repeatForever(autoreverses: true), value: d1)
-
-                // Bottom-right pink
-                Ellipse()
-                    .fill(Color(hex: 0xbe185d).opacity(0.42 * alpha))
-                    .frame(width: 290, height: 210)
-                    .blur(radius: 76)
-                    .offset(x: w * 0.26, y: d2 ? h * 0.26 : h * 0.20)
-                    .animation(.easeInOut(duration: 11).repeatForever(autoreverses: true), value: d2)
-
-                // Centre cyan shimmer
-                Ellipse()
-                    .fill(Color(hex: 0x0e7490).opacity(0.28 * alpha))
-                    .frame(width: 240, height: 170)
-                    .blur(radius: 62)
-                    .offset(x: d3 ? -18 : 18, y: -h * 0.04)
-                    .animation(.easeInOut(duration: 7).repeatForever(autoreverses: true), value: d3)
+            let size = geo.size
+            if reduceMotion {
+                canvas(t: 0)
+                    .frame(width: size.width, height: size.height)
+            } else {
+                TimelineView(.animation) { timeline in
+                    canvas(t: timeline.date.timeIntervalSinceReferenceDate)
+                        .frame(width: size.width, height: size.height)
+                }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
-        .onAppear { d1 = true; d2 = true; d3 = true }
+    }
+
+    private func canvas(t: TimeInterval) -> some View {
+        Canvas { ctx, size in
+            let w = size.width
+            let h = size.height
+            let maxR = max(w, h)
+
+            // slow sinusoidal drift — low frequencies = smooth, lazy motion
+            func osc(_ freq: Double, _ phase: Double) -> CGFloat {
+                CGFloat(sin(t * 2 * .pi * freq + phase))
+            }
+
+            func blob(cx: CGFloat, cy: CGFloat, r: CGFloat, hex: UInt, a: Double) {
+                let center = CGPoint(x: cx, y: cy)
+                let rect   = CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2)
+                ctx.fill(
+                    Path(ellipseIn: rect),
+                    with: .radialGradient(
+                        Gradient(colors: [
+                            Color(hex: hex).opacity(a * alpha),
+                            Color(hex: hex).opacity(0)
+                        ]),
+                        center: center, startRadius: 0, endRadius: r
+                    )
+                )
+            }
+
+            // Top-left violet
+            blob(cx: w * 0.22 + osc(0.020, 0.0) * w * 0.05,
+                 cy: h * 0.18 + osc(0.016, 1.0) * h * 0.05,
+                 r: maxR * 0.55, hex: 0x6b21a8, a: 0.50)
+
+            // Bottom-right pink
+            blob(cx: w * 0.80 + osc(0.018, 2.0) * w * 0.05,
+                 cy: h * 0.74 + osc(0.022, 0.5) * h * 0.05,
+                 r: maxR * 0.50, hex: 0xbe185d, a: 0.42)
+
+            // Centre cyan shimmer
+            blob(cx: w * 0.50 + osc(0.024, 3.0) * w * 0.06,
+                 cy: h * 0.46 + osc(0.015, 2.0) * h * 0.04,
+                 r: maxR * 0.42, hex: 0x0e7490, a: 0.28)
+        }
     }
 }
 
