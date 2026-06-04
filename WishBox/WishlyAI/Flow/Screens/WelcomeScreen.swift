@@ -97,7 +97,10 @@ struct WelcomeScreen: View {
                 }
             }
         }
-        .sheet(isPresented: $showFavorites) { FavoritesView().environmentObject(store) }
+        .sheet(isPresented: $showFavorites) {
+            FavoritesView(onOpenPeople: { showPeople = true })
+                .environmentObject(store)
+        }
         .sheet(isPresented: $showPeople)    { PeopleView() }
     }
 

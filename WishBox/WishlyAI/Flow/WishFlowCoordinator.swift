@@ -59,12 +59,14 @@ final class WishFlowCoordinator: ObservableObject {
         isGenerating  = false
     }
 
-    /// Deep-link: pre-fill occasion + name, jump directly to tone.
-    func applyDeepLink(occasion: HolidayType, name: String) {
+    /// Deep-link: pre-fill occasion + name (and optionally tone/length), jump directly to tone.
+    func applyDeepLink(occasion: HolidayType, name: String, tone: WishTone? = nil, length: WishLength? = nil) {
         reset()
         self.occasion    = occasion
         self.name        = name
         self.includeName = !name.isEmpty
+        if let tone   { self.tone = tone }
+        if let length { self.length = length }
         path.append(Step.tone)
     }
 

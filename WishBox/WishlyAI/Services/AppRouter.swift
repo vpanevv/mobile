@@ -12,6 +12,8 @@ final class AppRouter: ObservableObject {
     struct PendingWish: Equatable {
         let name: String
         let occasion: HolidayType
+        var tone: WishTone? = nil       // optional — used by "Regenerate" from Favorites
+        var length: WishLength? = nil   // optional — used by "Regenerate" from Favorites
     }
 
     func apply(userInfo: [AnyHashable: Any]) {

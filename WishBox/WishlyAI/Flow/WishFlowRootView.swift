@@ -50,7 +50,7 @@ struct WishFlowRootView: View {
         // ── Deep-link from notification ──────────────────────────────────
         .onChange(of: router.pendingWish) { _, pending in
             guard let p = pending else { return }
-            coordinator.applyDeepLink(occasion: p.occasion, name: p.name)
+            coordinator.applyDeepLink(occasion: p.occasion, name: p.name, tone: p.tone, length: p.length)
             router.pendingWish = nil
         }
     }
