@@ -64,6 +64,13 @@ struct NameStepView: View {
                 .padding(.bottom, 40)
             }
         }
+        // Tap anywhere on empty space to dismiss the keyboard.
+        // Buttons & text fields keep their own taps (higher-priority gestures).
+        .contentShape(Rectangle())
+        .onTapGesture {
+            fieldFocused = false
+            secondFieldFocused = false
+        }
         .background(Color.clear)
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.hidden, for: .navigationBar)

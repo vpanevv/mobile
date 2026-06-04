@@ -184,15 +184,13 @@ struct FlowGlassBackButton: View {
             if let action = overrideAction { action() } else { dismiss() }
         } label: {
             Image(systemName: "chevron.left")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(scheme == .dark ? Color.white.opacity(0.8) : Color(hex: 0x6b21a8))
-                .frame(width: 40, height: 40)
-                .background(.ultraThinMaterial)
-                .clipShape(Circle())
-                .overlay(Circle().stroke(
-                    scheme == .dark ? Color.white.opacity(0.12) : Color(hex: 0x9333ea).opacity(0.25),
-                    lineWidth: 1
-                ))
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(scheme == .dark ? Color.white.opacity(0.9) : Color(hex: 0x6b21a8))
+                .frame(width: 44, height: 44)
+                .background(
+                    Circle().fill(scheme == .dark ? Color.white.opacity(0.06) : Color.black.opacity(0.04))
+                )
+                .contentShape(Circle())
         }
         .buttonStyle(.plain)
     }
