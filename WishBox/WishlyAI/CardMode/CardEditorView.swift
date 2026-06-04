@@ -199,12 +199,6 @@ struct CardEditorView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 14)
-        .background(.ultraThinMaterial)
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(Color.white.opacity(0.06))
-                .frame(height: 1)
-        }
     }
 
     // MARK: - Background picker (compact swatches, no labels)

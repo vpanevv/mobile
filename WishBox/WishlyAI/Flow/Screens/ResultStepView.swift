@@ -40,35 +40,33 @@ struct ResultStepView: View {
                 .padding(.horizontal, 24)
 
             // ── Wish card ────────────────────────────────────────────────
-            VStack(alignment: .leading, spacing: 20) {
-                // Badge
-                HStack(spacing: 6) {
+            VStack(spacing: 18) {
+                // Badge — bigger + centered
+                HStack(spacing: 7) {
                     Circle()
-                        .fill(isTyping ? Color.neonCyan : Color.neonCyan.opacity(0.5))
-                        .frame(width: 6, height: 6)
+                        .fill(isTyping ? Color.neonCyan : Color.neonCyan.opacity(0.6))
+                        .frame(width: 7, height: 7)
                         .shadow(color: isTyping ? Color.neonCyan.opacity(0.8) : .clear, radius: 4)
                     Text(isTyping ? "GENERATING" : "AI GENERATED")
-                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                        .foregroundStyle(Color.neonCyan.opacity(0.75))
-                        .tracking(2)
-                    Spacer()
+                        .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(Color.neonCyan.opacity(0.85))
+                        .tracking(2.5)
                     if isTyping {
-                        ProgressView().tint(Color.neonCyan).scaleEffect(0.6)
+                        ProgressView().tint(Color.neonCyan).scaleEffect(0.55)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .center)
 
-                // Wish text
-                ScrollView(showsIndicators: false) {
-                    Text(displayedText + (isTyping ? "▋" : ""))
-                        .font(.system(size: 19, weight: .regular, design: .rounded))
-                        .italic()
-                        .foregroundStyle(.primary.opacity(0.92))
-                        .lineSpacing(6)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .animation(nil, value: displayedText)
-                }
-                .frame(maxHeight: 240)
+                // Wish text — hugs its own height (no fixed/blank space)
+                Text(displayedText + (isTyping ? "▋" : ""))
+                    .font(.system(size: 19, weight: .regular, design: .rounded))
+                    .italic()
+                    .foregroundStyle(.primary.opacity(0.92))
+                    .lineSpacing(6)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity)
+                    .animation(nil, value: displayedText)
             }
             .padding(22)
             .background(.ultraThinMaterial)
