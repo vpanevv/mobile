@@ -127,21 +127,6 @@ struct PeopleView: View {
                 .buttonStyle(.plain)
 
                 Spacer()
-
-                Button {
-                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                    showAdd = true
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(accent)
-                        .frame(width: 40, height: 40)
-                        .background(accent.opacity(0.12))
-                        .clipShape(Circle())
-                        .overlay(Circle().stroke(accent.opacity(0.30), lineWidth: 1))
-                        .scaleEffect(sortedPeople.isEmpty && addPulse ? 1.12 : 1.0)
-                }
-                .buttonStyle(.plain)
             }
 
             HStack(alignment: .top) {
