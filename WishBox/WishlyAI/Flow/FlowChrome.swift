@@ -132,37 +132,29 @@ struct PrimaryFlowButton: View {
             .frame(maxWidth: .infinity)
             .frame(height: 58)
             .background(
-                Group {
-                    if scheme == .dark {
-                        // Dark mode: glass pill — visible against dark gradient background
-                        AnyView(
-                            RoundedRectangle(cornerRadius: 29, style: .continuous)
-                                .fill(.ultraThinMaterial)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 29, style: .continuous)
-                                        .stroke(Color.white.opacity(disabled ? 0.05 : 0.18), lineWidth: 1)
-                                )
+                ZStack {
+                    // Vibrant brand gradient in both modes — dark mode leans cyan→violet
+                    // for high visibility against the dark backdrop.
+                    RoundedRectangle(cornerRadius: 29, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: scheme == .dark
+                                    ? [Color(hex: 0x22d3ee), Color(hex: 0x9333ea), Color(hex: 0xc084fc)]
+                                    : [Color(hex: 0x9333ea), Color(hex: 0xc084fc)],
+                                startPoint: .leading, endPoint: .trailing
+                            )
                         )
-                    } else {
-                        // Light mode: brand gradient — clearly visible on light backgrounds
-                        AnyView(
-                            RoundedRectangle(cornerRadius: 29, style: .continuous)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color(hex: 0x9333ea), Color(hex: 0xc084fc)],
-                                        startPoint: .leading, endPoint: .trailing
-                                    )
-                                )
-                        )
-                    }
+                    // Subtle top highlight for a glassy sheen
+                    RoundedRectangle(cornerRadius: 29, style: .continuous)
+                        .stroke(Color.white.opacity(0.25), lineWidth: 1)
                 }
             )
             .clipShape(RoundedRectangle(cornerRadius: 29, style: .continuous))
             .shadow(
                 color: scheme == .dark
-                    ? .black.opacity(0.2)
+                    ? Color(hex: 0x22d3ee).opacity(0.40)
                     : Color(hex: 0x9333ea).opacity(0.35),
-                radius: 12, y: 4
+                radius: 16, y: 4
             )
         }
         .buttonStyle(.plain)
