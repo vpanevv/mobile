@@ -252,7 +252,8 @@ struct CarDetailView: View {
 
             summaryCard(
                 title: "Last service",
-                value: car.lastService?.date.formatted(date: .abbreviated, time: .omitted) ?? "None",
+                value: car.lastService?.title ?? "None",
+                subtitle: car.lastService?.date.formatted(date: .abbreviated, time: .omitted),
                 symbol: "wrench.and.screwdriver.fill"
             )
 
@@ -279,7 +280,7 @@ struct CarDetailView: View {
             .sorted { $0.date > $1.date }
     }
 
-    private func summaryCard(title: String, value: String, symbol: String) -> some View {
+    private func summaryCard(title: String, value: String, subtitle: String? = nil, symbol: String) -> some View {
         GlassCardView(cornerRadius: 22) {
             VStack(alignment: .leading, spacing: 10) {
                 Image(systemName: symbol)
@@ -292,6 +293,12 @@ struct CarDetailView: View {
                     .font(.headline)
                     .lineLimit(2)
                     .minimumScaleFactor(0.78)
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
