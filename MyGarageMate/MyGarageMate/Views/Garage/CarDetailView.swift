@@ -322,13 +322,13 @@ struct CarDetailView: View {
     private var overview: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 12) {
-                quickAction(title: "Service", symbol: "wrench.and.screwdriver.fill") {
+                quickAction(title: "Add Service", symbol: "wrench.and.screwdriver.fill") {
                     isAddingService = true
                 }
-                quickAction(title: "Note", symbol: "note.text.badge.plus") {
+                quickAction(title: "Add Note", symbol: "note.text.badge.plus") {
                     isAddingNote = true
                 }
-                quickAction(title: "Reminder", symbol: "bell.badge.fill") {
+                quickAction(title: "Add Reminder", symbol: "bell.badge.fill") {
                     isAddingReminder = true
                 }
             }
@@ -411,13 +411,16 @@ struct CarDetailView: View {
                     .font(.title3)
                 Text(title)
                     .font(.caption.weight(.semibold))
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
         }
         .buttonStyle(.bordered)
         .buttonBorderShape(.roundedRectangle(radius: 16))
-        .accessibilityLabel("Add \(title.lowercased())")
+        .accessibilityLabel(title)
     }
 
     private func beginEditingMileage() {
