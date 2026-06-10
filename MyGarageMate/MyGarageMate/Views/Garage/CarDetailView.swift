@@ -21,6 +21,7 @@ struct CarDetailView: View {
     @State private var serviceReportURL: URL?
     @State private var serviceReportMessage: String?
     @State private var isGeneratingServiceReport = false
+    @State private var isShowingServiceReportShareSheet = false
     @State private var isShowingThisYearServices = false
 
     var body: some View {
@@ -67,6 +68,13 @@ struct CarDetailView: View {
                     Label("Reminder", systemImage: "bell.badge.fill")
                 }
 
+                Button {
+                    generateServiceReport()
+                } label: {
+                    Label("Export Services Report", systemImage: "doc.richtext")
+                }
+                .disabled(isGeneratingServiceReport)
+
                 Divider()
 
                 Button(role: .destructive) {
@@ -77,7 +85,7 @@ struct CarDetailView: View {
             } label: {
                 Image(systemName: "plus")
             }
-            .accessibilityLabel("Add item")
+            .accessibilityLabel("Car actions")
         }
         .sheet(isPresented: $isAddingService) {
             AddServiceRecordView(car: car, profile: profile)
@@ -93,6 +101,25 @@ struct CarDetailView: View {
         }
         .sheet(isPresented: $isShowingThisYearServices) {
             ThisYearServicesView(car: car, records: paidServicesThisYear)
+        }
+        .sheet(isPresented: $isShowingServiceReportShareSheet) {
+            if let serviceReportURL {
+                ServiceReportShareSheet(url: serviceReportURL)
+                    .presentationDetents([.medium, .large])
+            }
+        }
+        .alert(
+            "Services Report",
+            isPresented: Binding(
+                get: { serviceReportMessage != nil },
+                set: { if !$0 { serviceReportMessage = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) {
+                serviceReportMessage = nil
+            }
+        } message: {
+            Text(serviceReportMessage ?? "")
         }
         .onChange(of: selectedPhotoItem) { _, newValue in
             Task {
@@ -310,10 +337,7 @@ struct CarDetailView: View {
         case .overview:
             overview
         case .history:
-            VStack(alignment: .leading, spacing: 14) {
-                serviceReportControls
-                ServiceHistoryView(car: car)
-            }
+            ServiceHistoryView(car: car)
         case .notes:
             MechanicNotesView(car: car)
         }
@@ -333,8 +357,6 @@ struct CarDetailView: View {
                 }
             }
 
-            serviceReportControls
-
             if car.upcomingReminders.isEmpty {
                 EmptyStateView(
                     symbolName: "calendar.badge.checkmark",
@@ -350,57 +372,6 @@ struct CarDetailView: View {
                     }
                 }
             }
-        }
-    }
-
-    private var serviceReportControls: some View {
-        GlassCardView(cornerRadius: 20) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 12) {
-                    Image(systemName: "doc.richtext")
-                        .font(.title3.weight(.semibold))
-                        .foregroundStyle(.tint)
-                        .frame(width: 38, height: 38)
-                        .background(.thinMaterial, in: Circle())
-                        .accessibilityHidden(true)
-
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Services Report")
-                            .font(.headline)
-                        Text("Export records for this car only.")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                Button {
-                    generateServiceReport()
-                } label: {
-                    Label("Export This Car's Services", systemImage: "square.and.arrow.up")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .buttonBorderShape(.roundedRectangle(radius: 14))
-                .disabled(isGeneratingServiceReport)
-                .accessibilityLabel("Export this car's services")
-
-                if let serviceReportURL {
-                    ShareLink(item: serviceReportURL) {
-                        Label("Download Car Report", systemImage: "doc.badge.arrow.up")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                    .buttonBorderShape(.roundedRectangle(radius: 14))
-                    .accessibilityLabel("Download car report")
-                }
-
-                if let serviceReportMessage {
-                    Text(serviceReportMessage)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -461,7 +432,7 @@ struct CarDetailView: View {
         do {
             let url = try ServiceReportExporter.makePDF(for: car)
             serviceReportURL = url
-            serviceReportMessage = "Report ready: \(url.lastPathComponent)"
+            isShowingServiceReportShareSheet = true
             HapticsManager.success()
         } catch {
             serviceReportMessage = error.localizedDescription
@@ -504,6 +475,16 @@ struct CarDetailView: View {
             assertionFailure("Failed to delete car: \(error)")
         }
     }
+}
+
+private struct ServiceReportShareSheet: UIViewControllerRepresentable {
+    let url: URL
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: [url], applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) { }
 }
 
 private enum DetailSection: String, CaseIterable, Identifiable {
