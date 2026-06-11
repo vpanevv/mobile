@@ -1,0 +1,71 @@
+{
+  "identifier" : "5E2A9C44-1B6B-4B5E-9F2A-WISHLYAIPRO1",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "9.99",
+      "familyShareable" : false,
+      "internalID" : "WLAI-PRO-LIFETIME-0001",
+      "localizations" : [
+        {
+          "description" : "Unlimited wishes and wish cards, forever.",
+          "displayName" : "Pro Lifetime",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.vladipanev.wishlyai.pro.lifetime",
+      "referenceName" : "Pro Lifetime",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "WLAI-PRO-GROUP-0001",
+      "localizations" : [
+
+      ],
+      "name" : "WishlyAI Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "1.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "WLAI-PRO-MONTHLY-0001",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlimited wishes and wish cards.",
+              "displayName" : "Pro Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.vladipanev.wishlyai.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Pro Monthly",
+          "subscriptionGroupID" : "WLAI-PRO-GROUP-0001",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

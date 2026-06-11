@@ -10,11 +10,13 @@ struct FavoriteDetailView: View {
     let onRegenerate: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var pro = ProStore.shared
     @AppStorage("wishlyai.isDark") private var isDark: Bool = true
 
     @State private var copied            = false
     @State private var showDeleteConfirm = false
     @State private var showCardEditor    = false
+    @State private var showPaywall       = false
     @State private var cardAppeared      = false
     @State private var actionsAppeared   = false
 
@@ -108,7 +110,11 @@ struct FavoriteDetailView: View {
                     }
                     actionCircle(icon: "wand.and.stars", tint: Color(hex: 0xc084fc)) {
                         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        showCardEditor = true
+                        if pro.isPro {
+                            showCardEditor = true
+                        } else {
+                            showPaywall = true
+                        }
                     }
                     actionCircle(icon: "arrow.clockwise", tint: Color(hex: 0x22d3ee)) {
                         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
@@ -149,6 +155,9 @@ struct FavoriteDetailView: View {
             withAnimation(.spring(response: 0.45, dampingFraction: 0.8).delay(0.22)) {
                 actionsAppeared = true
             }
+        }
+        .sheet(isPresented: $showPaywall) {
+            ProPaywallView(context: .cardMode)
         }
         .fullScreenCover(isPresented: $showCardEditor) {
             CardEditorView(

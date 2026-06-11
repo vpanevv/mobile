@@ -5,7 +5,10 @@ import UIKit
 
 struct LengthStepView: View {
     @EnvironmentObject private var coordinator: WishFlowCoordinator
-    @State private var appeared = false
+    @ObservedObject private var pro   = ProStore.shared
+    @ObservedObject private var quota = WishQuota.shared
+    @State private var appeared    = false
+    @State private var showPaywall = false
 
     var body: some View {
         ZStack {
@@ -53,7 +56,13 @@ struct LengthStepView: View {
 
             // ── CTA ─────────────────────────────────────────────────────
             PrimaryFlowButton(label: "Generate Wish ✨", icon: "sparkles") {
-                coordinator.goNext(.generating)
+                quota.refresh()
+                if pro.isPro || quota.canGenerate {
+                    coordinator.generatedWish = nil   // fresh entry for GeneratingStepView
+                    coordinator.goNext(.generating)
+                } else {
+                    showPaywall = true
+                }
             }
             .opacity(appeared ? 1 : 0)
             .animation(.spring(response: 0.45, dampingFraction: 0.8).delay(0.24), value: appeared)
@@ -72,6 +81,10 @@ struct LengthStepView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                 withAnimation { appeared = true }
             }
+            quota.refresh()
+        }
+        .sheet(isPresented: $showPaywall) {
+            ProPaywallView(context: .dailyLimit)
         }
     }
 }

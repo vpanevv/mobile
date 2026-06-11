@@ -19,6 +19,7 @@ struct AnthropicService {
         let max_tokens: Int
         let system: String
         let messages: [Message]
+        var stream: Bool = false
 
         struct Message: Encodable {
             let role: String
@@ -43,18 +44,35 @@ struct AnthropicService {
         }
     }
 
-    func generateWish(
+    // SSE event frame for streaming responses
+    private struct StreamEvent: Decodable {
+        let type: String
+        let delta: Delta?
+        let error: ErrorDetail?
+
+        struct Delta: Decodable {
+            let type: String?
+            let text: String?
+        }
+        struct ErrorDetail: Decodable {
+            let message: String?
+        }
+    }
+
+    // MARK: - Prompt building (shared by both paths)
+
+    private func buildPrompts(
         holidayType: String,
-        occasion: HolidayType = .birthday,
-        name: String? = nil,
-        parentName: String? = nil,
-        babyName: String? = nil,
-        partner1Name: String? = nil,
-        partner2Name: String? = nil,
-        language: WishLanguage = .english,
-        tone: WishTone = .friendly,
-        length: WishLength = .medium
-    ) async throws -> String {
+        occasion: HolidayType,
+        name: String?,
+        parentName: String?,
+        babyName: String?,
+        partner1Name: String?,
+        partner2Name: String?,
+        language: WishLanguage,
+        tone: WishTone,
+        length: WishLength
+    ) -> (system: String, user: String) {
         let systemPrompt = "You are WishlyAI, a creative wish generator. \(tone.apiInstruction) \(length.apiInstruction) Never use clichés like 'May your day be filled with joy'. Be original and specific. Return ONLY the wish text — no quotes, no labels, no extra formatting."
 
         // Occasion-specific guidance appended to the user prompt
@@ -76,12 +94,16 @@ struct AnthropicService {
             basePrompt = "Generate a \(holidayType.lowercased()) wish."
         }
         let userPrompt = "\(basePrompt)\(occasionGuidance) \(language.promptInstruction)"
+        return (systemPrompt, userPrompt)
+    }
 
+    private func makeRequest(system: String, user: String, stream: Bool) throws -> URLRequest {
         let requestBody = APIRequest(
             model: model,
             max_tokens: 400,
-            system: systemPrompt,
-            messages: [.init(role: "user", content: userPrompt)]
+            system: system,
+            messages: [.init(role: "user", content: user)],
+            stream: stream
         )
 
         var request = URLRequest(url: endpoint)
@@ -90,6 +112,30 @@ struct AnthropicService {
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         request.httpBody = try JSONEncoder().encode(requestBody)
+        return request
+    }
+
+    // MARK: - One-shot generation
+
+    func generateWish(
+        holidayType: String,
+        occasion: HolidayType = .birthday,
+        name: String? = nil,
+        parentName: String? = nil,
+        babyName: String? = nil,
+        partner1Name: String? = nil,
+        partner2Name: String? = nil,
+        language: WishLanguage = .english,
+        tone: WishTone = .friendly,
+        length: WishLength = .medium
+    ) async throws -> String {
+        let (system, user) = buildPrompts(
+            holidayType: holidayType, occasion: occasion, name: name,
+            parentName: parentName, babyName: babyName,
+            partner1Name: partner1Name, partner2Name: partner2Name,
+            language: language, tone: tone, length: length
+        )
+        let request = try makeRequest(system: system, user: user, stream: false)
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
@@ -112,6 +158,81 @@ struct AnthropicService {
 
         return text
     }
+
+    // MARK: - Streaming generation
+
+    /// Streams the wish token-by-token. Calls `onDelta` with each new text chunk
+    /// and returns the complete wish when the stream finishes.
+    func generateWishStreaming(
+        holidayType: String,
+        occasion: HolidayType = .birthday,
+        name: String? = nil,
+        parentName: String? = nil,
+        babyName: String? = nil,
+        partner1Name: String? = nil,
+        partner2Name: String? = nil,
+        language: WishLanguage = .english,
+        tone: WishTone = .friendly,
+        length: WishLength = .medium,
+        onDelta: @escaping (String) -> Void
+    ) async throws -> String {
+        let (system, user) = buildPrompts(
+            holidayType: holidayType, occasion: occasion, name: name,
+            parentName: parentName, babyName: babyName,
+            partner1Name: partner1Name, partner2Name: partner2Name,
+            language: language, tone: tone, length: length
+        )
+        let request = try makeRequest(system: system, user: user, stream: true)
+
+        let (bytes, response) = try await URLSession.shared.bytes(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw WishError.networkError("Invalid response")
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            // Drain enough of the body to surface the API's error message
+            var body = ""
+            for try await line in bytes.lines {
+                body += line
+                if body.count > 4000 { break }
+            }
+            if let data = body.data(using: .utf8),
+               let apiError = try? JSONDecoder().decode(APIError.self, from: data) {
+                throw WishError.apiError(apiError.error.message)
+            }
+            throw WishError.networkError("HTTP \(httpResponse.statusCode)")
+        }
+
+        var full = ""
+        let decoder = JSONDecoder()
+
+        for try await line in bytes.lines {
+            try Task.checkCancellation()
+            guard line.hasPrefix("data:") else { continue }
+            let payload = line.dropFirst(5).trimmingCharacters(in: .whitespaces)
+            guard !payload.isEmpty,
+                  let data = payload.data(using: .utf8),
+                  let event = try? decoder.decode(StreamEvent.self, from: data) else { continue }
+
+            switch event.type {
+            case "content_block_delta":
+                if let text = event.delta?.text, !text.isEmpty {
+                    full += text
+                    onDelta(text)
+                }
+            case "error":
+                throw WishError.apiError(event.error?.message ?? "Streaming error")
+            default:
+                break
+            }
+        }
+
+        guard !full.isEmpty else { throw WishError.emptyResponse }
+        return full
+    }
+
+    // MARK: - Occasion clauses
 
     private func weddingClause(p1: String, p2: String) -> String {
         let a = p1.trimmingCharacters(in: .whitespaces)

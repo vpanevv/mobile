@@ -6,6 +6,8 @@ import UIKit
 struct WelcomeScreen: View {
     @EnvironmentObject private var coordinator: WishFlowCoordinator
     @EnvironmentObject private var store:       FavoritesStore
+    @ObservedObject private var pro   = ProStore.shared
+    @ObservedObject private var quota = WishQuota.shared
     @AppStorage("wishlyai.isDark")   private var isDark:  Bool = true
 
     @State private var showFavorites = false
@@ -74,18 +76,27 @@ struct WelcomeScreen: View {
                 Spacer()
 
                 // ── CTA ──────────────────────────────────────────────────
-                PrimaryFlowButton(label: "Start", icon: "sparkles") {
-                    coordinator.reset()
-                    coordinator.goNext(.occasion)
+                VStack(spacing: 10) {
+                    PrimaryFlowButton(label: "Start", icon: "sparkles") {
+                        coordinator.reset()
+                        coordinator.goNext(.occasion)
+                    }
+
+                    if !pro.isPro {
+                        Text("✨ \(quota.remaining) of \(WishQuota.dailyLimit) free wishes left today")
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundStyle(.secondary.opacity(0.75))
+                    }
                 }
                 .opacity(appeared ? 1 : 0)
                 .offset(y: appeared ? 0 : 20)
                 .animation(.spring(response: 0.5, dampingFraction: 0.75).delay(0.32), value: appeared)
-                .padding(.bottom, 52)
+                .padding(.bottom, 44)
             }
         }
         .navigationBarHidden(true)
         .onAppear {
+            quota.refresh()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                 withAnimation { appeared = true }
             }

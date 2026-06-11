@@ -39,6 +39,7 @@ final class WishFlowCoordinator: ObservableObject {
     }
 
     private let service = AnthropicService()
+    private var generationTask: Task<Void, Never>?
 
     // ── Navigation ────────────────────────────────────────────────────
     enum Step: Hashable {
@@ -48,6 +49,7 @@ final class WishFlowCoordinator: ObservableObject {
     func goNext(_ step: Step) { path.append(step) }
 
     func reset() {
+        cancelGeneration()
         path          = NavigationPath()
         occasion      = nil
         includeName   = false
@@ -70,12 +72,21 @@ final class WishFlowCoordinator: ObservableObject {
         path.append(Step.tone)
     }
 
-    // ── Generation ────────────────────────────────────────────────────
-    /// Async; throws on API/network errors. Respects Task cancellation.
-    func generate() async throws -> String {
-        guard let occasion else { throw WishError.apiError("No occasion selected") }
-        isGenerating    = true
+    // ── Generation (streaming) ────────────────────────────────────────
+    /// Kicks off a coordinator-owned streaming generation task. The wish text
+    /// arrives token-by-token into `generatedWish`; `isGenerating` stays true
+    /// until the stream completes. Owning the task here (not in a view) means
+    /// navigation transitions can't cancel an in-flight generation.
+    func startGeneration() {
+        generationTask?.cancel()
+        guard let occasion else {
+            generationError = "No occasion selected"
+            return
+        }
+
+        generatedWish   = nil
         generationError = nil
+        isGenerating    = true
 
         let isNewBaby     = occasion == .newBaby
         let isWedding     = occasion == .wedding
@@ -95,20 +106,46 @@ final class WishFlowCoordinator: ObservableObject {
             }
         }()
 
-        return try await service.generateWish(
-            holidayType:  occasion.label,
-            occasion:     occasion,
-            name:         isNewBaby || isWedding ? nil
-                            : isAnniversary      ? anniversaryName
-                            : (includeName && !name.isEmpty) ? name : nil,
-            parentName:   isNewBaby ? (parentName.isEmpty ? nil : parentName) : nil,
-            babyName:     isNewBaby ? (babyName.isEmpty   ? nil : babyName)   : nil,
-            partner1Name: isWedding ? (name.isEmpty        ? nil : name)       : nil,
-            partner2Name: isWedding ? (parentName.isEmpty  ? nil : parentName) : nil,
-            language:     language,
-            tone:         tone,
-            length:       length
-        )
+        generationTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                let full = try await self.service.generateWishStreaming(
+                    holidayType:  occasion.label,
+                    occasion:     occasion,
+                    name:         isNewBaby || isWedding ? nil
+                                    : isAnniversary      ? anniversaryName
+                                    : (self.includeName && !self.name.isEmpty) ? self.name : nil,
+                    parentName:   isNewBaby ? (self.parentName.isEmpty ? nil : self.parentName) : nil,
+                    babyName:     isNewBaby ? (self.babyName.isEmpty   ? nil : self.babyName)   : nil,
+                    partner1Name: isWedding ? (self.name.isEmpty        ? nil : self.name)       : nil,
+                    partner2Name: isWedding ? (self.parentName.isEmpty  ? nil : self.parentName) : nil,
+                    language:     self.language,
+                    tone:         self.tone,
+                    length:       self.length
+                ) { [weak self] delta in
+                    guard let self else { return }
+                    self.generatedWish = (self.generatedWish ?? "") + delta
+                }
+
+                guard !Task.isCancelled else { return }
+                self.generatedWish = full
+                self.isGenerating  = false
+                WishQuota.shared.recordUse()
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            } catch is CancellationError {
+                self.isGenerating = false
+            } catch {
+                guard !Task.isCancelled else { self.isGenerating = false; return }
+                self.isGenerating    = false
+                self.generationError = error.localizedDescription
+            }
+        }
+    }
+
+    func cancelGeneration() {
+        generationTask?.cancel()
+        generationTask = nil
+        isGenerating = false
     }
 
     // ── Display helpers ───────────────────────────────────────────────
