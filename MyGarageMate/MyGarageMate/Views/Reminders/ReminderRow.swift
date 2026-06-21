@@ -5,24 +5,26 @@ struct ReminderRow: View {
     let car: Car
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Theme.Spacing.m) {
             Image(systemName: reminder.reminderType.symbolName)
-                .foregroundStyle(.tint)
-                .frame(width: 34, height: 34)
-                .background(.thinMaterial, in: Circle())
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: 40, height: 40)
+                .background(Theme.accent.gradient, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(reminder.title)
                     .font(.headline)
                 Text(dueText)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                    .lineLimit(2)
             }
 
-            Spacer()
+            Spacer(minLength: 0)
         }
-        .padding(14)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .padding(Theme.Spacing.l)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
         .accessibilityElement(children: .combine)
     }
 
