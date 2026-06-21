@@ -105,7 +105,14 @@ struct SectionHeader<Accessory: View>: View {
     let title: String
     var systemImage: String?
     var subtitle: String?
-    @ViewBuilder var accessory: Accessory
+    var accessory: Accessory
+
+    init(_ title: String, systemImage: String? = nil, subtitle: String? = nil, @ViewBuilder accessory: () -> Accessory) {
+        self.title = title
+        self.systemImage = systemImage
+        self.subtitle = subtitle
+        self.accessory = accessory()
+    }
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
@@ -136,7 +143,7 @@ struct SectionHeader<Accessory: View>: View {
 
 extension SectionHeader where Accessory == EmptyView {
     init(_ title: String, systemImage: String? = nil, subtitle: String? = nil) {
-        self.init(title: title, systemImage: systemImage, subtitle: subtitle) { EmptyView() }
+        self.init(title, systemImage: systemImage, subtitle: subtitle) { EmptyView() }
     }
 }
 

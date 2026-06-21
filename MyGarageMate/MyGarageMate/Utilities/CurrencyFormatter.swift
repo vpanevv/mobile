@@ -13,6 +13,26 @@ enum CurrencyFormatter {
         return formatter.string(from: majorAmount as NSDecimalNumber) ?? "\(currencyCode) \(majorAmount)"
     }
 
+    /// A compact, axis-friendly representation (e.g. "€1.2k", "$340").
+    static func compactString(fromMinor amountMinor: Int, currencyCode: String) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = currencyCode
+        formatter.locale = locale(for: currencyCode)
+        formatter.maximumFractionDigits = 0
+
+        let major = Double(amountMinor) / 100
+        if abs(major) >= 1000 {
+            formatter.maximumFractionDigits = 1
+            let symbol = formatter.currencySymbol ?? ""
+            let value = (major / 1000)
+            let trimmed = value.formatted(.number.precision(.fractionLength(0...1)))
+            return "\(symbol)\(trimmed)k"
+        }
+
+        return formatter.string(from: major as NSNumber) ?? "\(Int(major))"
+    }
+
     static func minorUnits(from text: String) -> Int {
         let sanitized = text
             .replacingOccurrences(of: ",", with: ".")

@@ -388,6 +388,8 @@ struct CarDetailView: View {
 
             SpendInsightsView(car: car, currencyCode: profile.preferredCurrencyCode)
 
+            MileageTrendCard(car: car)
+
             if car.upcomingReminders.isEmpty {
                 EmptyStateView(
                     symbolName: "calendar.badge.checkmark",

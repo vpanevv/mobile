@@ -244,6 +244,37 @@ final class Car {
     }
 }
 
+extension Car {
+    /// Spend grouped by service category for the current year, richest first.
+    func spendByCategoryThisYear(currencyCode: String, now: Date = .now) -> [CategorySpend] {
+        let relevant = serviceRecords.filter { record in
+            record.currencyCode == currencyCode &&
+            record.amountMinor > 0 &&
+            Calendar.current.isDate(record.date, equalTo: now, toGranularity: .year)
+        }
+
+        let grouped = Dictionary(grouping: relevant, by: { $0.category })
+        return grouped
+            .map { category, records in
+                CategorySpend(category: category, amountMinor: records.reduce(0) { $0 + $1.amountMinor })
+            }
+            .sorted { $0.amountMinor > $1.amountMinor }
+    }
+
+    /// Recorded mileage readings over time (from services that captured mileage).
+    func mileageHistory() -> [MileagePoint] {
+        let points = serviceRecords
+            .compactMap { record -> MileagePoint? in
+                guard let mileage = record.mileage, mileage > 0 else { return nil }
+                return MileagePoint(date: record.date, mileage: mileage)
+            }
+            .sorted { $0.date < $1.date }
+
+        // Always include the current reading as the latest point.
+        return points + [MileagePoint(date: .now, mileage: currentMileage)]
+    }
+}
+
 struct MonthlySpend: Identifiable {
     let monthStart: Date
     let amountMinor: Int
@@ -253,4 +284,18 @@ struct MonthlySpend: Identifiable {
     var shortMonth: String {
         monthStart.formatted(.dateTime.month(.abbreviated))
     }
+}
+
+struct CategorySpend: Identifiable {
+    let category: ServiceCategory
+    let amountMinor: Int
+
+    var id: String { category.rawValue }
+}
+
+struct MileagePoint: Identifiable {
+    let date: Date
+    let mileage: Double
+
+    var id: Date { date }
 }
