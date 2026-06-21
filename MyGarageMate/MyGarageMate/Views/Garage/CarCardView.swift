@@ -9,6 +9,11 @@ struct CarCardView: View {
         car.healthStatus
     }
 
+    private var photo: UIImage? {
+        guard let data = car.photoData else { return nil }
+        return UIImage(data: data)
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
             carImage
@@ -16,9 +21,13 @@ struct CarCardView: View {
                 .frame(maxWidth: .infinity)
                 .clipped()
 
-            // Bottom scrim so the glass panel and text stay legible.
+            // Bottom scrim so the glass panel and text stay legible. A real
+            // photo needs a heavier scrim; the branded placeholder is already
+            // controlled, so it gets a lighter one.
             LinearGradient(
-                colors: [.clear, .black.opacity(0.25), .black.opacity(0.65)],
+                colors: photo == nil
+                    ? [.clear, .black.opacity(0.12), .black.opacity(0.42)]
+                    : [.clear, .black.opacity(0.25), .black.opacity(0.65)],
                 startPoint: .center,
                 endPoint: .bottom
             )
@@ -43,24 +52,34 @@ struct CarCardView: View {
 
     // MARK: Photo
 
+    @ViewBuilder
     private var carImage: some View {
+        if let photo {
+            Image(uiImage: photo)
+                .resizable()
+                .scaledToFill()
+        } else {
+            placeholderArtwork
+        }
+    }
+
+    /// A vivid branded backdrop for cars without a photo, so the card reads
+    /// clearly instead of looking empty. A large car silhouette anchors it.
+    private var placeholderArtwork: some View {
         ZStack {
             LinearGradient(
-                colors: [Theme.accent.opacity(0.45), Theme.mist.opacity(0.30)],
+                colors: [Theme.accent, Theme.mist, Theme.accent.opacity(0.85)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
 
-            if let data = car.photoData, let image = UIImage(data: data) {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                Image(systemName: "car.side.fill")
-                    .font(.system(size: 76, weight: .semibold))
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(.white.opacity(0.85))
-            }
+            Image(systemName: "car.side.fill")
+                .font(.system(size: 168, weight: .bold))
+                .symbolRenderingMode(.monochrome)
+                .foregroundStyle(.white.opacity(0.20))
+                .rotation3DEffect(.degrees(8), axis: (x: 0, y: 1, z: 0))
+                .offset(x: 28, y: 18)
+                .accessibilityHidden(true)
         }
     }
 

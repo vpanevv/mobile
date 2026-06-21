@@ -15,6 +15,7 @@ struct CarDetailView: View {
     @State private var isAddingReminder = false
     @State private var isConfirmingDelete = false
     @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var isPhotoPickerPresented = false
     @State private var isEditingMileage = false
     @State private var mileageDraft = ""
     @State private var mileageValidationMessage: String?
@@ -72,6 +73,14 @@ struct CarDetailView: View {
                     Label("Reminder", systemImage: "bell.badge.fill")
                 }
 
+                Divider()
+
+                Button {
+                    isPhotoPickerPresented = true
+                } label: {
+                    Label(car.photoData == nil ? "Add Photo" : "Change Photo", systemImage: "photo.badge.plus")
+                }
+
                 Button {
                     generateServiceReport()
                 } label: {
@@ -125,6 +134,7 @@ struct CarDetailView: View {
         } message: {
             Text(serviceReportMessage ?? "")
         }
+        .photosPicker(isPresented: $isPhotoPickerPresented, selection: $selectedPhotoItem, matching: .images)
         .onChange(of: selectedPhotoItem) { _, newValue in
             Task {
                 await updatePhoto(from: newValue)
@@ -166,18 +176,6 @@ struct CarDetailView: View {
                     }
 
                 heroOverlay
-
-                PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                    Image(systemName: "photo.badge.plus")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 44, height: 44)
-                }
-                .buttonStyle(.glass)
-                .clipShape(Circle())
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                .padding(Theme.Spacing.l)
-                .accessibilityLabel("Edit car photo")
             }
             .frame(width: geo.size.width, height: height)
             .offset(y: -stretch)
@@ -193,15 +191,16 @@ struct CarDetailView: View {
                     .scaledToFill()
             } else {
                 LinearGradient(
-                    colors: [Theme.accent.opacity(0.5), Theme.mist.opacity(0.35)],
+                    colors: [Theme.accent, Theme.mist, Theme.accent.opacity(0.85)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
                 .overlay {
                     Image(systemName: "car.side.fill")
-                        .font(.system(size: 92, weight: .semibold))
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(.white.opacity(0.85))
+                        .font(.system(size: 150, weight: .bold))
+                        .symbolRenderingMode(.monochrome)
+                        .foregroundStyle(.white.opacity(0.22))
+                        .offset(y: -30)
                 }
             }
         }
