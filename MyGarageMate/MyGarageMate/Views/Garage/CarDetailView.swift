@@ -26,28 +26,31 @@ struct CarDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: Theme.Spacing.xl) {
                 hero
 
                 summaryCards
                     .padding(.horizontal)
 
-                Picker("Section", selection: $selectedSection) {
-                    ForEach(DetailSection.allCases) { section in
-                        Text(section.title).tag(section)
-                    }
-                }
-                .pickerStyle(.segmented)
+                GlassSegmentedControl(
+                    items: DetailSection.allCases,
+                    title: { $0.title },
+                    selection: $selectedSection
+                )
                 .padding(.horizontal)
 
                 sectionContent
                     .padding(.horizontal)
-                    .padding(.bottom, 24)
+                    .padding(.bottom, Theme.Spacing.xxl)
             }
         }
-        .background(Color(.systemGroupedBackground))
+        .coordinateSpace(name: "carDetailScroll")
+        .ignoresSafeArea(edges: .top)
+        .scrollContentBackground(.hidden)
+        .background(AmbientBackground(tint: car.healthStatus.tint))
         .navigationTitle(car.model)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             Menu {
                 Button {
@@ -140,95 +143,104 @@ struct CarDetailView: View {
         }
     }
 
+    private let heroBaseHeight: CGFloat = 440
+
     private var hero: some View {
-        ZStack(alignment: .bottomLeading) {
-            Group {
-                if let data = car.photoData, let image = UIImage(data: data) {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                } else {
-                    LinearGradient(colors: [.accentColor.opacity(0.34), .primary.opacity(0.12)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                        .overlay {
-                            Image(systemName: "car.side.fill")
-                                .font(.system(size: 84, weight: .semibold))
-                                .symbolRenderingMode(.hierarchical)
-                        }
-                }
-            }
-            .frame(height: 380)
-            .clipped()
-            .overlay(alignment: .bottom) {
-                LinearGradient(
-                    colors: [.clear, .black.opacity(0.12), .black.opacity(0.58)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(height: 180)
-            }
+        GeometryReader { geo in
+            let minY = geo.frame(in: .named("carDetailScroll")).minY
+            let stretch = max(0, minY)
+            let height = heroBaseHeight + stretch
 
-            VStack(alignment: .leading, spacing: 8) {
-                Text(car.displayName)
-                    .font(.largeTitle.bold())
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.72)
-                    .foregroundStyle(.white)
-                    .shadow(color: .black.opacity(0.35), radius: 8, y: 3)
-
-                ScrollView(.horizontal) {
-                    HStack(spacing: 10) {
-                        Button {
-                            beginEditingMileage()
-                        } label: {
-                            HStack(spacing: 8) {
-                                Text("\(car.currentMileage.formatted(.number.precision(.fractionLength(0)))) \(car.mileageUnit)")
-                                    .font(.headline)
-                                Image(systemName: "pencil.circle.fill")
-                                    .font(.headline)
-                            }
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(.ultraThinMaterial, in: Capsule())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Edit current mileage")
-
-                        Label(car.engineType.title, systemImage: car.engineType.symbolName)
-                            .font(.headline)
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(.ultraThinMaterial, in: Capsule())
-                            .accessibilityLabel("Engine type \(car.engineType.title)")
-
-                        Label(car.healthStatus.title, systemImage: car.healthStatus.symbolName)
-                            .font(.headline)
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(healthStatusColor.opacity(0.82), in: Capsule())
-                            .accessibilityLabel("Car status \(car.healthStatus.title)")
+            ZStack(alignment: .bottomLeading) {
+                heroImage
+                    .frame(width: geo.size.width, height: height)
+                    .clipped()
+                    .overlay(alignment: .bottom) {
+                        LinearGradient(
+                            colors: [.clear, .black.opacity(0.15), .black.opacity(0.62)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: 240)
                     }
-                }
-                .scrollIndicators(.hidden)
-            }
-            .padding(18)
-            .frame(maxWidth: .infinity, alignment: .leading)
 
-            PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                Label("Edit Photo", systemImage: "photo.badge.plus")
-                    .font(.subheadline.weight(.semibold))
-                    .labelStyle(.iconOnly)
-                    .foregroundStyle(.primary)
-                    .frame(width: 44, height: 44)
-                    .background(.ultraThinMaterial, in: Circle())
+                heroOverlay
+
+                PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                    Image(systemName: "photo.badge.plus")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 44, height: 44)
+                }
+                .buttonStyle(.glass)
+                .clipShape(Circle())
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                .padding(Theme.Spacing.l)
+                .accessibilityLabel("Edit car photo")
             }
-            .buttonStyle(.plain)
-            .padding(16)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-            .accessibilityLabel("Edit car photo")
+            .frame(width: geo.size.width, height: height)
+            .offset(y: -stretch)
         }
+        .frame(height: heroBaseHeight)
+    }
+
+    private var heroImage: some View {
+        Group {
+            if let data = car.photoData, let image = UIImage(data: data) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                LinearGradient(
+                    colors: [Theme.accent.opacity(0.5), Theme.mist.opacity(0.35)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .overlay {
+                    Image(systemName: "car.side.fill")
+                        .font(.system(size: 92, weight: .semibold))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+            }
+        }
+    }
+
+    private var heroOverlay: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+            Text(car.displayName)
+                .font(.largeTitle.bold())
+                .lineLimit(2)
+                .minimumScaleFactor(0.72)
+                .foregroundStyle(.white)
+                .shadow(color: .black.opacity(0.4), radius: 8, y: 3)
+
+            ScrollView(.horizontal) {
+                HStack(spacing: Theme.Spacing.s) {
+                    Button {
+                        beginEditingMileage()
+                    } label: {
+                        GlassChip(
+                            systemImage: "gauge.with.dots.needle.67percent",
+                            text: "\(car.currentMileage.formatted(.number.precision(.fractionLength(0)))) \(car.mileageUnit)",
+                            tint: .white
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Edit current mileage")
+
+                    GlassChip(systemImage: car.engineType.symbolName, text: car.engineType.title, tint: .white)
+                        .accessibilityLabel("Engine type \(car.engineType.title)")
+
+                    StatusBadge(status: car.healthStatus)
+                        .accessibilityLabel("Car status \(car.healthStatus.title)")
+                }
+                .padding(.bottom, 2)
+            }
+            .scrollIndicators(.hidden)
+        }
+        .padding(Theme.Spacing.l)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var mileageEditor: some View {
@@ -274,7 +286,7 @@ struct CarDetailView: View {
     }
 
     private var summaryCards: some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: Theme.Spacing.m), GridItem(.flexible())], spacing: Theme.Spacing.m) {
             Button {
                 HapticsManager.lightTap()
                 isShowingThisYearServices = true
@@ -282,39 +294,34 @@ struct CarDetailView: View {
                 summaryCard(
                     title: "This year",
                     value: CurrencyFormatter.string(fromMinor: car.totalSpentThisYear(currencyCode: profile.preferredCurrencyCode), currencyCode: profile.preferredCurrencyCode),
-                    symbol: "creditcard.fill"
+                    symbol: "creditcard.fill",
+                    tint: Theme.highlight
                 )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(CardPressStyle())
             .accessibilityLabel("Show paid services this year")
 
             summaryCard(
                 title: "Last service",
                 value: car.lastService?.title ?? "None",
                 subtitle: car.lastService?.date.formatted(date: .abbreviated, time: .omitted),
-                symbol: "wrench.and.screwdriver.fill"
+                symbol: "wrench.and.screwdriver.fill",
+                tint: Theme.accent
             )
 
             summaryCard(
                 title: "Next reminder",
                 value: car.nextImportantReminder?.title ?? "All clear",
-                symbol: car.nextImportantReminder?.reminderType.symbolName ?? "checkmark.seal.fill"
+                symbol: car.nextImportantReminder?.reminderType.symbolName ?? "checkmark.seal.fill",
+                tint: car.healthStatus.tint
             )
 
             summaryCard(
                 title: "Records",
                 value: "\(car.serviceRecords.count)",
-                symbol: "list.bullet.rectangle.fill"
+                symbol: "list.bullet.rectangle.fill",
+                tint: Theme.mist
             )
-        }
-    }
-
-    private var healthStatusColor: Color {
-        switch car.healthStatus {
-        case .overdue: .red
-        case .dueSoon: .orange
-        case .allClear: .green
-        case .needsSetup: .blue
         }
     }
 
@@ -327,12 +334,14 @@ struct CarDetailView: View {
             .sorted { $0.date > $1.date }
     }
 
-    private func summaryCard(title: String, value: String, subtitle: String? = nil, symbol: String) -> some View {
-        GlassCardView(cornerRadius: 22) {
-            VStack(alignment: .leading, spacing: 10) {
+    private func summaryCard(title: String, value: String, subtitle: String? = nil, symbol: String, tint: Color = Theme.accent) -> some View {
+        GlassCard(cornerRadius: Theme.Radius.card) {
+            VStack(alignment: .leading, spacing: Theme.Spacing.s) {
                 Image(systemName: symbol)
-                    .foregroundStyle(.tint)
-                    .font(.title3)
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 36, height: 36)
+                    .background(tint.gradient, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
                 Text(title)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -365,14 +374,14 @@ struct CarDetailView: View {
 
     private var overview: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 12) {
-                quickAction(title: "Add Service", symbol: "wrench.and.screwdriver.fill") {
+            HStack(spacing: Theme.Spacing.m) {
+                quickAction(title: "Add Service", symbol: "wrench.and.screwdriver.fill", tint: Theme.accent) {
                     isAddingService = true
                 }
-                quickAction(title: "Add Note", symbol: "note.text.badge.plus") {
+                quickAction(title: "Add Note", symbol: "note.text.badge.plus", tint: Theme.ember) {
                     isAddingNote = true
                 }
-                quickAction(title: "Add Reminder", symbol: "bell.badge.fill") {
+                quickAction(title: "Add Reminder", symbol: "bell.badge.fill", tint: Theme.mist) {
                     isAddingReminder = true
                 }
             }
@@ -386,9 +395,8 @@ struct CarDetailView: View {
                     message: "Add one for oil, inspection, insurance, tires, or anything custom."
                 )
             } else {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Upcoming")
-                        .font(.headline)
+                VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+                    SectionHeader("Upcoming", systemImage: "calendar.badge.clock")
                     ForEach(car.upcomingReminders, id: \.id) { reminder in
                         ReminderRow(reminder: reminder, car: car)
                     }
@@ -397,22 +405,27 @@ struct CarDetailView: View {
         }
     }
 
-    private func quickAction(title: String, symbol: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            VStack(spacing: 8) {
+    private func quickAction(title: String, symbol: String, tint: Color = Theme.accent, action: @escaping () -> Void) -> some View {
+        Button {
+            HapticsManager.soft()
+            action()
+        } label: {
+            VStack(spacing: Theme.Spacing.s) {
                 Image(systemName: symbol)
-                    .font(.title3)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(tint)
                 Text(title)
                     .font(.caption.weight(.semibold))
+                    .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .minimumScaleFactor(0.85)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
+            .padding(.vertical, Theme.Spacing.l)
+            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
         }
-        .buttonStyle(.bordered)
-        .buttonBorderShape(.roundedRectangle(radius: 16))
+        .buttonStyle(CardPressStyle())
         .accessibilityLabel(title)
     }
 

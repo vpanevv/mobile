@@ -140,6 +140,44 @@ extension SectionHeader where Accessory == EmptyView {
     }
 }
 
+// MARK: - Glass segmented control
+
+/// A Liquid Glass segmented control with a spring-animated selection pill.
+struct GlassSegmentedControl<T: Hashable>: View {
+    let items: [T]
+    let title: (T) -> String
+    @Binding var selection: T
+    @Namespace private var namespace
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(items, id: \.self) { item in
+                let isSelected = item == selection
+                Button {
+                    HapticsManager.selection()
+                    withAnimation(Motion.spring) { selection = item }
+                } label: {
+                    Text(title(item))
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 9)
+                        .foregroundStyle(isSelected ? AnyShapeStyle(.white) : AnyShapeStyle(Color.secondary))
+                        .background {
+                            if isSelected {
+                                Capsule()
+                                    .fill(Theme.accent.gradient)
+                                    .matchedGeometryEffect(id: "segment", in: namespace)
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(4)
+        .glassEffect(.regular, in: Capsule())
+    }
+}
+
 // MARK: - Backwards-compatible shim
 
 /// Legacy wrapper kept so existing call sites adopt Liquid Glass automatically.
