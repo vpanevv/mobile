@@ -10,89 +10,43 @@ struct CarCardView: View {
     }
 
     var body: some View {
-        GlassCardView(cornerRadius: 24) {
-            VStack(alignment: .leading, spacing: 14) {
-                ZStack(alignment: .bottomLeading) {
-                    carImage
-                        .frame(height: 154)
-                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        ZStack(alignment: .bottom) {
+            carImage
+                .frame(height: 300)
+                .frame(maxWidth: .infinity)
+                .clipped()
 
-                    LinearGradient(
-                        colors: [.clear, .black.opacity(0.52)],
-                        startPoint: .center,
-                        endPoint: .bottom
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            // Bottom scrim so the glass panel and text stay legible.
+            LinearGradient(
+                colors: [.clear, .black.opacity(0.25), .black.opacity(0.65)],
+                startPoint: .center,
+                endPoint: .bottom
+            )
 
-                    HStack(alignment: .bottom) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(car.model)
-                                .font(.title3.weight(.bold))
-                                .foregroundStyle(.white)
-                                .lineLimit(1)
+            StatusBadge(status: status, compact: true)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                .padding(Theme.Spacing.m)
 
-                            Text("\(car.year) \(car.make)")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(.white.opacity(0.82))
-                                .lineLimit(1)
-                        }
-
-                        Spacer()
-
-                        statusPill
-                    }
-                    .padding(14)
-                }
-
-                HStack(spacing: 12) {
-                    metric(
-                        title: "Mileage",
-                        value: "\(car.currentMileage.formatted(.number.precision(.fractionLength(0)))) \(car.mileageUnit)",
-                        symbol: "gauge.with.dots.needle.67percent"
-                    )
-
-                    metric(
-                        title: "This year",
-                        value: CurrencyFormatter.string(fromMinor: car.totalSpentThisYear(currencyCode: profile.preferredCurrencyCode), currencyCode: profile.preferredCurrencyCode),
-                        symbol: "creditcard.fill"
-                    )
-                }
-
-                HStack(spacing: 10) {
-                    Image(systemName: car.nextImportantReminder?.reminderType.symbolName ?? status.symbolName)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(statusColor)
-                        .frame(width: 30, height: 30)
-                        .background(statusColor.opacity(0.12), in: Circle())
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(car.nextImportantReminder?.title ?? status.title)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.primary)
-                            .lineLimit(1)
-
-                        Text(car.healthSubtitle)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(.footnote.weight(.bold))
-                        .foregroundStyle(.tertiary)
-                }
-            }
+            infoPanel
+                .padding(Theme.Spacing.m)
         }
+        .frame(height: 300)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous)
+                .strokeBorder(.white.opacity(0.12), lineWidth: 1)
+        }
+        .shadow(color: status.tint.opacity(0.28), radius: 22, y: 12)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(car.displayName), \(status.title), \(Int(car.currentMileage)) \(car.mileageUnit)")
     }
 
+    // MARK: Photo
+
     private var carImage: some View {
         ZStack {
             LinearGradient(
-                colors: [.accentColor.opacity(0.34), .primary.opacity(0.10)],
+                colors: [Theme.accent.opacity(0.45), Theme.mist.opacity(0.30)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -103,54 +57,67 @@ struct CarCardView: View {
                     .scaledToFill()
             } else {
                 Image(systemName: "car.side.fill")
-                    .font(.system(size: 56, weight: .semibold))
+                    .font(.system(size: 76, weight: .semibold))
                     .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(.primary)
-                    .opacity(0.92)
+                    .foregroundStyle(.white.opacity(0.85))
             }
         }
     }
 
-    private var statusPill: some View {
-        Label(status.shortTitle, systemImage: status.symbolName)
-            .font(.caption.weight(.bold))
-            .foregroundStyle(.white)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
-            .background(statusColor.gradient, in: Capsule())
-            .shadow(color: statusColor.opacity(0.28), radius: 8, y: 4)
-    }
+    // MARK: Floating glass info panel
 
-    private func metric(title: String, value: String, symbol: String) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: symbol)
-                .font(.caption.weight(.bold))
-                .foregroundStyle(.tint)
-                .frame(width: 26, height: 26)
-                .background(.thinMaterial, in: Circle())
+    private var infoPanel: some View {
+        GlassEffectContainer(spacing: 10) {
+            VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(car.model)
+                        .font(.title2.weight(.bold))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                    Text("\(car.year.description) · \(car.make)")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .lineLimit(1)
+                }
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(.secondary)
-                Text(value)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.78)
+                HStack(spacing: Theme.Spacing.s) {
+                    GlassChip(
+                        systemImage: "gauge.with.dots.needle.67percent",
+                        text: "\(car.currentMileage.formatted(.number.precision(.fractionLength(0)))) \(car.mileageUnit)",
+                        tint: .white
+                    )
+                    GlassChip(
+                        systemImage: "creditcard.fill",
+                        text: CurrencyFormatter.string(
+                            fromMinor: car.totalSpentThisYear(currencyCode: profile.preferredCurrencyCode),
+                            currencyCode: profile.preferredCurrencyCode
+                        ),
+                        tint: .white
+                    )
+                }
+
+                HStack(spacing: Theme.Spacing.s) {
+                    Image(systemName: car.nextImportantReminder?.reminderType.symbolName ?? status.symbolName)
+                        .font(.footnote.weight(.bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 28, height: 28)
+                        .background(status.tint.opacity(0.9), in: Circle())
+
+                    Text(car.nextImportantReminder?.title ?? status.title)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+
+                    Spacer(minLength: 0)
+
+                    Image(systemName: "chevron.right")
+                        .font(.footnote.weight(.bold))
+                        .foregroundStyle(.white.opacity(0.7))
+                }
             }
+            .padding(Theme.Spacing.l)
             .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .padding(10)
-        .background(Color(.tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-
-    private var statusColor: Color {
-        switch status {
-        case .overdue: .red
-        case .dueSoon: .orange
-        case .allClear: .green
-        case .needsSetup: .blue
+            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.Radius.control + 4, style: .continuous))
         }
     }
 }
