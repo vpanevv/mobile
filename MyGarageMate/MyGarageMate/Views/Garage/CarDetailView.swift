@@ -23,6 +23,7 @@ struct CarDetailView: View {
     @State private var isGeneratingServiceReport = false
     @State private var isShowingServiceReportShareSheet = false
     @State private var isShowingThisYearServices = false
+    @State private var liveActivityActive = false
 
     var body: some View {
         ScrollView {
@@ -386,6 +387,10 @@ struct CarDetailView: View {
                 }
             }
 
+            if car.nextImportantReminder != nil {
+                liveActivityButton
+            }
+
             SpendInsightsView(car: car, currencyCode: profile.preferredCurrencyCode)
 
             MileageTrendCard(car: car)
@@ -404,6 +409,65 @@ struct CarDetailView: View {
                     }
                 }
             }
+        }
+    }
+
+    private var liveActivityButton: some View {
+        Button {
+            toggleLiveActivity()
+        } label: {
+            HStack(spacing: Theme.Spacing.m) {
+                Image(systemName: liveActivityActive ? "bolt.badge.checkmark.fill" : "bolt.badge.clock.fill")
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 38, height: 38)
+                    .background((liveActivityActive ? Theme.highlight : Theme.accent).gradient, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(liveActivityActive ? "Tracking on Lock Screen" : "Track on Lock Screen")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                    Text(liveActivityActive ? "Tap to stop the Live Activity" : "Live countdown to your next service")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: liveActivityActive ? "stop.circle.fill" : "play.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(Theme.Spacing.l)
+            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+        }
+        .buttonStyle(CardPressStyle())
+        .onAppear { liveActivityActive = ServiceActivityManager.hasActive }
+        .accessibilityLabel(liveActivityActive ? "Stop Lock Screen tracking" : "Track next service on Lock Screen")
+    }
+
+    private func toggleLiveActivity() {
+        if liveActivityActive {
+            ServiceActivityManager.end()
+            liveActivityActive = false
+            HapticsManager.soft()
+            return
+        }
+
+        guard let reminder = car.nextImportantReminder else { return }
+        let started = ServiceActivityManager.start(
+            carName: car.model,
+            reminderTitle: reminder.title,
+            symbolName: reminder.reminderType.symbolName,
+            statusRawValue: car.healthStatus.rawValue,
+            dueDate: reminder.dueDate
+        )
+        liveActivityActive = started
+        if started {
+            HapticsManager.success()
+        } else {
+            HapticsManager.warning()
         }
     }
 
