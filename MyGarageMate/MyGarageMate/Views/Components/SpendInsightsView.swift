@@ -45,7 +45,7 @@ struct SpendInsightsView: View {
                     ForEach(months) { month in
                         VStack(spacing: 8) {
                             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(month.amountMinor == 0 ? Color.secondary.opacity(0.18) : Color.accentColor.gradient)
+                                .fill(month.amountMinor == 0 ? AnyShapeStyle(Color.secondary.opacity(0.18)) : AnyShapeStyle(Color.accentColor.gradient))
                                 .frame(height: barHeight(for: month.amountMinor))
                                 .frame(maxWidth: .infinity)
 
