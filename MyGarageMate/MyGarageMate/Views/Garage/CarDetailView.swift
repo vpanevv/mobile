@@ -348,7 +348,10 @@ struct CarDetailView: View {
                 Text(value)
                     .font(.headline)
                     .lineLimit(2)
-                    .minimumScaleFactor(0.78)
+                    .minimumScaleFactor(0.72)
+
+                Spacer(minLength: 0)
+
                 if let subtitle {
                     Text(subtitle)
                         .font(.caption.weight(.medium))
@@ -356,8 +359,10 @@ struct CarDetailView: View {
                         .lineLimit(1)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            // Fixed height keeps all four tiles identical regardless of content length.
+            .frame(maxWidth: .infinity, minHeight: 132, maxHeight: 132, alignment: .topLeading)
         }
+        .contentShape(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
     }
 
     @ViewBuilder

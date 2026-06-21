@@ -62,8 +62,6 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		8A2C7A0D2F3A000100A1B001 /* MyGarageMate */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = MyGarageMate;
 			sourceTree = "<group>";
 		};
@@ -99,7 +97,6 @@
 				1E3BB10C0FA73658C033B4B3 /* Info.plist */,
 				4D9A2E81471886EC909003AC /* GarageWidgets.entitlements */,
 			);
-			name = GarageWidgets;
 			path = GarageWidgets;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -137,7 +134,6 @@
 				D5FBDCA850CC232BFCC618F1 /* GarageSharedData.swift */,
 				2D62FA5DDC045A75F032F4A8 /* ServiceActivityAttributes.swift */,
 			);
-			name = Shared;
 			path = Shared;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -318,7 +314,7 @@
 				CODE_SIGN_ENTITLEMENTS = MyGarageMate/MyGarageMate.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = DP5G9GAZQJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -360,7 +356,7 @@
 				CODE_SIGN_ENTITLEMENTS = MyGarageMate/MyGarageMate.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = DP5G9GAZQJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;

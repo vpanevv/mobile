@@ -19,20 +19,6 @@ struct ServiceHistoryView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(Array(car.serviceRecordsNewestFirst.enumerated()), id: \.element.id) { index, record in
                         serviceTimelineRow(record, isLast: index == car.serviceRecordsNewestFirst.count - 1)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button {
-                                    recordPendingEdit = record
-                                } label: {
-                                    Label("Edit", systemImage: "pencil")
-                                }
-                                .tint(.blue)
-
-                                Button(role: .destructive) {
-                                    recordPendingDeletion = record
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                            }
                             .contextMenu {
                                 Button {
                                     recordPendingEdit = record
@@ -111,7 +97,11 @@ struct ServiceHistoryView: View {
             }
             .frame(width: 42)
 
-            VStack(alignment: .leading, spacing: 10) {
+            SwipeActionsRow {
+                recordPendingEdit = record
+            } onDelete: {
+                recordPendingDeletion = record
+            } content: {
                 HStack(alignment: .top, spacing: 12) {
                     VStack(alignment: .leading, spacing: 5) {
                         Text(record.title)
@@ -146,39 +136,10 @@ struct ServiceHistoryView: View {
 
                     CurrencyAmountView(amountMinor: record.amountMinor, currencyCode: record.currencyCode)
                 }
-
-                HStack(spacing: 8) {
-                    Button {
-                        recordPendingEdit = record
-                    } label: {
-                        Label("Edit", systemImage: "pencil")
-                            .font(.caption.weight(.semibold))
-                            .labelStyle(.iconOnly)
-                            .foregroundStyle(.blue)
-                            .frame(width: 34, height: 34)
-                            .background(.blue.opacity(0.10), in: Circle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Edit \(record.title)")
-
-                    Button(role: .destructive) {
-                        recordPendingDeletion = record
-                    } label: {
-                        Label("Delete", systemImage: "trash")
-                            .font(.caption.weight(.semibold))
-                            .labelStyle(.iconOnly)
-                            .foregroundStyle(.red)
-                            .frame(width: 34, height: 34)
-                            .background(.red.opacity(0.10), in: Circle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Delete \(record.title)")
-
-                    Spacer()
-                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(Theme.Spacing.l)
+                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
             }
-            .padding(Theme.Spacing.l)
-            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
             .padding(.bottom, isLast ? 0 : 12)
         }
         .accessibilityElement(children: .combine)
