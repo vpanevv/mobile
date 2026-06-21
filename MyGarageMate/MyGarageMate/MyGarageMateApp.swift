@@ -11,7 +11,8 @@ struct MyGarageMateApp: App {
             Car.self,
             ServiceRecord.self,
             CarReminder.self,
-            MechanicNote.self
+            MechanicNote.self,
+            CarDocument.self
         ])
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

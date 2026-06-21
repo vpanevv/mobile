@@ -90,6 +90,9 @@ final class Car {
     @Relationship(deleteRule: .cascade, inverse: \MechanicNote.car)
     var mechanicNotes: [MechanicNote] = []
 
+    @Relationship(deleteRule: .cascade, inverse: \CarDocument.car)
+    var documents: [CarDocument] = []
+
     init(
         id: UUID = UUID(),
         make: String,

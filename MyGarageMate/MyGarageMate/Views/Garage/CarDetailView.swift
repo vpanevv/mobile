@@ -398,6 +398,8 @@ struct CarDetailView: View {
                 liveActivityButton
             }
 
+            documentsRow
+
             SpendInsightsView(car: car, currencyCode: profile.preferredCurrencyCode)
 
             MileageTrendCard(car: car)
@@ -417,6 +419,42 @@ struct CarDetailView: View {
                 }
             }
         }
+    }
+
+    private var documentsRow: some View {
+        NavigationLink {
+            DocumentVaultView(car: car)
+        } label: {
+            HStack(spacing: Theme.Spacing.m) {
+                Image(systemName: "folder.fill")
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 38, height: 38)
+                    .background(car.accentColor.gradient, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Documents")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                    Text(car.documents.isEmpty
+                         ? "Insurance, registration, warranty…"
+                         : "\(car.documents.count) \(car.documents.count == 1 ? "document" : "documents")")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.bold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(Theme.Spacing.l)
+            .adaptiveGlass(in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+        }
+        .buttonStyle(CardPressStyle())
+        .accessibilityLabel("Documents, \(car.documents.count) saved")
     }
 
     private var liveActivityButton: some View {
