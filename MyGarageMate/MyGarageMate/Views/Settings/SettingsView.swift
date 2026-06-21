@@ -125,7 +125,8 @@ struct SettingsView: View {
                 .padding(.top, 20)
                 .padding(.bottom, 26)
             }
-            .background(Color(.systemGroupedBackground))
+            .scrollContentBackground(.hidden)
+            .background(AmbientBackground())
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .confirmationDialog(
@@ -240,7 +241,7 @@ struct SettingsView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 22)
                     .padding(.vertical, 18)
-                    .background(Color(.secondarySystemGroupedBackground), in: Capsule())
+                    .glassEffect(.regular, in: Capsule())
             }
             .buttonStyle(.plain)
             .disabled(isLoadingProfilePhoto)
@@ -268,7 +269,7 @@ struct SettingsView: View {
             content()
         }
         .padding(.vertical, 10)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
     }
 
     private func settingsInfoRow(title: String, subtitle: String? = nil, symbol: String, color: Color) -> some View {

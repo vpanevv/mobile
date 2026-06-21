@@ -98,8 +98,8 @@ struct ServiceHistoryView: View {
                     .font(.headline.weight(.semibold))
                     .foregroundStyle(.white)
                     .frame(width: 42, height: 42)
-                    .background(categoryColor(for: record.category).gradient, in: Circle())
-                    .shadow(color: categoryColor(for: record.category).opacity(0.18), radius: 10, y: 5)
+                    .background(record.category.tint.gradient, in: Circle())
+                    .shadow(color: record.category.tint.opacity(0.3), radius: 10, y: 5)
 
                 if !isLast {
                     Rectangle()
@@ -177,26 +177,11 @@ struct ServiceHistoryView: View {
                     Spacer()
                 }
             }
-            .padding(14)
-            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .padding(Theme.Spacing.l)
+            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
             .padding(.bottom, isLast ? 0 : 12)
         }
         .accessibilityElement(children: .combine)
-    }
-
-    private func categoryColor(for category: ServiceCategory) -> Color {
-        switch category {
-        case .oil: .blue
-        case .tires: .indigo
-        case .brakes: .red
-        case .engine: .orange
-        case .transmission: .purple
-        case .battery: .green
-        case .suspension: .teal
-        case .insurance: .cyan
-        case .inspection: .mint
-        case .other: .gray
-        }
     }
 }
 

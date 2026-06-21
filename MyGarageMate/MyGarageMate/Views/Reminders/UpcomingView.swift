@@ -19,19 +19,24 @@ struct UpcomingView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
+            Group {
                 if reminders.isEmpty {
-                    EmptyStateView(
-                        symbolName: "calendar.badge.checkmark",
-                        title: "Nothing due",
-                        message: "Upcoming reminders from every car will appear here, sorted by date and mileage."
-                    )
-                    .padding(.horizontal)
-                    .padding(.top, 80)
+                    ScrollView {
+                        EmptyStateView(
+                            symbolName: "calendar.badge.checkmark",
+                            title: "Nothing due",
+                            message: "Upcoming reminders from every car will appear here, sorted by date and mileage."
+                        )
+                        .padding(.horizontal)
+                        .padding(.top, 80)
+                    }
                 } else {
-                    LazyVStack(spacing: 12) {
+                    List {
                         ForEach(reminders, id: \.reminder.id) { item in
                             ReminderRow(reminder: item.reminder, car: item.car)
+                                .listRowInsets(EdgeInsets(top: 6, leading: Theme.Spacing.l, bottom: 6, trailing: Theme.Spacing.l))
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                     Button {
                                         item.reminder.isCompleted = true
@@ -55,10 +60,11 @@ struct UpcomingView: View {
                                 }
                         }
                     }
-                    .padding()
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .background(AmbientBackground())
             .navigationTitle("Upcoming")
             .confirmationDialog(
                 "Delete reminder?",

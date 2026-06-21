@@ -11,6 +11,7 @@ struct GarageView: View {
     @State private var carPendingDeletion: Car?
     @State private var isAddCarCTAVisible = false
     @State private var reminderTargetCar: Car?
+    @Namespace private var cardNamespace
 
     private var cars: [Car] {
         viewModel.sortedCars(for: profile)
@@ -46,14 +47,16 @@ struct GarageView: View {
                             .padding(.horizontal)
                             .padding(.top, 80)
                         } else {
-                            LazyVStack(spacing: 12) {
+                            LazyVStack(spacing: Theme.Spacing.l) {
                                 ForEach(cars) { car in
                                     NavigationLink {
                                         CarDetailView(car: car, profile: profile)
+                                            .navigationTransition(.zoom(sourceID: car.id, in: cardNamespace))
                                     } label: {
                                         CarCardView(car: car, profile: profile)
                                     }
-                                    .buttonStyle(.plain)
+                                    .buttonStyle(CardPressStyle())
+                                    .matchedTransitionSource(id: car.id, in: cardNamespace)
                                     .contextMenu {
                                         Button(role: .destructive) {
                                             carPendingDeletion = car
@@ -63,8 +66,8 @@ struct GarageView: View {
                                     }
                                 }
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 12)
+                            .padding(.horizontal, Theme.Spacing.l)
+                            .padding(.vertical, Theme.Spacing.m)
                         }
 
                         Spacer(minLength: cars.isEmpty ? 28 : 140)
@@ -78,8 +81,9 @@ struct GarageView: View {
                     .frame(minHeight: proxy.size.height, alignment: .top)
                 }
             }
-            .background(Color(.systemGroupedBackground))
-            .navigationTitle("My garage")
+            .scrollContentBackground(.hidden)
+            .background(AmbientBackground())
+            .navigationTitle("My Garage")
             .onAppear {
                 withAnimation(.easeOut(duration: 0.25)) {
                     isAddCarCTAVisible = true
@@ -185,6 +189,15 @@ private struct AddCarCTAButtonStyle: ButtonStyle {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.easeOut(duration: 0.2), value: configuration.isPressed)
+    }
+}
+
+/// Press style for hero cards: a gentle spring scale that feels tactile.
+struct CardPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.975 : 1)
+            .animation(Motion.snappy, value: configuration.isPressed)
     }
 }
 

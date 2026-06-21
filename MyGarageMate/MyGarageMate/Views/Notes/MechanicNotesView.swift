@@ -150,8 +150,8 @@ struct MechanicNotesView: View {
                 }
             }
         }
-        .padding(14)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .padding(Theme.Spacing.l)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
     }
 
     private func priorityColor(_ priority: NotePriority) -> Color {

@@ -6,13 +6,64 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		18293018B32A291E61F907A9 /* ServiceActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D62FA5DDC045A75F032F4A8 /* ServiceActivityAttributes.swift */; };
+		1EAF71240DCDDBEE8A3DB06B /* NextServiceWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2620A84C13D89C6E32B9E8F /* NextServiceWidget.swift */; };
+		1FB71E92C449705F8D0A9851 /* ServiceLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA810FF5C74016F63848CDC5 /* ServiceLiveActivity.swift */; };
+		40C9FB26E02A6AE798FFFF5E /* GarageSharedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5FBDCA850CC232BFCC618F1 /* GarageSharedData.swift */; };
+		54C4DC5C20833020E93F8170 /* GarageSharedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5FBDCA850CC232BFCC618F1 /* GarageSharedData.swift */; };
+		5F0E8404087BC3BC5C445C6F /* GarageWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 087E98DEB477A70C8F151B3D /* GarageWidgetBundle.swift */; };
+		7C37338679D29AC583A8112F /* ServiceActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D62FA5DDC045A75F032F4A8 /* ServiceActivityAttributes.swift */; };
+		93C7DE74EDEA45B21978F132 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41F2A203F9222746AB622DE2 /* Foundation.framework */; };
+		B5DD01AE608257D64EB78103 /* GarageWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2579D2D87490B3D5E2D0CFC0 /* GarageWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		BFA1661241D0DD2391C8B81D /* GarageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA6AC6D7BECF66583FB13C36 /* GarageProvider.swift */; };
+		CB956193F513D9D05A300070 /* SpendWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4DF97B0253ADC7D85180E97 /* SpendWidget.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A7F3E3D6BBB834FC9DCB4E34 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8A2C7A032F3A000100A1B001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D9218E423B02CDDD60FD6623;
+			remoteInfo = GarageWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		387D5F7584B80D9D3F2FB445 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B5DD01AE608257D64EB78103 /* GarageWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		087E98DEB477A70C8F151B3D /* GarageWidgetBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GarageWidgetBundle.swift; sourceTree = "<group>"; };
+		1E3BB10C0FA73658C033B4B3 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2579D2D87490B3D5E2D0CFC0 /* GarageWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GarageWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D62FA5DDC045A75F032F4A8 /* ServiceActivityAttributes.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceActivityAttributes.swift; sourceTree = "<group>"; };
+		41F2A203F9222746AB622DE2 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		4D9A2E81471886EC909003AC /* GarageWidgets.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = GarageWidgets.entitlements; sourceTree = "<group>"; };
 		8A2C7A0B2F3A000100A1B001 /* MyGarageMate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyGarageMate.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B2620A84C13D89C6E32B9E8F /* NextServiceWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NextServiceWidget.swift; sourceTree = "<group>"; };
+		C4DF97B0253ADC7D85180E97 /* SpendWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpendWidget.swift; sourceTree = "<group>"; };
+		CA6AC6D7BECF66583FB13C36 /* GarageProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GarageProvider.swift; sourceTree = "<group>"; };
+		CA810FF5C74016F63848CDC5 /* ServiceLiveActivity.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServiceLiveActivity.swift; sourceTree = "<group>"; };
+		D5FBDCA850CC232BFCC618F1 /* GarageSharedData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GarageSharedData.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		8A2C7A0D2F3A000100A1B001 /* MyGarageMate */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = MyGarageMate;
 			sourceTree = "<group>";
 		};
@@ -26,14 +77,48 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B27778E12507A0965420824A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				93C7DE74EDEA45B21978F132 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		576B4C96EA46C8020B709365 /* GarageWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				087E98DEB477A70C8F151B3D /* GarageWidgetBundle.swift */,
+				CA6AC6D7BECF66583FB13C36 /* GarageProvider.swift */,
+				B2620A84C13D89C6E32B9E8F /* NextServiceWidget.swift */,
+				C4DF97B0253ADC7D85180E97 /* SpendWidget.swift */,
+				CA810FF5C74016F63848CDC5 /* ServiceLiveActivity.swift */,
+				1E3BB10C0FA73658C033B4B3 /* Info.plist */,
+				4D9A2E81471886EC909003AC /* GarageWidgets.entitlements */,
+			);
+			name = GarageWidgets;
+			path = GarageWidgets;
+			sourceTree = SOURCE_ROOT;
+		};
+		81B22A627452E624046A8A65 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				41F2A203F9222746AB622DE2 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
 		8A2C7A022F3A000100A1B001 = {
 			isa = PBXGroup;
 			children = (
 				8A2C7A0D2F3A000100A1B001 /* MyGarageMate */,
 				8A2C7A0C2F3A000100A1B001 /* Products */,
+				CC56ED1455AD8553057C80A9 /* Shared */,
+				576B4C96EA46C8020B709365 /* GarageWidgets */,
+				F61E856905AF720806E79F2C /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -41,8 +126,27 @@
 			isa = PBXGroup;
 			children = (
 				8A2C7A0B2F3A000100A1B001 /* MyGarageMate.app */,
+				2579D2D87490B3D5E2D0CFC0 /* GarageWidgets.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		CC56ED1455AD8553057C80A9 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				D5FBDCA850CC232BFCC618F1 /* GarageSharedData.swift */,
+				2D62FA5DDC045A75F032F4A8 /* ServiceActivityAttributes.swift */,
+			);
+			name = Shared;
+			path = Shared;
+			sourceTree = SOURCE_ROOT;
+		};
+		F61E856905AF720806E79F2C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				81B22A627452E624046A8A65 /* iOS */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -55,20 +159,37 @@
 				8A2C7A072F3A000100A1B001 /* Sources */,
 				8A2C7A082F3A000100A1B001 /* Frameworks */,
 				8A2C7A092F3A000100A1B001 /* Resources */,
+				387D5F7584B80D9D3F2FB445 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				A7111E61B25645EAC523C8CA /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				8A2C7A0D2F3A000100A1B001 /* MyGarageMate */,
 			);
 			name = MyGarageMate;
-			packageProductDependencies = (
-			);
 			productName = MyGarageMate;
 			productReference = 8A2C7A0B2F3A000100A1B001 /* MyGarageMate.app */;
 			productType = "com.apple.product-type.application";
+		};
+		D9218E423B02CDDD60FD6623 /* GarageWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5255A3B134D2835C64A53DC6 /* Build configuration list for PBXNativeTarget "GarageWidgets" */;
+			buildPhases = (
+				3CD974506BEAF03E872ADBD6 /* Sources */,
+				B27778E12507A0965420824A /* Frameworks */,
+				518FA542E2A93F115083C895 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GarageWidgets;
+			productName = GarageWidgets;
+			productReference = 2579D2D87490B3D5E2D0CFC0 /* GarageWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -100,11 +221,19 @@
 			projectRoot = "";
 			targets = (
 				8A2C7A0A2F3A000100A1B001 /* MyGarageMate */,
+				D9218E423B02CDDD60FD6623 /* GarageWidgets */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		518FA542E2A93F115083C895 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8A2C7A092F3A000100A1B001 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -115,16 +244,71 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		3CD974506BEAF03E872ADBD6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				40C9FB26E02A6AE798FFFF5E /* GarageSharedData.swift in Sources */,
+				7C37338679D29AC583A8112F /* ServiceActivityAttributes.swift in Sources */,
+				5F0E8404087BC3BC5C445C6F /* GarageWidgetBundle.swift in Sources */,
+				BFA1661241D0DD2391C8B81D /* GarageProvider.swift in Sources */,
+				1EAF71240DCDDBEE8A3DB06B /* NextServiceWidget.swift in Sources */,
+				CB956193F513D9D05A300070 /* SpendWidget.swift in Sources */,
+				1FB71E92C449705F8D0A9851 /* ServiceLiveActivity.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8A2C7A072F3A000100A1B001 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				54C4DC5C20833020E93F8170 /* GarageSharedData.swift in Sources */,
+				18293018B32A291E61F907A9 /* ServiceActivityAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		A7111E61B25645EAC523C8CA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = GarageWidgets;
+			target = D9218E423B02CDDD60FD6623 /* GarageWidgets */;
+			targetProxy = A7F3E3D6BBB834FC9DCB4E34 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		79A7CF8FD833FC01033573B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = GarageWidgets/GarageWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DP5G9GAZQJ;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GarageWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Garage;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vpanev.mygaragemate.GarageWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
 		8A2C7A1A2F3A000200A1B001 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -141,6 +325,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = MyGarageMate;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "MyGarageMate uses your photo library so you can add photos of your cars and receipts.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSUserNotificationUsageDescription = "MyGarageMate uses notifications to remind you about oil changes, insurance, inspections, and other car maintenance tasks.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -182,6 +367,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = MyGarageMate;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "MyGarageMate uses your photo library so you can add photos of your cars and receipts.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSUserNotificationUsageDescription = "MyGarageMate uses notifications to remind you about oil changes, insurance, inspections, and other car maintenance tasks.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -328,9 +514,49 @@
 			};
 			name = Release;
 		};
+		A3D3A0C2FA93CE6CB4BF70BF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = GarageWidgets/GarageWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DP5G9GAZQJ;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GarageWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Garage;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vpanev.mygaragemate.GarageWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		5255A3B134D2835C64A53DC6 /* Build configuration list for PBXNativeTarget "GarageWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A3D3A0C2FA93CE6CB4BF70BF /* Release */,
+				79A7CF8FD833FC01033573B6 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		8A2C7A062F3A000100A1B001 /* Build configuration list for PBXProject "MyGarageMate" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
