@@ -13,17 +13,10 @@ struct GlassCard<Content: View>: View {
         content
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .glassEffect(
-                glass,
-                in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            .adaptiveGlass(
+                in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous),
+                tint: tint
             )
-    }
-
-    private var glass: Glass {
-        if let tint {
-            return .regular.tint(tint.opacity(0.22))
-        }
-        return .regular
     }
 }
 
@@ -49,10 +42,22 @@ struct GlassChip: View {
         .foregroundStyle(prominent ? AnyShapeStyle(.white) : AnyShapeStyle(tint))
         .padding(.horizontal, Theme.Spacing.m)
         .padding(.vertical, Theme.Spacing.s)
-        .glassEffect(
-            prominent ? .regular.tint(tint) : .regular,
-            in: Capsule()
-        )
+        .modifier(GlassChipBackground(prominent: prominent, tint: tint))
+    }
+}
+
+private struct GlassChipBackground: ViewModifier {
+    let prominent: Bool
+    let tint: Color
+
+    func body(content: Content) -> some View {
+        if prominent {
+            content.background(tint.gradient, in: Capsule())
+        } else {
+            // Chips are used over car photos with light text, so fall back to a
+            // dark scrim for legibility under Reduce Transparency.
+            content.adaptiveGlass(in: Capsule(), overImagery: true)
+        }
     }
 }
 
@@ -181,7 +186,7 @@ struct GlassSegmentedControl<T: Hashable>: View {
             }
         }
         .padding(4)
-        .glassEffect(.regular, in: Capsule())
+        .adaptiveGlass(in: Capsule())
     }
 }
 

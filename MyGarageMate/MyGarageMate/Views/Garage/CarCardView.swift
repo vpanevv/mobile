@@ -136,7 +136,7 @@ struct CarCardView: View {
             }
             .padding(Theme.Spacing.l)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.Radius.control + 4, style: .continuous))
+            .adaptiveGlass(in: RoundedRectangle(cornerRadius: Theme.Radius.control + 4, style: .continuous), overImagery: true)
         }
     }
 }

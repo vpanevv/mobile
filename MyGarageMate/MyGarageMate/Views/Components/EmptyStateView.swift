@@ -16,7 +16,7 @@ struct EmptyStateView: View {
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(Theme.accent)
                 .frame(width: 104, height: 104)
-                .glassEffect(.regular, in: Circle())
+                .adaptiveGlass(in: Circle())
                 .symbolEffect(.bounce, options: .repeat(.periodic(delay: 2.4)), value: appeared)
                 .scaleEffect(appeared ? 1 : 0.85)
                 .opacity(appeared ? 1 : 0)

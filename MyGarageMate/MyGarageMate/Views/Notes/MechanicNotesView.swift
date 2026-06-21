@@ -151,7 +151,7 @@ struct MechanicNotesView: View {
             }
         }
         .padding(Theme.Spacing.l)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+        .adaptiveGlass(in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
     }
 
     private func priorityColor(_ priority: NotePriority) -> Color {

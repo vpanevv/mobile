@@ -138,7 +138,7 @@ struct ServiceHistoryView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(Theme.Spacing.l)
-                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+                .adaptiveGlass(in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
             }
             .padding(.bottom, isLast ? 0 : 12)
         }

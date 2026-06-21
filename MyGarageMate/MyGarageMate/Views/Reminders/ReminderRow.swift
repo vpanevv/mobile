@@ -24,7 +24,7 @@ struct ReminderRow: View {
             Spacer(minLength: 0)
         }
         .padding(Theme.Spacing.l)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+        .adaptiveGlass(in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
         .accessibilityElement(children: .combine)
     }
 

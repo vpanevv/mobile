@@ -241,7 +241,7 @@ struct SettingsView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 22)
                     .padding(.vertical, 18)
-                    .glassEffect(.regular, in: Capsule())
+                    .adaptiveGlass(in: Capsule())
             }
             .buttonStyle(.plain)
             .disabled(isLoadingProfilePhoto)
@@ -269,7 +269,7 @@ struct SettingsView: View {
             content()
         }
         .padding(.vertical, 10)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
+        .adaptiveGlass(in: RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
     }
 
     private func settingsInfoRow(title: String, subtitle: String? = nil, symbol: String, color: Color) -> some View {

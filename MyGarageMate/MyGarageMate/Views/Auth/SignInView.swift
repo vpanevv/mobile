@@ -29,7 +29,7 @@ struct SignInView: View {
                             .symbolRenderingMode(.hierarchical)
                             .foregroundStyle(Theme.accent)
                             .frame(width: 116, height: 116)
-                            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.Radius.hero, style: .continuous))
+                            .adaptiveGlass(in: RoundedRectangle(cornerRadius: Theme.Radius.hero, style: .continuous))
                             .scaleEffect(appeared ? 1 : 0.8)
                             .opacity(appeared ? 1 : 0)
 
@@ -121,7 +121,7 @@ struct SignInView: View {
             Spacer(minLength: 0)
         }
         .padding(Theme.Spacing.m)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+        .adaptiveGlass(in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(item.title). \(item.subtitle)")
     }

@@ -444,7 +444,7 @@ struct CarDetailView: View {
                     .foregroundStyle(.secondary)
             }
             .padding(Theme.Spacing.l)
-            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+            .adaptiveGlass(in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
         }
         .buttonStyle(CardPressStyle())
         .onAppear { liveActivityActive = ServiceActivityManager.hasActive }
@@ -493,7 +493,7 @@ struct CarDetailView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, Theme.Spacing.l)
-            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+            .adaptiveGlass(in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
         }
         .buttonStyle(CardPressStyle())
         .accessibilityLabel(title)
