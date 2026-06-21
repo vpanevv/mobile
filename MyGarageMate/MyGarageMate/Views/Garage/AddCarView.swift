@@ -389,7 +389,8 @@ struct AddCarView: View {
             currentMileage: currentMileage,
             mileageUnit: profile.mileageUnit,
             engineType: selectedEngineType,
-            photoData: photoData
+            photoData: photoData,
+            accentHex: photoData.flatMap(DominantColor.hex(from:))
         )
         car.owner = profile
         profile.cars.append(car)

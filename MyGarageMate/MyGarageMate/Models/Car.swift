@@ -77,6 +77,7 @@ final class Car {
     var mileageUnit: String
     var engineTypeRawValue: String = EngineType.gasoline.rawValue
     var photoData: Data?
+    var accentHex: String?
     var createdAt: Date
     var owner: UserProfile?
 
@@ -101,6 +102,7 @@ final class Car {
         mileageUnit: String = "km",
         engineType: EngineType = .gasoline,
         photoData: Data? = nil,
+        accentHex: String? = nil,
         createdAt: Date = .now,
         serviceRecords: [ServiceRecord] = [],
         reminders: [CarReminder] = [],
@@ -117,6 +119,7 @@ final class Car {
         self.mileageUnit = mileageUnit
         self.engineTypeRawValue = engineType.rawValue
         self.photoData = photoData
+        self.accentHex = accentHex
         self.createdAt = createdAt
         self.serviceRecords = serviceRecords
         self.reminders = reminders

@@ -45,7 +45,7 @@ struct CarCardView: View {
             RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous)
                 .strokeBorder(.white.opacity(0.12), lineWidth: 1)
         }
-        .shadow(color: status.tint.opacity(0.28), radius: 22, y: 12)
+        .shadow(color: car.accentColor.opacity(0.3), radius: 22, y: 12)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(car.displayName), \(status.title), \(Int(car.currentMileage)) \(car.mileageUnit)")
     }

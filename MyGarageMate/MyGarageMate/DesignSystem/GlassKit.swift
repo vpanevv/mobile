@@ -159,6 +159,7 @@ struct GlassSegmentedControl<T: Hashable>: View {
     let items: [T]
     let title: (T) -> String
     @Binding var selection: T
+    var tint: Color = Theme.accent
     @Namespace private var namespace
 
     var body: some View {
@@ -177,7 +178,7 @@ struct GlassSegmentedControl<T: Hashable>: View {
                         .background {
                             if isSelected {
                                 Capsule()
-                                    .fill(Theme.accent.gradient)
+                                    .fill(tint.gradient)
                                     .matchedGeometryEffect(id: "segment", in: namespace)
                             }
                         }

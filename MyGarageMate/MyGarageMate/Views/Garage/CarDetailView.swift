@@ -37,7 +37,8 @@ struct CarDetailView: View {
                 GlassSegmentedControl(
                     items: DetailSection.allCases,
                     title: { $0.title },
-                    selection: $selectedSection
+                    selection: $selectedSection,
+                    tint: car.accentColor
                 )
                 .padding(.horizontal)
 
@@ -49,7 +50,9 @@ struct CarDetailView: View {
         .coordinateSpace(name: "carDetailScroll")
         .ignoresSafeArea(edges: .top)
         .scrollContentBackground(.hidden)
-        .background(AmbientBackground(tint: car.healthStatus.tint))
+        .background(AmbientBackground(tint: car.accentColor))
+        .task { backfillAccentIfNeeded() }
+        .tint(car.accentColor)
         .navigationTitle(car.model)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -306,7 +309,7 @@ struct CarDetailView: View {
                 value: car.lastService?.title ?? "None",
                 subtitle: car.lastService?.date.formatted(date: .abbreviated, time: .omitted),
                 symbol: "wrench.and.screwdriver.fill",
-                tint: Theme.accent
+                tint: car.accentColor
             )
 
             summaryCard(
@@ -556,6 +559,7 @@ struct CarDetailView: View {
 
         await MainActor.run {
             car.photoData = jpegData
+            car.accentHex = DominantColor.hex(from: jpegData)
 
             do {
                 try modelContext.save()
@@ -564,6 +568,14 @@ struct CarDetailView: View {
                 assertionFailure("Failed to update car photo: \(error)")
             }
         }
+    }
+
+    /// Backfills the accent color for cars that have a photo but no stored accent
+    /// (e.g. added before this feature existed).
+    private func backfillAccentIfNeeded() {
+        guard car.accentHex == nil, let data = car.photoData else { return }
+        car.accentHex = DominantColor.hex(from: data)
+        try? modelContext.save()
     }
 
     private func deleteCar() {
