@@ -2,7 +2,7 @@ import Foundation
 
 struct AnthropicService {
     private let apiKey: String
-    private let model = "claude-sonnet-4-20250514"
+    private let model = "claude-sonnet-4-6"
     private let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
 
     init() {
