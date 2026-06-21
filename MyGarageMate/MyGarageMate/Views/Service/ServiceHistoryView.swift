@@ -16,9 +16,9 @@ struct ServiceHistoryView: View {
                     message: "Add oil changes, repairs, insurance, inspections, and receipts as they happen."
                 )
             } else {
-                VStack(alignment: .leading, spacing: 10) {
-                    ForEach(car.serviceRecordsNewestFirst, id: \.id) { record in
-                        serviceRow(record)
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(Array(car.serviceRecordsNewestFirst.enumerated()), id: \.element.id) { index, record in
+                        serviceTimelineRow(record, isLast: index == car.serviceRecordsNewestFirst.count - 1)
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 Button {
                                     recordPendingEdit = record
@@ -91,37 +91,69 @@ struct ServiceHistoryView: View {
         recordPendingDeletion = nil
     }
 
-    private func serviceRow(_ record: ServiceRecord) -> some View {
+    private func serviceTimelineRow(_ record: ServiceRecord, isLast: Bool) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: record.category.symbolName)
-                .foregroundStyle(.tint)
-                .frame(width: 36, height: 36)
-                .background(.thinMaterial, in: Circle())
+            VStack(spacing: 0) {
+                Image(systemName: record.category.symbolName)
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 42, height: 42)
+                    .background(categoryColor(for: record.category).gradient, in: Circle())
+                    .shadow(color: categoryColor(for: record.category).opacity(0.18), radius: 10, y: 5)
 
-            VStack(alignment: .leading, spacing: 5) {
-                Text(record.title)
-                    .font(.headline)
-                Text(record.date.formatted(date: .abbreviated, time: .omitted))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                if let shopName = record.shopName {
-                    Text(shopName)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                if !isLast {
+                    Rectangle()
+                        .fill(Color(.separator).opacity(0.38))
+                        .frame(width: 2)
+                        .frame(maxHeight: .infinity)
+                        .padding(.vertical, 6)
                 }
             }
+            .frame(width: 42)
 
-            Spacer()
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(record.title)
+                            .font(.headline)
+                            .lineLimit(2)
 
-            VStack(alignment: .trailing, spacing: 10) {
-                CurrencyAmountView(amountMinor: record.amountMinor, currencyCode: record.currencyCode)
+                        HStack(spacing: 6) {
+                            Text(record.category.title)
+                            Text("•")
+                            Text(record.date.formatted(date: .abbreviated, time: .omitted))
+                        }
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+
+                        if let mileage = record.mileage {
+                            Label("\(mileage.formatted(.number.precision(.fractionLength(0)))) \(car.mileageUnit)", systemImage: "gauge.with.dots.needle.67percent")
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+
+                        if let shopName = record.shopName {
+                            Label(shopName, systemImage: "mappin.and.ellipse")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                    }
+
+                    Spacer()
+
+                    CurrencyAmountView(amountMinor: record.amountMinor, currencyCode: record.currencyCode)
+                }
 
                 HStack(spacing: 8) {
                     Button {
                         recordPendingEdit = record
                     } label: {
-                        Image(systemName: "pencil")
-                            .font(.subheadline.weight(.semibold))
+                        Label("Edit", systemImage: "pencil")
+                            .font(.caption.weight(.semibold))
+                            .labelStyle(.iconOnly)
                             .foregroundStyle(.blue)
                             .frame(width: 34, height: 34)
                             .background(.blue.opacity(0.10), in: Circle())
@@ -132,19 +164,39 @@ struct ServiceHistoryView: View {
                     Button(role: .destructive) {
                         recordPendingDeletion = record
                     } label: {
-                        Image(systemName: "trash")
-                            .font(.subheadline.weight(.semibold))
+                        Label("Delete", systemImage: "trash")
+                            .font(.caption.weight(.semibold))
+                            .labelStyle(.iconOnly)
                             .foregroundStyle(.red)
                             .frame(width: 34, height: 34)
                             .background(.red.opacity(0.10), in: Circle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Delete \(record.title)")
+
+                    Spacer()
                 }
             }
+            .padding(14)
+            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .padding(.bottom, isLast ? 0 : 12)
         }
-        .padding(14)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .accessibilityElement(children: .combine)
+    }
+
+    private func categoryColor(for category: ServiceCategory) -> Color {
+        switch category {
+        case .oil: .blue
+        case .tires: .indigo
+        case .brakes: .red
+        case .engine: .orange
+        case .transmission: .purple
+        case .battery: .green
+        case .suspension: .teal
+        case .insurance: .cyan
+        case .inspection: .mint
+        case .other: .gray
+        }
     }
 }
 

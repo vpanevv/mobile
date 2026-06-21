@@ -3,15 +3,24 @@ import SwiftUI
 
 struct GarageView: View {
     @Environment(\.modelContext) private var modelContext
+    @AppStorage("MyGarageMate.didCompleteGarageOnboarding") private var didCompleteGarageOnboarding = false
     let profile: UserProfile
 
     @StateObject private var viewModel = GarageViewModel()
     @State private var isAddingCar = false
     @State private var carPendingDeletion: Car?
     @State private var isAddCarCTAVisible = false
+    @State private var reminderTargetCar: Car?
 
     private var cars: [Car] {
         viewModel.sortedCars(for: profile)
+    }
+
+    private var onboardingStep: GarageOnboardingStep? {
+        guard !didCompleteGarageOnboarding else { return nil }
+        if cars.isEmpty { return .addCar }
+        if cars.allSatisfy({ $0.reminders.isEmpty }) { return .addReminder }
+        return .complete
     }
 
     var body: some View {
@@ -19,6 +28,15 @@ struct GarageView: View {
             GeometryReader { proxy in
                 ScrollView {
                     VStack(spacing: 0) {
+                        if let onboardingStep {
+                            GarageOnboardingCard(step: onboardingStep) {
+                                perform(onboardingStep)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.top, cars.isEmpty ? 30 : 12)
+                            .padding(.bottom, cars.isEmpty ? 4 : 12)
+                        }
+
                         if cars.isEmpty {
                             EmptyStateView(
                                 symbolName: "car.2.fill",
@@ -33,7 +51,7 @@ struct GarageView: View {
                                     NavigationLink {
                                         CarDetailView(car: car, profile: profile)
                                     } label: {
-                                        CarCardView(car: car)
+                                        CarCardView(car: car, profile: profile)
                                     }
                                     .buttonStyle(.plain)
                                     .contextMenu {
@@ -81,6 +99,16 @@ struct GarageView: View {
             .sheet(isPresented: $isAddingCar) {
                 AddCarView(profile: profile)
             }
+            .sheet(
+                isPresented: Binding(
+                    get: { reminderTargetCar != nil },
+                    set: { if !$0 { reminderTargetCar = nil } }
+                )
+            ) {
+                if let reminderTargetCar {
+                    AddReminderView(car: reminderTargetCar)
+                }
+            }
             .confirmationDialog(
                 "Delete this car?",
                 isPresented: Binding(
@@ -98,6 +126,20 @@ struct GarageView: View {
             } message: {
                 Text("This removes the car and all related service records, reminders, and mechanic notes from this device.")
             }
+        }
+    }
+
+    private func perform(_ step: GarageOnboardingStep) {
+        HapticsManager.lightTap()
+
+        switch step {
+        case .addCar:
+            isAddingCar = true
+        case .addReminder:
+            reminderTargetCar = cars.first
+        case .complete:
+            didCompleteGarageOnboarding = true
+            HapticsManager.success()
         }
     }
 
@@ -143,5 +185,84 @@ private struct AddCarCTAButtonStyle: ButtonStyle {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.easeOut(duration: 0.2), value: configuration.isPressed)
+    }
+}
+
+private enum GarageOnboardingStep {
+    case addCar
+    case addReminder
+    case complete
+
+    var symbolName: String {
+        switch self {
+        case .addCar: "car.2.fill"
+        case .addReminder: "bell.badge.fill"
+        case .complete: "checkmark.seal.fill"
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .addCar: "Add your first car"
+        case .addReminder: "Add your first reminder"
+        case .complete: "You're set"
+        }
+    }
+
+    var message: String {
+        switch self {
+        case .addCar:
+            "Start with the car you drive most. Services, reminders, and costs will live under it."
+        case .addReminder:
+            "Set one upcoming reminder for oil, inspection, insurance, or anything custom."
+        case .complete:
+            "Your garage now has a car and a reminder. Keep building its service story over time."
+        }
+    }
+
+    var buttonTitle: String {
+        switch self {
+        case .addCar: "Add Car"
+        case .addReminder: "Add Reminder"
+        case .complete: "Done"
+        }
+    }
+}
+
+private struct GarageOnboardingCard: View {
+    let step: GarageOnboardingStep
+    let action: () -> Void
+
+    var body: some View {
+        GlassCardView(cornerRadius: 24) {
+            HStack(spacing: 14) {
+                Image(systemName: step.symbolName)
+                    .font(.title2.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 50, height: 50)
+                    .background(Color.accentColor.gradient, in: Circle())
+                    .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(step.title)
+                        .font(.headline)
+                    Text(step.message)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(3)
+                }
+
+                Spacer(minLength: 8)
+
+                Button(action: action) {
+                    Text(step.buttonTitle)
+                        .font(.caption.weight(.bold))
+                        .lineLimit(1)
+                }
+                .buttonStyle(.borderedProminent)
+                .buttonBorderShape(.capsule)
+            }
+        }
+        .accessibilityElement(children: .combine)
     }
 }

@@ -19,10 +19,42 @@ struct AddServiceRecordView: View {
     @State private var createFollowUpReminder = false
     @State private var reminderDate = Date.now.addingTimeInterval(180 * 24 * 60 * 60)
     @State private var reminderMileage = 0.0
+    @State private var isApplyingPreset = false
 
     var body: some View {
         NavigationStack {
             Form {
+                Section("Quick presets") {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 118), spacing: 10)], spacing: 10) {
+                        ForEach(ServicePreset.allCases) { preset in
+                            Button {
+                                apply(preset)
+                            } label: {
+                                VStack(spacing: 8) {
+                                    Image(systemName: preset.category.symbolName)
+                                        .font(.title3.weight(.semibold))
+                                        .foregroundStyle(preset.color)
+                                        .frame(width: 38, height: 38)
+                                        .background(preset.color.opacity(0.12), in: Circle())
+
+                                    Text(preset.title)
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.primary)
+                                        .multilineTextAlignment(.center)
+                                        .lineLimit(2)
+                                        .minimumScaleFactor(0.82)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Use \(preset.title) preset")
+                        }
+                    }
+                    .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
+                }
+
                 Section("Service") {
                     TextField("Title", text: $title)
                         .accessibilityLabel("Service title")
@@ -100,6 +132,10 @@ struct AddServiceRecordView: View {
                 reminderMileage = car.currentMileage + 10_000
             }
             .onChange(of: category) { _, newValue in
+                if isApplyingPreset {
+                    isApplyingPreset = false
+                    return
+                }
                 createFollowUpReminder = false
                 if newValue == .oil {
                     reminderDate = Date.now.addingTimeInterval(180 * 24 * 60 * 60)
@@ -195,6 +231,89 @@ struct AddServiceRecordView: View {
             return CarReminder(title: "Inspection renewal", reminderType: .inspection, dueDate: reminderDate, reminderDate: Calendar.current.date(byAdding: .day, value: -21, to: reminderDate))
         default:
             return nil
+        }
+    }
+
+    private func apply(_ preset: ServicePreset) {
+        isApplyingPreset = category != preset.category
+        title = preset.defaultTitle
+        category = preset.category
+        createFollowUpReminder = preset.createsReminder
+
+        switch preset.category {
+        case .oil:
+            reminderDate = Date.now.addingTimeInterval(180 * 24 * 60 * 60)
+            reminderMileage = max(car.currentMileage, mileage) + 10_000
+        case .insurance:
+            reminderDate = Date.now.addingTimeInterval(365 * 24 * 60 * 60)
+        case .inspection:
+            reminderDate = Date.now.addingTimeInterval(365 * 24 * 60 * 60)
+        default:
+            break
+        }
+
+        HapticsManager.lightTap()
+    }
+}
+
+private enum ServicePreset: String, CaseIterable, Identifiable {
+    case oilAndFilter
+    case insurance
+    case inspection
+    case tires
+    case brakes
+    case repair
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .oilAndFilter: "Oil + Filter"
+        case .insurance: "Insurance"
+        case .inspection: "Inspection"
+        case .tires: "Tires"
+        case .brakes: "Brakes"
+        case .repair: "Repair"
+        }
+    }
+
+    var defaultTitle: String {
+        switch self {
+        case .oilAndFilter: "Oil and filter"
+        case .insurance: "Annual insurance"
+        case .inspection: "Inspection"
+        case .tires: "Tire service"
+        case .brakes: "Brake service"
+        case .repair: "Repair"
+        }
+    }
+
+    var category: ServiceCategory {
+        switch self {
+        case .oilAndFilter: .oil
+        case .insurance: .insurance
+        case .inspection: .inspection
+        case .tires: .tires
+        case .brakes: .brakes
+        case .repair: .other
+        }
+    }
+
+    var createsReminder: Bool {
+        switch self {
+        case .oilAndFilter, .insurance, .inspection: true
+        case .tires, .brakes, .repair: false
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .oilAndFilter: .blue
+        case .insurance: .cyan
+        case .inspection: .mint
+        case .tires: .indigo
+        case .brakes: .red
+        case .repair: .orange
         }
     }
 }

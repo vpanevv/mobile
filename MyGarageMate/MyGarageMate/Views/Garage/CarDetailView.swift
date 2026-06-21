@@ -175,32 +175,43 @@ struct CarDetailView: View {
                     .foregroundStyle(.white)
                     .shadow(color: .black.opacity(0.35), radius: 8, y: 3)
 
-                HStack(spacing: 10) {
-                    Button {
-                        beginEditingMileage()
-                    } label: {
-                        HStack(spacing: 8) {
-                            Text("\(car.currentMileage.formatted(.number.precision(.fractionLength(0)))) \(car.mileageUnit)")
-                                .font(.headline)
-                            Image(systemName: "pencil.circle.fill")
-                                .font(.headline)
+                ScrollView(.horizontal) {
+                    HStack(spacing: 10) {
+                        Button {
+                            beginEditingMileage()
+                        } label: {
+                            HStack(spacing: 8) {
+                                Text("\(car.currentMileage.formatted(.number.precision(.fractionLength(0)))) \(car.mileageUnit)")
+                                    .font(.headline)
+                                Image(systemName: "pencil.circle.fill")
+                                    .font(.headline)
+                            }
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(.ultraThinMaterial, in: Capsule())
                         }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(.ultraThinMaterial, in: Capsule())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Edit current mileage")
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Edit current mileage")
 
-                    Label(car.engineType.title, systemImage: car.engineType.symbolName)
-                        .font(.headline)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(.ultraThinMaterial, in: Capsule())
-                        .accessibilityLabel("Engine type \(car.engineType.title)")
+                        Label(car.engineType.title, systemImage: car.engineType.symbolName)
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(.ultraThinMaterial, in: Capsule())
+                            .accessibilityLabel("Engine type \(car.engineType.title)")
+
+                        Label(car.healthStatus.title, systemImage: car.healthStatus.symbolName)
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(healthStatusColor.opacity(0.82), in: Capsule())
+                            .accessibilityLabel("Car status \(car.healthStatus.title)")
+                    }
                 }
+                .scrollIndicators(.hidden)
             }
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -298,6 +309,15 @@ struct CarDetailView: View {
         }
     }
 
+    private var healthStatusColor: Color {
+        switch car.healthStatus {
+        case .overdue: .red
+        case .dueSoon: .orange
+        case .allClear: .green
+        case .needsSetup: .blue
+        }
+    }
+
     private var paidServicesThisYear: [ServiceRecord] {
         car.serviceRecords
             .filter { record in
@@ -356,6 +376,8 @@ struct CarDetailView: View {
                     isAddingReminder = true
                 }
             }
+
+            SpendInsightsView(car: car, currencyCode: profile.preferredCurrencyCode)
 
             if car.upcomingReminders.isEmpty {
                 EmptyStateView(

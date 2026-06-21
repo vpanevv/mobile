@@ -28,6 +28,42 @@ enum EngineType: String, CaseIterable, Codable, Identifiable {
     }
 }
 
+enum CarHealthStatus: String, CaseIterable, Codable, Identifiable {
+    case overdue
+    case dueSoon
+    case allClear
+    case needsSetup
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .overdue: "Needs attention"
+        case .dueSoon: "Due soon"
+        case .allClear: "All clear"
+        case .needsSetup: "Set up reminders"
+        }
+    }
+
+    var shortTitle: String {
+        switch self {
+        case .overdue: "Attention"
+        case .dueSoon: "Due soon"
+        case .allClear: "Clear"
+        case .needsSetup: "Set up"
+        }
+    }
+
+    var symbolName: String {
+        switch self {
+        case .overdue: "exclamationmark.triangle.fill"
+        case .dueSoon: "clock.badge.exclamationmark.fill"
+        case .allClear: "checkmark.seal.fill"
+        case .needsSetup: "bell.badge.fill"
+        }
+    }
+}
+
 @Model
 final class Car {
     var id: UUID
@@ -116,6 +152,60 @@ final class Car {
         serviceRecordsNewestFirst.first
     }
 
+    var healthStatus: CarHealthStatus {
+        guard !reminders.isEmpty || !serviceRecords.isEmpty else {
+            return .needsSetup
+        }
+
+        let activeReminders = reminders.filter { !$0.isCompleted }
+        guard !activeReminders.isEmpty else {
+            return .allClear
+        }
+
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        let dueSoonCutoff = calendar.date(byAdding: .day, value: 30, to: today) ?? today
+
+        if activeReminders.contains(where: { reminder in
+            if let dueDate = reminder.dueDate, calendar.startOfDay(for: dueDate) < today {
+                return true
+            }
+            if let dueMileage = reminder.dueMileage, dueMileage <= currentMileage {
+                return true
+            }
+            return false
+        }) {
+            return .overdue
+        }
+
+        if activeReminders.contains(where: { reminder in
+            if let dueDate = reminder.dueDate, dueDate <= dueSoonCutoff {
+                return true
+            }
+            if let dueMileage = reminder.dueMileage, dueMileage <= currentMileage + 1_000 {
+                return true
+            }
+            return false
+        }) {
+            return .dueSoon
+        }
+
+        return .allClear
+    }
+
+    var healthSubtitle: String {
+        switch healthStatus {
+        case .overdue:
+            nextImportantReminder.map { "\($0.title) is overdue" } ?? "Review open reminders"
+        case .dueSoon:
+            nextImportantReminder.map { "\($0.title) is coming up" } ?? "Maintenance is coming up"
+        case .allClear:
+            "No urgent maintenance"
+        case .needsSetup:
+            "Add a reminder to track this car"
+        }
+    }
+
     func totalSpentThisYear(currencyCode: String, now: Date = .now) -> Int {
         serviceRecords
             .filter { record in
@@ -123,5 +213,44 @@ final class Car {
                 Calendar.current.isDate(record.date, equalTo: now, toGranularity: .year)
             }
             .reduce(0) { $0 + $1.amountMinor }
+    }
+
+    func totalSpent(currencyCode: String) -> Int {
+        serviceRecords
+            .filter { $0.currencyCode == currencyCode }
+            .reduce(0) { $0 + $1.amountMinor }
+    }
+
+    func monthlySpend(currencyCode: String, monthCount: Int = 6, now: Date = .now) -> [MonthlySpend] {
+        let calendar = Calendar.current
+        let currentMonth = calendar.dateInterval(of: .month, for: now)?.start ?? now
+
+        return (0..<monthCount).reversed().compactMap { offset in
+            guard let monthStart = calendar.date(byAdding: .month, value: -offset, to: currentMonth),
+                  let monthEnd = calendar.date(byAdding: .month, value: 1, to: monthStart) else {
+                return nil
+            }
+
+            let amount = serviceRecords
+                .filter { record in
+                    record.currencyCode == currencyCode &&
+                    record.date >= monthStart &&
+                    record.date < monthEnd
+                }
+                .reduce(0) { $0 + $1.amountMinor }
+
+            return MonthlySpend(monthStart: monthStart, amountMinor: amount)
+        }
+    }
+}
+
+struct MonthlySpend: Identifiable {
+    let monthStart: Date
+    let amountMinor: Int
+
+    var id: Date { monthStart }
+
+    var shortMonth: String {
+        monthStart.formatted(.dateTime.month(.abbreviated))
     }
 }
