@@ -62,6 +62,8 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		8A2C7A0D2F3A000100A1B001 /* MyGarageMate */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = MyGarageMate;
 			sourceTree = "<group>";
 		};
@@ -314,12 +316,13 @@
 				CODE_SIGN_ENTITLEMENTS = MyGarageMate/MyGarageMate.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DP5G9GAZQJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = MyGarageMate;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "MyGarageMate uses your location to show current weather and driving conditions for your garage.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "MyGarageMate uses your photo library so you can add photos of your cars and receipts.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSUserNotificationUsageDescription = "MyGarageMate uses notifications to remind you about oil changes, insurance, inspections, and other car maintenance tasks.";
@@ -332,7 +335,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.vpanev.mygaragemate;
 				PRODUCT_NAME = MyGarageMate;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -356,12 +359,13 @@
 				CODE_SIGN_ENTITLEMENTS = MyGarageMate/MyGarageMate.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DP5G9GAZQJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = MyGarageMate;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "MyGarageMate uses your location to show current weather and driving conditions for your garage.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "MyGarageMate uses your photo library so you can add photos of your cars and receipts.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSUserNotificationUsageDescription = "MyGarageMate uses notifications to remind you about oil changes, insurance, inspections, and other car maintenance tasks.";
@@ -374,7 +378,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.vpanev.mygaragemate;
 				PRODUCT_NAME = MyGarageMate;
 				PROVISIONING_PROFILE_SPECIFIER = "";

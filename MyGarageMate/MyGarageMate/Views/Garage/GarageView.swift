@@ -7,6 +7,7 @@ struct GarageView: View {
     let profile: UserProfile
 
     @StateObject private var viewModel = GarageViewModel()
+    @StateObject private var weather = WeatherViewModel()
     @State private var isAddingCar = false
     @State private var carPendingDeletion: Car?
     @State private var isAddCarCTAVisible = false
@@ -29,6 +30,10 @@ struct GarageView: View {
             GeometryReader { proxy in
                 ScrollView {
                     VStack(spacing: 0) {
+                        WeatherCardView(viewModel: weather)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 12)
+
                         if let onboardingStep {
                             GarageOnboardingCard(step: onboardingStep) {
                                 perform(onboardingStep)
@@ -88,6 +93,9 @@ struct GarageView: View {
                 withAnimation(.easeOut(duration: 0.25)) {
                     isAddCarCTAVisible = true
                 }
+            }
+            .task {
+                await weather.loadIfNeeded()
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
