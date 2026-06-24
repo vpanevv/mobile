@@ -62,8 +62,6 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		8A2C7A0D2F3A000100A1B001 /* MyGarageMate */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = MyGarageMate;
 			sourceTree = "<group>";
 		};
@@ -316,7 +314,7 @@
 				CODE_SIGN_ENTITLEMENTS = MyGarageMate/MyGarageMate.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = DP5G9GAZQJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -359,7 +357,7 @@
 				CODE_SIGN_ENTITLEMENTS = MyGarageMate/MyGarageMate.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = DP5G9GAZQJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;

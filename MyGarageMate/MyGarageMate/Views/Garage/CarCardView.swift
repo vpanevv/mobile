@@ -5,6 +5,8 @@ struct CarCardView: View {
     let car: Car
     let profile: UserProfile
 
+    private let cardHeight: CGFloat = 200
+
     private var status: CarHealthStatus {
         car.healthStatus
     }
@@ -17,7 +19,7 @@ struct CarCardView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             carImage
-                .frame(height: 300)
+                .frame(height: cardHeight)
                 .frame(maxWidth: .infinity)
                 .clipped()
 
@@ -39,7 +41,7 @@ struct CarCardView: View {
             infoPanel
                 .padding(Theme.Spacing.m)
         }
-        .frame(height: 300)
+        .frame(height: cardHeight)
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous)
@@ -87,10 +89,10 @@ struct CarCardView: View {
 
     private var infoPanel: some View {
         GlassEffectContainer(spacing: 10) {
-            VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-                VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Theme.Spacing.s) {
+                VStack(alignment: .leading, spacing: 1) {
                     Text(car.model)
-                        .font(.title2.weight(.bold))
+                        .font(.title3.weight(.bold))
                         .foregroundStyle(.white)
                         .lineLimit(1)
                     Text("\(car.year.description) · \(car.make)")
@@ -134,7 +136,7 @@ struct CarCardView: View {
                         .foregroundStyle(.white.opacity(0.7))
                 }
             }
-            .padding(Theme.Spacing.l)
+            .padding(Theme.Spacing.m)
             .frame(maxWidth: .infinity, alignment: .leading)
             .adaptiveGlass(in: RoundedRectangle(cornerRadius: Theme.Radius.control + 4, style: .continuous), overImagery: true)
         }

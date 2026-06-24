@@ -10,7 +10,6 @@ struct GarageView: View {
     @StateObject private var weather = WeatherViewModel()
     @State private var isAddingCar = false
     @State private var carPendingDeletion: Car?
-    @State private var isAddCarCTAVisible = false
     @State private var reminderTargetCar: Car?
     @Namespace private var cardNamespace
 
@@ -27,73 +26,61 @@ struct GarageView: View {
 
     var body: some View {
         NavigationStack {
-            GeometryReader { proxy in
-                ScrollView {
-                    VStack(spacing: 0) {
-                        WeatherCardView(viewModel: weather)
-                            .padding(.horizontal, 16)
-                            .padding(.top, 12)
+            ScrollView {
+                VStack(spacing: 0) {
+                    WeatherCardView(viewModel: weather)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 12)
 
-                        if let onboardingStep {
-                            GarageOnboardingCard(step: onboardingStep) {
-                                perform(onboardingStep)
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.top, cars.isEmpty ? 30 : 12)
-                            .padding(.bottom, cars.isEmpty ? 4 : 12)
+                    if let onboardingStep {
+                        GarageOnboardingCard(step: onboardingStep) {
+                            perform(onboardingStep)
                         }
+                        .padding(.horizontal, 16)
+                        .padding(.top, cars.isEmpty ? 30 : 12)
+                        .padding(.bottom, cars.isEmpty ? 4 : 12)
+                    }
 
-                        if cars.isEmpty {
-                            EmptyStateView(
-                                symbolName: "car.2.fill",
-                                title: "Add your first car",
-                                message: "Track services, repairs, maintenance and reminders in one place."
-                            )
-                            .padding(.horizontal)
-                            .padding(.top, 80)
-                        } else {
-                            LazyVStack(spacing: Theme.Spacing.l) {
-                                ForEach(cars) { car in
-                                    NavigationLink {
-                                        CarDetailView(car: car, profile: profile)
-                                            .navigationTransition(.zoom(sourceID: car.id, in: cardNamespace))
+                    if cars.isEmpty {
+                        EmptyStateView(
+                            symbolName: "car.2.fill",
+                            title: "Add your first car",
+                            message: "Track services, repairs, maintenance and reminders in one place."
+                        )
+                        .padding(.horizontal)
+                        .padding(.top, 80)
+                    } else {
+                        LazyVStack(spacing: Theme.Spacing.m) {
+                            ForEach(cars) { car in
+                                NavigationLink {
+                                    CarDetailView(car: car, profile: profile)
+                                        .navigationTransition(.zoom(sourceID: car.id, in: cardNamespace))
+                                } label: {
+                                    CarCardView(car: car, profile: profile)
+                                }
+                                .buttonStyle(CardPressStyle())
+                                .matchedTransitionSource(id: car.id, in: cardNamespace)
+                                .contextMenu {
+                                    Button(role: .destructive) {
+                                        carPendingDeletion = car
                                     } label: {
-                                        CarCardView(car: car, profile: profile)
-                                    }
-                                    .buttonStyle(CardPressStyle())
-                                    .matchedTransitionSource(id: car.id, in: cardNamespace)
-                                    .contextMenu {
-                                        Button(role: .destructive) {
-                                            carPendingDeletion = car
-                                        } label: {
-                                            Label("Delete Car", systemImage: "trash")
-                                        }
+                                        Label("Delete Car", systemImage: "trash")
                                     }
                                 }
                             }
-                            .padding(.horizontal, Theme.Spacing.l)
-                            .padding(.vertical, Theme.Spacing.m)
                         }
-
-                        Spacer(minLength: cars.isEmpty ? 28 : 140)
-
-                        addCarCTA
-                            .padding(.horizontal, 32)
-                            .padding(.bottom, cars.isEmpty ? 120 : 132)
-                            .opacity(isAddCarCTAVisible ? 1 : 0)
-                            .offset(y: isAddCarCTAVisible ? 0 : 8)
+                        .padding(.horizontal, Theme.Spacing.l)
+                        .padding(.vertical, Theme.Spacing.m)
                     }
-                    .frame(minHeight: proxy.size.height, alignment: .top)
                 }
+                .padding(.bottom, Theme.Spacing.s)
             }
             .scrollContentBackground(.hidden)
             .background(AmbientBackground())
-            .navigationTitle("My Garage")
-            .onAppear {
-                withAnimation(.easeOut(duration: 0.25)) {
-                    isAddCarCTAVisible = true
-                }
+            .safeAreaInset(edge: .bottom) {
+                addCarBar
             }
+            .navigationTitle("My Garage")
             .task {
                 await weather.loadIfNeeded()
             }
@@ -153,6 +140,14 @@ struct GarageView: View {
             didCompleteGarageOnboarding = true
             HapticsManager.success()
         }
+    }
+
+    private var addCarBar: some View {
+        addCarCTA
+            .padding(.horizontal, 32)
+            .padding(.top, Theme.Spacing.s)
+            .padding(.bottom, Theme.Spacing.s)
+            .frame(maxWidth: .infinity)
     }
 
     private var addCarCTA: some View {

@@ -266,19 +266,6 @@ extension Car {
             }
             .sorted { $0.amountMinor > $1.amountMinor }
     }
-
-    /// Recorded mileage readings over time (from services that captured mileage).
-    func mileageHistory() -> [MileagePoint] {
-        let points = serviceRecords
-            .compactMap { record -> MileagePoint? in
-                guard let mileage = record.mileage, mileage > 0 else { return nil }
-                return MileagePoint(date: record.date, mileage: mileage)
-            }
-            .sorted { $0.date < $1.date }
-
-        // Always include the current reading as the latest point.
-        return points + [MileagePoint(date: .now, mileage: currentMileage)]
-    }
 }
 
 struct MonthlySpend: Identifiable {
@@ -297,11 +284,4 @@ struct CategorySpend: Identifiable {
     let amountMinor: Int
 
     var id: String { category.rawValue }
-}
-
-struct MileagePoint: Identifiable {
-    let date: Date
-    let mileage: Double
-
-    var id: Date { date }
 }
