@@ -194,7 +194,7 @@ struct CarDetailView: View {
                     .scaledToFill()
             } else {
                 LinearGradient(
-                    colors: [Theme.accent, Theme.mist, Theme.accent.opacity(0.85)],
+                    colors: [car.accentColor.opacity(0.9), car.accentColor.opacity(0.4), Theme.canvas],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -202,7 +202,7 @@ struct CarDetailView: View {
                     Image(systemName: "car.side.fill")
                         .font(.system(size: 150, weight: .bold))
                         .symbolRenderingMode(.monochrome)
-                        .foregroundStyle(.white.opacity(0.22))
+                        .foregroundStyle(.white.opacity(0.18))
                         .offset(y: -30)
                 }
             }
@@ -365,6 +365,7 @@ struct CarDetailView: View {
             // Fixed height keeps all four tiles identical regardless of content length.
             .frame(maxWidth: .infinity, minHeight: 132, maxHeight: 132, alignment: .topLeading)
         }
+        .metallicStroke(cornerRadius: Theme.Radius.card)
         .contentShape(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
     }
 
