@@ -43,11 +43,8 @@ struct CarCardView: View {
         }
         .frame(height: cardHeight)
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous)
-                .strokeBorder(.white.opacity(0.12), lineWidth: 1)
-        }
-        .shadow(color: car.accentColor.opacity(0.3), radius: 22, y: 12)
+        .metallicStroke(cornerRadius: Theme.Radius.card, opacity: 0.18)
+        .shadow(color: car.accentColor.opacity(0.35), radius: 26, y: 16)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(car.displayName), \(status.title), \(Int(car.currentMileage)) \(car.mileageUnit)")
     }
@@ -70,7 +67,7 @@ struct CarCardView: View {
     private var placeholderArtwork: some View {
         ZStack {
             LinearGradient(
-                colors: [Theme.accent, Theme.mist, Theme.accent.opacity(0.85)],
+                colors: [car.accentColor.opacity(0.85), car.accentColor.opacity(0.35), Theme.canvas],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -78,7 +75,7 @@ struct CarCardView: View {
             Image(systemName: "car.side.fill")
                 .font(.system(size: 168, weight: .bold))
                 .symbolRenderingMode(.monochrome)
-                .foregroundStyle(.white.opacity(0.20))
+                .foregroundStyle(.white.opacity(0.16))
                 .rotation3DEffect(.degrees(8), axis: (x: 0, y: 1, z: 0))
                 .offset(x: 28, y: 18)
                 .accessibilityHidden(true)
