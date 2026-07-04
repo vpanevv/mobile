@@ -10,6 +10,8 @@ struct TodayView: View {
     @Query(sort: \Car.createdAt, order: .forward) private var cars: [Car]
     @StateObject private var weather = WeatherViewModel()
     @State private var isAddingCar = false
+    @State private var appeared = false
+    @Namespace private var heroNamespace
 
     private var upcoming: [(reminder: CarReminder, car: Car)] {
         cars.flatMap { car in
@@ -31,22 +33,29 @@ struct TodayView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
                     header
+                        .entrance(appeared, index: 0)
 
                     WeatherCardView(viewModel: weather)
+                        .entrance(appeared, index: 1)
 
                     if cars.isEmpty {
                         emptyGarage
                     } else {
                         nextUpSection
+                            .entrance(appeared, index: 2)
                         quickActions
+                            .entrance(appeared, index: 3)
                         garageStrip
+                            .entrance(appeared, index: 4)
                         statsRow
+                            .entrance(appeared, index: 5)
                     }
                 }
                 .padding(.horizontal, Theme.Spacing.l)
                 .padding(.bottom, Theme.Spacing.xl)
             }
             .scrollContentBackground(.hidden)
+            .scrollEdgeEffectStyle(.soft, for: .top)
             .background(AmbientBackground(tint: focusAccent))
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
@@ -65,6 +74,9 @@ struct TodayView: View {
                 AddCarView(profile: profile)
             }
             .task { await weather.loadIfNeeded() }
+            .onAppear {
+                withAnimation { appeared = true }
+            }
         }
     }
 
@@ -106,10 +118,12 @@ struct TodayView: View {
         if let nextUp {
             NavigationLink {
                 CarDetailView(car: nextUp.car, profile: profile)
+                    .navigationTransition(.zoom(sourceID: "hero-\(nextUp.car.id)", in: heroNamespace))
             } label: {
                 NextUpHeroCard(reminder: nextUp.reminder, car: nextUp.car)
             }
             .buttonStyle(CardPressStyle())
+            .matchedTransitionSource(id: "hero-\(nextUp.car.id)", in: heroNamespace)
         } else {
             allClearCard
         }
@@ -187,10 +201,12 @@ struct TodayView: View {
                     ForEach(cars) { car in
                         NavigationLink {
                             CarDetailView(car: car, profile: profile)
+                                .navigationTransition(.zoom(sourceID: "strip-\(car.id)", in: heroNamespace))
                         } label: {
                             GarageStripCard(car: car)
                         }
                         .buttonStyle(CardPressStyle())
+                        .matchedTransitionSource(id: "strip-\(car.id)", in: heroNamespace)
                     }
                 }
                 .padding(.vertical, 2)

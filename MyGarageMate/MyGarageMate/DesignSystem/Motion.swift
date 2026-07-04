@@ -24,4 +24,28 @@ extension View {
         scaleEffect(isPressed ? scale : 1)
             .animation(Motion.snappy, value: isPressed)
     }
+
+    /// A staged entrance: fade + gentle rise, offset per section index so a
+    /// screen's content settles in as a choreographed sequence.
+    func entrance(_ appeared: Bool, index: Int) -> some View {
+        modifier(EntranceModifier(appeared: appeared, index: index))
+    }
+}
+
+private struct EntranceModifier: ViewModifier {
+    let appeared: Bool
+    let index: Int
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        if reduceMotion {
+            content
+        } else {
+            content
+                .opacity(appeared ? 1 : 0)
+                .offset(y: appeared ? 0 : 14)
+                .animation(Motion.spring.delay(Double(index) * 0.06), value: appeared)
+        }
+    }
 }

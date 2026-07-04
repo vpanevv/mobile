@@ -38,6 +38,7 @@ struct MainTabView: View {
                     Label("Settings", systemImage: "gearshape.fill")
                 }
         }
+        .tabBarMinimizeBehavior(.onScrollDown)
         .task { publishSnapshot() }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active { publishSnapshot() }
