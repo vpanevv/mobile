@@ -1,60 +1,57 @@
 import SwiftUI
 
-/// A living, softly drifting mesh-gradient backdrop.
-///
-/// Liquid Glass looks its best over rich, colorful content — this provides a
-/// subtle, ever-shifting field of brand tones for the glass to refract, while
-/// staying quiet enough to keep foreground text legible.
+/// The signature "Midnight Garage" backdrop: a near-black cinematic canvas with
+/// a soft, slowly breathing accent glow and an edge vignette. Kept intentionally
+/// dark so foreground content and photography feel premium and high-contrast.
 struct AmbientBackground: View {
-    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// Optional tint that biases the field toward a status/category color.
+    /// Optional tint (usually a car's accent) that colours the glow.
     var tint: Color?
 
+    private var accent: Color { tint ?? Theme.accent }
+
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 30)) { context in
+        TimelineView(.animation(minimumInterval: 1 / 20, paused: reduceMotion)) { context in
             let t = context.date.timeIntervalSinceReferenceDate
-            let drift = Float(sin(t * 0.18))
-            let drift2 = Float(cos(t * 0.13))
+            let breathe = reduceMotion ? 0 : CGFloat(sin(t * 0.25))
 
-            let points: [SIMD2<Float>] = [
-                SIMD2(0, 0), SIMD2(0.5, 0), SIMD2(1, 0),
-                SIMD2(0, 0.5),
-                SIMD2(0.5 + 0.12 * drift, 0.5 + 0.10 * drift2),
-                SIMD2(1, 0.5),
-                SIMD2(0, 1), SIMD2(0.5, 1), SIMD2(1, 1)
-            ]
+            ZStack {
+                Theme.canvas.ignoresSafeArea()
 
-            MeshGradient(width: 3, height: 3, points: points, colors: meshColors)
+                // Primary accent glow, high and slightly off-centre.
+                RadialGradient(
+                    colors: [accent.opacity(0.30 + 0.05 * breathe), .clear],
+                    center: UnitPoint(x: 0.5, y: -0.05),
+                    startRadius: 0,
+                    endRadius: 540 + 40 * breathe
+                )
                 .ignoresSafeArea()
-        }
-        .background(baseColor.ignoresSafeArea())
-    }
 
-    private var baseColor: Color {
-        colorScheme == .dark ? Color(white: 0.04) : Color(white: 0.97)
-    }
+                // Cool secondary glow low and to the side for depth.
+                RadialGradient(
+                    colors: [Theme.mist.opacity(0.14), .clear],
+                    center: UnitPoint(x: 0.92, y: 0.9),
+                    startRadius: 0,
+                    endRadius: 460
+                )
+                .ignoresSafeArea()
 
-    private var meshColors: [Color] {
-        let accent = tint ?? Theme.accent
-        if colorScheme == .dark {
-            return [
-                Color(white: 0.06), accent.opacity(0.28), Color(white: 0.05),
-                Theme.mist.opacity(0.22), Color(white: 0.07), accent.opacity(0.20),
-                Color(white: 0.04), Theme.ember.opacity(0.18), Color(white: 0.06)
-            ]
-        } else {
-            return [
-                Color(white: 0.99), accent.opacity(0.16), Color(white: 0.97),
-                Theme.mist.opacity(0.12), Color(white: 0.99), accent.opacity(0.12),
-                Color(white: 0.98), Theme.ember.opacity(0.10), Color(white: 0.99)
-            ]
+                // Vignette to focus the centre and deepen the edges.
+                RadialGradient(
+                    colors: [.clear, .black.opacity(0.55)],
+                    center: .center,
+                    startRadius: 160,
+                    endRadius: 720
+                )
+                .ignoresSafeArea()
+            }
         }
     }
 }
 
 extension View {
-    /// Places an ambient mesh backdrop behind this view.
+    /// Places the cinematic backdrop behind this view.
     func ambientBackground(tint: Color? = nil) -> some View {
         background(AmbientBackground(tint: tint))
     }

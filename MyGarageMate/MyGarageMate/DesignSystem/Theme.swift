@@ -29,7 +29,7 @@ enum Theme {
 
     // MARK: Signature gradient tones
 
-    /// The brand accent used as the primary tint across glass surfaces.
+    /// The brand accent used as the primary tint across surfaces.
     static let accent = Color.accentColor
 
     /// Warm secondary used in gradients and chart series.
@@ -40,6 +40,40 @@ enum Theme {
 
     /// Vivid highlight for emphasis moments.
     static let highlight = Color(red: 0.45, green: 0.86, blue: 0.74)
+
+    // MARK: Cinematic canvas (dark-first identity)
+
+    /// The near-black base of the cinematic canvas.
+    static let canvas = Color(red: 0.03, green: 0.035, blue: 0.05)
+
+    /// A slightly lifted surface for solid fallbacks over the canvas.
+    static let surface = Color(red: 0.09, green: 0.10, blue: 0.12)
+
+    /// Thin metallic hairline used to edge cards and controls.
+    static let metallic = Color(red: 0.78, green: 0.82, blue: 0.88)
+
+    /// A soft metallic sheen gradient for premium strokes and accents.
+    static var metallicSheen: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color.white.opacity(0.55),
+                Color.white.opacity(0.12),
+                Color.white.opacity(0.28)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+}
+
+extension View {
+    /// A thin metallic hairline stroke that gives cards a premium, machined edge.
+    func metallicStroke(cornerRadius: CGFloat, opacity: Double = 0.14, lineWidth: CGFloat = 1) -> some View {
+        overlay {
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .strokeBorder(Theme.metallicSheen.opacity(opacity), lineWidth: lineWidth)
+        }
+    }
 }
 
 // MARK: - Health status styling

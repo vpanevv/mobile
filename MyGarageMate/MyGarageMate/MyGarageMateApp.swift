@@ -31,6 +31,8 @@ struct MyGarageMateApp: App {
     var body: some Scene {
         WindowGroup {
             AppLaunchView()
+                .preferredColorScheme(.dark)
+                .tint(Theme.accent)
         }
         .modelContainer(modelContainer)
     }
