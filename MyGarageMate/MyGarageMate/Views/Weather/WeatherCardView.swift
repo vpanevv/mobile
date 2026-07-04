@@ -10,6 +10,7 @@ struct WeatherCardView: View {
             content
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .metallicStroke(cornerRadius: Theme.Radius.card)
     }
 
     @ViewBuilder

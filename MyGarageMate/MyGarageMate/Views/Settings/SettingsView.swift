@@ -270,6 +270,7 @@ struct SettingsView: View {
         }
         .padding(.vertical, 10)
         .adaptiveGlass(in: RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
+        .metallicStroke(cornerRadius: Theme.Radius.card)
     }
 
     private func settingsInfoRow(title: String, subtitle: String? = nil, symbol: String, color: Color) -> some View {
