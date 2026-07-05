@@ -7,6 +7,7 @@ Premium native iOS fitness notebook for tracking a Monday / Wednesday / Friday c
 - editable workout program seeded from the uploaded screenshots
 - set logging for weight, reps, RPE, completion, and notes
 - saved workout sessions and exercise-level progress history
+- calendar activity for weekly and monthly completion percentages
 - dashboard for weekly completion, last workout, body weight, and strength trend
 - body weight and measurement check-ins
 - local persistence with `UserDefaults`
@@ -14,5 +15,5 @@ Premium native iOS fitness notebook for tracking a Monday / Wednesday / Friday c
 ## Build
 
 ```bash
-xcodebuild -project /Users/panev/panev-ios/mobile/WaterTracker/WaterTracker.xcodeproj -destination 'generic/platform=iOS' -scheme WaterTracker -derivedDataPath /tmp/WaterTrackerDerived CODE_SIGNING_ALLOWED=NO build
+xcodebuild -project /Users/panev/panev-ios/mobile/GymCutTracker/GymCutTracker.xcodeproj -destination 'generic/platform=iOS' -scheme "Gym Cut Tracker" -derivedDataPath /tmp/GymCutTrackerDerived CODE_SIGNING_ALLOWED=NO build
 ```

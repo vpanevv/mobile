@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct WaterTrackerApp: App {
+struct GymCutTrackerApp: App {
     @StateObject private var store = FitnessStore()
     @AppStorage("gym-cut.has-seen-onboarding") private var hasSeenOnboarding = false
 

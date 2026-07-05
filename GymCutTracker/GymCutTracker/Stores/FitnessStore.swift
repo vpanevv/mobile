@@ -73,6 +73,14 @@ final class FitnessStore: ObservableObject {
         Set(sessions.filter { calendar.isDate($0.date, equalTo: .now, toGranularity: .weekOfYear) }.map(\.day))
     }
 
+    var currentWeekActivity: ActivitySummary {
+        activitySummary(for: .weekOfYear, containing: .now)
+    }
+
+    var currentMonthActivity: ActivitySummary {
+        activitySummary(for: .month, containing: .now)
+    }
+
     var strengthSummary: String {
         let improving = allExerciseProgress.filter { $0.trend == .improving }.count
         let dropping = allExerciseProgress.filter { $0.trend == .dropping }.count
@@ -131,6 +139,79 @@ final class FitnessStore: ObservableObject {
         bodyEntries.append(entry)
     }
 
+    func activitySummary(for component: Calendar.Component, containing date: Date) -> ActivitySummary {
+        guard let interval = calendar.dateInterval(of: component, for: date) else {
+            return ActivitySummary(startDate: date, endDate: date, scheduledCount: 0, completedCount: 0)
+        }
+
+        let scheduledDates = scheduledTrainingDates(in: interval)
+        let completedDates = completedTrainingDates(in: interval)
+        let completedScheduledDates = scheduledDates.filter { scheduledDate in
+            completedDates.contains { calendar.isDate($0, inSameDayAs: scheduledDate) }
+        }
+
+        return ActivitySummary(
+            startDate: interval.start,
+            endDate: interval.end,
+            scheduledCount: scheduledDates.count,
+            completedCount: completedScheduledDates.count
+        )
+    }
+
+    func calendarDays(forMonthContaining date: Date) -> [TrainingCalendarDay] {
+        guard let monthInterval = calendar.dateInterval(of: .month, for: date),
+              let monthGrid = calendar.dateInterval(of: .weekOfMonth, for: monthInterval.start),
+              let lastMonthDay = calendar.date(byAdding: .day, value: -1, to: monthInterval.end),
+              let endGrid = calendar.dateInterval(of: .weekOfMonth, for: lastMonthDay)
+        else { return [] }
+
+        let completedDates = completedTrainingDates(in: DateInterval(start: monthGrid.start, end: endGrid.end))
+        var days: [TrainingCalendarDay] = []
+        var cursor = monthGrid.start
+
+        while cursor < endGrid.end {
+            let day = trainingDay(for: cursor)
+            let completed = completedDates.contains { calendar.isDate($0, inSameDayAs: cursor) }
+            days.append(
+                TrainingCalendarDay(
+                    date: cursor,
+                    trainingDay: day,
+                    completed: completed,
+                    isInDisplayedMonth: calendar.isDate(cursor, equalTo: date, toGranularity: .month)
+                )
+            )
+
+            guard let nextDay = calendar.date(byAdding: .day, value: 1, to: cursor) else { break }
+            cursor = nextDay
+        }
+
+        return days
+    }
+
+    func weekRows(containing date: Date) -> [TrainingCalendarDay] {
+        guard let interval = calendar.dateInterval(of: .weekOfYear, for: date) else { return [] }
+        let completedDates = completedTrainingDates(in: interval)
+        var rows: [TrainingCalendarDay] = []
+        var cursor = interval.start
+
+        while cursor < interval.end {
+            if let day = trainingDay(for: cursor) {
+                rows.append(
+                    TrainingCalendarDay(
+                        date: cursor,
+                        trainingDay: day,
+                        completed: completedDates.contains { calendar.isDate($0, inSameDayAs: cursor) },
+                        isInDisplayedMonth: true
+                    )
+                )
+            }
+            guard let nextDay = calendar.date(byAdding: .day, value: 1, to: cursor) else { break }
+            cursor = nextDay
+        }
+
+        return rows
+    }
+
     func recommendation(for log: ExerciseLog) -> String {
         let completedSets = log.setLogs.filter(\.completed)
         guard completedSets.isEmpty == false else { return "Log at least one completed set next time." }
@@ -167,6 +248,38 @@ final class FitnessStore: ObservableObject {
         return numbers.first ?? 1
     }
 
+    private func scheduledTrainingDates(in interval: DateInterval) -> [Date] {
+        var dates: [Date] = []
+        var cursor = calendar.startOfDay(for: interval.start)
+
+        while cursor < interval.end {
+            if trainingDay(for: cursor) != nil {
+                dates.append(cursor)
+            }
+            guard let nextDay = calendar.date(byAdding: .day, value: 1, to: cursor) else { break }
+            cursor = nextDay
+        }
+
+        return dates
+    }
+
+    private func completedTrainingDates(in interval: DateInterval) -> [Date] {
+        let matchingDates = sessions
+            .filter { interval.contains($0.date) }
+            .map { calendar.startOfDay(for: $0.date) }
+
+        return Array(Set(matchingDates)).sorted()
+    }
+
+    private func trainingDay(for date: Date) -> TrainingDay? {
+        switch calendar.component(.weekday, from: date) {
+        case 2: .monday
+        case 4: .wednesday
+        case 6: .friday
+        default: nil
+        }
+    }
+
     private func load() {
         workoutDays = decode([WorkoutDay].self, key: workoutDaysKey) ?? Self.seedWorkouts
         sessions = decode([WorkoutSession].self, key: sessionsKey) ?? []
@@ -199,6 +312,31 @@ final class FitnessStore: ObservableObject {
         }
         defaults.set(data, forKey: key)
     }
+}
+
+struct ActivitySummary: Hashable {
+    let startDate: Date
+    let endDate: Date
+    let scheduledCount: Int
+    let completedCount: Int
+
+    var percentage: Int {
+        guard scheduledCount > 0 else { return 0 }
+        return Int((Double(completedCount) / Double(scheduledCount) * 100).rounded())
+    }
+
+    var remainingCount: Int {
+        max(scheduledCount - completedCount, 0)
+    }
+}
+
+struct TrainingCalendarDay: Identifiable, Hashable {
+    let date: Date
+    let trainingDay: TrainingDay?
+    let completed: Bool
+    let isInDisplayedMonth: Bool
+
+    var id: Date { date }
 }
 
 extension FitnessStore {
