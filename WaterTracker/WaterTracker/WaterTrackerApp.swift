@@ -2,8 +2,8 @@ import SwiftUI
 
 @main
 struct WaterTrackerApp: App {
-    @StateObject private var store = HydrationStore()
-    @AppStorage("has-seen-onboarding") private var hasSeenOnboarding = false
+    @StateObject private var store = FitnessStore()
+    @AppStorage("gym-cut.has-seen-onboarding") private var hasSeenOnboarding = false
 
     var body: some Scene {
         WindowGroup {
@@ -17,6 +17,7 @@ struct WaterTrackerApp: App {
                 }
             }
             .environmentObject(store)
+            .preferredColorScheme(.dark)
         }
     }
 }

@@ -1,17 +1,18 @@
-# WaterTracker
+# Gym Cut Tracker
 
-`WaterTracker` is a simple native iOS app for a first TestFlight release.
+`Gym Cut Tracker` is a premium dark-mode SwiftUI MVP for tracking a 3-day cutting-phase gym program.
 
-It focuses on one job:
+It focuses on:
 
-- log water quickly
-- track progress toward a daily goal
-- keep today history visible
-- persist data locally between launches
+- Monday / Wednesday / Friday workout setup seeded from the uploaded screenshots
+- editable exercises with sets, target reps, rest, muscle group, and notes
+- session tracking for weight, reps, RPE, completion, and notes
+- workout history, exercise progress, recommendations, and body weight check-ins
+- local persistence between launches
 
 ## Project
 
-Open the [WaterTracker Xcode project](/Users/panev/panev-ios/mobile/WaterTracker/WaterTracker.xcodeproj) and run the `WaterTracker` scheme.
+Open the [Xcode project](/Users/panev/panev-ios/mobile/WaterTracker/WaterTracker.xcodeproj) and run the `WaterTracker` scheme. The app display name and product name are `Gym Cut Tracker`.
 
 The app source lives under [WaterTracker](/Users/panev/panev-ios/mobile/WaterTracker/WaterTracker).
 
@@ -26,5 +27,5 @@ xcodebuild -project /Users/panev/panev-ios/mobile/WaterTracker/WaterTracker.xcod
 In this environment, `xcodebuild` is currently blocked at the asset compilation stage by an unavailable CoreSimulator service, but the Swift source files typecheck successfully with:
 
 ```bash
-swiftc -typecheck -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk -target arm64-apple-ios17.0 /Users/panev/panev-ios/mobile/WaterTracker/WaterTracker/WaterTrackerApp.swift /Users/panev/panev-ios/mobile/WaterTracker/WaterTracker/Models/HydrationEntry.swift /Users/panev/panev-ios/mobile/WaterTracker/WaterTracker/Stores/HydrationStore.swift /Users/panev/panev-ios/mobile/WaterTracker/WaterTracker/Views/ProgressRing.swift /Users/panev/panev-ios/mobile/WaterTracker/WaterTracker/Views/ContentView.swift /Users/panev/panev-ios/mobile/WaterTracker/WaterTracker/Views/OnboardingView.swift
+swiftc -typecheck -sdk "$(xcrun --sdk iphoneos --show-sdk-path)" -target arm64-apple-ios17.0 /Users/panev/panev-ios/mobile/WaterTracker/WaterTracker/WaterTrackerApp.swift /Users/panev/panev-ios/mobile/WaterTracker/WaterTracker/Models/FitnessModels.swift /Users/panev/panev-ios/mobile/WaterTracker/WaterTracker/Stores/FitnessStore.swift /Users/panev/panev-ios/mobile/WaterTracker/WaterTracker/Views/ContentView.swift /Users/panev/panev-ios/mobile/WaterTracker/WaterTracker/Views/OnboardingView.swift
 ```

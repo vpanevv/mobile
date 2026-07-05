@@ -7,22 +7,22 @@ struct OnboardingView: View {
 
     private let pages: [OnboardingPage] = [
         .init(
-            title: "Hydration, without the clutter",
-            subtitle: "Log water in one tap and keep your daily target visible all day.",
-            symbol: "drop.circle.fill",
-            accent: Color(red: 0.22, green: 0.84, blue: 0.96)
+            title: "Your cut, tracked like training",
+            subtitle: "Monday, Wednesday, and Friday are ready with the program from your screenshots.",
+            symbol: "figure.strengthtraining.traditional.circle.fill",
+            accent: Color(red: 0.31, green: 1.0, blue: 0.42)
         ),
         .init(
-            title: "Build the habit",
-            subtitle: "See your progress ring, remaining goal, and streak without digging through menus.",
+            title: "Log every working set",
+            subtitle: "Track weight, reps, RPE, notes, and completed sets without turning the session into admin.",
             symbol: "chart.line.uptrend.xyaxis.circle.fill",
-            accent: Color(red: 0.30, green: 0.68, blue: 0.98)
+            accent: Color(red: 0.15, green: 0.58, blue: 1.0)
         ),
         .init(
-            title: "Make it yours",
-            subtitle: "Pick a goal that fits your day and adjust serving sizes as you go.",
+            title: "Hold strength while cutting",
+            subtitle: "See exercise history, body weight, and next-session recommendations in one premium notebook.",
             symbol: "slider.horizontal.3",
-            accent: Color(red: 0.25, green: 0.90, blue: 0.74)
+            accent: Color(red: 0.31, green: 1.0, blue: 0.42)
         )
     ]
 
@@ -30,9 +30,9 @@ struct OnboardingView: View {
         ZStack {
             LinearGradient(
                 colors: [
-                    Color(red: 0.02, green: 0.07, blue: 0.18),
-                    Color(red: 0.05, green: 0.17, blue: 0.31),
-                    Color(red: 0.08, green: 0.32, blue: 0.48)
+                    Color(red: 0.02, green: 0.025, blue: 0.03),
+                    Color(red: 0.04, green: 0.07, blue: 0.06),
+                    Color(red: 0.02, green: 0.04, blue: 0.06)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -59,7 +59,7 @@ struct OnboardingView: View {
 
     private var header: some View {
         HStack {
-            Text("WaterTracker")
+            Text("Gym Cut Tracker")
                 .font(.system(.title2, design: .rounded, weight: .bold))
                 .foregroundStyle(.white)
 
@@ -136,12 +136,12 @@ struct OnboardingView: View {
                     }
                 }
             } label: {
-                Text(selection == pages.count - 1 ? "Start Tracking" : "Continue")
+                Text(selection == pages.count - 1 ? "Start Training" : "Continue")
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(Color(red: 0.03, green: 0.10, blue: 0.21))
+                    .foregroundStyle(Color.black)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 18)
-                    .background(.white, in: Capsule())
+                    .background(Color(red: 0.31, green: 1.0, blue: 0.42), in: Capsule())
             }
             .buttonStyle(.plain)
         }

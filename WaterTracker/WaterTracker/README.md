@@ -1,15 +1,15 @@
-# WaterTracker
+# Gym Cut Tracker
 
-Simple native iOS water intake tracking for a first TestFlight launch.
+Premium native iOS fitness notebook for tracking a Monday / Wednesday / Friday cutting-phase workout plan.
 
 ## V1 Scope
 
-- Quick add buttons for common drink sizes
-- Custom amount entry
-- Daily progress ring
-- Adjustable daily goal
-- Local persistence with `UserDefaults`
-- Same-day history and reset action
+- editable workout program seeded from the uploaded screenshots
+- set logging for weight, reps, RPE, completion, and notes
+- saved workout sessions and exercise-level progress history
+- dashboard for weekly completion, last workout, body weight, and strength trend
+- body weight and measurement check-ins
+- local persistence with `UserDefaults`
 
 ## Build
 
