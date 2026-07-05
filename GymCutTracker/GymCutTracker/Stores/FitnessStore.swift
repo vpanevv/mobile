@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import SwiftUI
+import UIKit
 
 @MainActor
 final class FitnessStore: ObservableObject {
@@ -133,6 +134,41 @@ final class FitnessStore: ObservableObject {
         var completedSession = session
         completedSession.personalRecords = personalRecords(for: session)
         sessions.append(completedSession)
+    }
+
+    func session(id: UUID) -> WorkoutSession? {
+        sessions.first { $0.id == id }
+    }
+
+    func attachSessionPhoto(_ image: UIImage, to sessionID: UUID) {
+        guard let index = sessions.firstIndex(where: { $0.id == sessionID }),
+              let url = saveImage(image, name: "session-\(sessionID.uuidString).jpg")
+        else { return }
+        sessions[index].sessionPhotoURL = url
+        sessions[index].generatedShareCardURL = nil
+    }
+
+    func removeSessionPhoto(from sessionID: UUID) {
+        guard let index = sessions.firstIndex(where: { $0.id == sessionID }) else { return }
+        if let url = sessions[index].sessionPhotoURL {
+            try? FileManager.default.removeItem(at: url)
+        }
+        sessions[index].sessionPhotoURL = nil
+        sessions[index].generatedShareCardURL = nil
+    }
+
+    func updateShareCard(for sessionID: UUID, image: UIImage, template: ShareCardTemplate) -> URL? {
+        guard let index = sessions.firstIndex(where: { $0.id == sessionID }),
+              let url = saveImage(image, name: "share-card-\(sessionID.uuidString).png", compressionQuality: 1)
+        else { return nil }
+        sessions[index].shareCardTemplate = template
+        sessions[index].generatedShareCardURL = url
+        return url
+    }
+
+    func markSessionShared(_ sessionID: UUID) {
+        guard let index = sessions.firstIndex(where: { $0.id == sessionID }) else { return }
+        sessions[index].sharedAt = .now
     }
 
     func addBodyEntry(_ entry: BodyProgress) {
@@ -311,6 +347,40 @@ final class FitnessStore: ObservableObject {
             return
         }
         defaults.set(data, forKey: key)
+    }
+
+    private func saveImage(_ image: UIImage, name: String, compressionQuality: CGFloat = 0.88) -> URL? {
+        guard let directory = sessionMediaDirectory() else { return nil }
+        let url = directory.appendingPathComponent(name)
+        let data: Data?
+
+        if name.lowercased().hasSuffix(".png") {
+            data = image.pngData()
+        } else {
+            data = image.jpegData(compressionQuality: compressionQuality)
+        }
+
+        guard let data else { return nil }
+
+        do {
+            try data.write(to: url, options: [.atomic])
+            return url
+        } catch {
+            return nil
+        }
+    }
+
+    private func sessionMediaDirectory() -> URL? {
+        guard let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            return nil
+        }
+        let directory = documents.appendingPathComponent("SessionMedia", isDirectory: true)
+
+        if FileManager.default.fileExists(atPath: directory.path) == false {
+            try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        }
+
+        return directory
     }
 }
 

@@ -139,6 +139,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Gym Cut Tracker";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Add a gym session photo to your workout summary and share card.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save generated workout share cards to Photos.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Choose a gym session photo for your workout summary and share card.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -177,6 +180,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Gym Cut Tracker";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Add a gym session photo to your workout summary and share card.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save generated workout share cards to Photos.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Choose a gym session photo for your workout summary and share card.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

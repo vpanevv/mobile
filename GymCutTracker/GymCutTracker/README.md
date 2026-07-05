@@ -8,6 +8,7 @@ Premium native iOS fitness notebook for tracking a Monday / Wednesday / Friday c
 - set logging for weight, reps, RPE, completion, and notes
 - saved workout sessions and exercise-level progress history
 - calendar activity for weekly and monthly completion percentages
+- session photo attachment and generated share cards from workout summaries
 - dashboard for weekly completion, last workout, body weight, and strength trend
 - body weight and measurement check-ins
 - local persistence with `UserDefaults`

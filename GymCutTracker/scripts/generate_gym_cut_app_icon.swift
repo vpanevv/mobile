@@ -10,70 +10,79 @@ guard let context = NSGraphicsContext.current?.cgContext else {
     fatalError("Missing graphics context")
 }
 
-let colors = [
-    NSColor(calibratedRed: 0.05, green: 0.16, blue: 0.31, alpha: 1).cgColor,
-    NSColor(calibratedRed: 0.11, green: 0.51, blue: 0.85, alpha: 1).cgColor,
-    NSColor(calibratedRed: 0.21, green: 0.87, blue: 0.92, alpha: 1).cgColor
-]
-
-let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: [0, 0.55, 1])!
-context.drawLinearGradient(gradient, start: CGPoint(x: 0, y: 1024), end: CGPoint(x: 1024, y: 0), options: [])
-
-context.setFillColor(NSColor.white.withAlphaComponent(0.12).cgColor)
-context.fillEllipse(in: CGRect(x: 120, y: 580, width: 320, height: 320))
-context.fillEllipse(in: CGRect(x: 640, y: 120, width: 220, height: 220))
-
-let droplet = NSBezierPath()
-droplet.move(to: CGPoint(x: 512, y: 790))
-droplet.curve(to: CGPoint(x: 720, y: 448), controlPoint1: CGPoint(x: 650, y: 676), controlPoint2: CGPoint(x: 742, y: 564))
-droplet.curve(to: CGPoint(x: 512, y: 232), controlPoint1: CGPoint(x: 720, y: 328), controlPoint2: CGPoint(x: 624, y: 232))
-droplet.curve(to: CGPoint(x: 304, y: 448), controlPoint1: CGPoint(x: 400, y: 232), controlPoint2: CGPoint(x: 304, y: 328))
-droplet.curve(to: CGPoint(x: 512, y: 790), controlPoint1: CGPoint(x: 282, y: 564), controlPoint2: CGPoint(x: 374, y: 676))
-droplet.close()
-
-context.saveGState()
-context.addPath(droplet.cgPath)
-context.clip()
-
-let dropletGradient = CGGradient(
+let background = CGGradient(
     colorsSpace: CGColorSpaceCreateDeviceRGB(),
     colors: [
-        NSColor.white.withAlphaComponent(0.96).cgColor,
-        NSColor(calibratedRed: 0.63, green: 0.94, blue: 1.0, alpha: 1).cgColor,
-        NSColor(calibratedRed: 0.15, green: 0.58, blue: 0.96, alpha: 1).cgColor
+        NSColor(calibratedRed: 0.015, green: 0.018, blue: 0.020, alpha: 1).cgColor,
+        NSColor(calibratedRed: 0.050, green: 0.060, blue: 0.065, alpha: 1).cgColor,
+        NSColor(calibratedRed: 0.012, green: 0.020, blue: 0.018, alpha: 1).cgColor
     ] as CFArray,
-    locations: [0, 0.35, 1]
+    locations: [0, 0.55, 1]
 )!
-context.drawLinearGradient(dropletGradient, start: CGPoint(x: 350, y: 760), end: CGPoint(x: 680, y: 230), options: [])
+context.drawLinearGradient(background, start: CGPoint(x: 0, y: 1024), end: CGPoint(x: 1024, y: 0), options: [])
 
-context.setFillColor(NSColor.white.withAlphaComponent(0.18).cgColor)
-context.fillEllipse(in: CGRect(x: 408, y: 560, width: 150, height: 170))
-context.restoreGState()
+let accent = NSColor(calibratedRed: 0.31, green: 1.0, blue: 0.42, alpha: 1)
+let blueAccent = NSColor(calibratedRed: 0.15, green: 0.58, blue: 1.0, alpha: 1)
 
-context.setStrokeColor(NSColor.white.withAlphaComponent(0.32).cgColor)
-context.setLineWidth(10)
-context.addPath(droplet.cgPath)
+context.setFillColor(accent.withAlphaComponent(0.16).cgColor)
+context.fillEllipse(in: CGRect(x: 152, y: 120, width: 720, height: 720))
+
+context.setFillColor(blueAccent.withAlphaComponent(0.10).cgColor)
+context.fillEllipse(in: CGRect(x: 570, y: 580, width: 260, height: 260))
+
+let glass = NSBezierPath(roundedRect: CGRect(x: 132, y: 132, width: 760, height: 760), xRadius: 170, yRadius: 170)
+context.setStrokeColor(NSColor.white.withAlphaComponent(0.10).cgColor)
+context.setLineWidth(4)
+context.addPath(glass.cgPath)
 context.strokePath()
 
-let glass = NSBezierPath(roundedRect: CGRect(x: 360, y: 214, width: 304, height: 84), xRadius: 28, yRadius: 28)
+func roundedRect(_ rect: CGRect, radius: CGFloat) {
+    context.addPath(NSBezierPath(roundedRect: rect, xRadius: radius, yRadius: radius).cgPath)
+}
+
 context.saveGState()
-context.addPath(glass.cgPath)
-context.clip()
-let glassGradient = CGGradient(
+context.translateBy(x: 512, y: 512)
+context.rotate(by: -0.18)
+context.translateBy(x: -512, y: -512)
+
+let shadow = NSShadow()
+shadow.shadowColor = accent.withAlphaComponent(0.38)
+shadow.shadowBlurRadius = 44
+shadow.shadowOffset = CGSize(width: 0, height: -8)
+shadow.set()
+
+let dumbbellGradient = CGGradient(
     colorsSpace: CGColorSpaceCreateDeviceRGB(),
     colors: [
-        NSColor.white.withAlphaComponent(0.92).cgColor,
-        NSColor.white.withAlphaComponent(0.56).cgColor
+        NSColor(calibratedRed: 0.70, green: 1.0, blue: 0.74, alpha: 1).cgColor,
+        accent.cgColor,
+        NSColor(calibratedRed: 0.16, green: 0.78, blue: 0.28, alpha: 1).cgColor
     ] as CFArray,
-    locations: [0, 1]
+    locations: [0, 0.52, 1]
 )!
-context.drawLinearGradient(glassGradient, start: CGPoint(x: 360, y: 298), end: CGPoint(x: 664, y: 214), options: [])
+
+let dumbbellPath = CGMutablePath()
+dumbbellPath.addRoundedRect(in: CGRect(x: 286, y: 472, width: 452, height: 80), cornerWidth: 40, cornerHeight: 40)
+dumbbellPath.addRoundedRect(in: CGRect(x: 156, y: 392, width: 86, height: 240), cornerWidth: 34, cornerHeight: 34)
+dumbbellPath.addRoundedRect(in: CGRect(x: 246, y: 346, width: 96, height: 332), cornerWidth: 38, cornerHeight: 38)
+dumbbellPath.addRoundedRect(in: CGRect(x: 682, y: 346, width: 96, height: 332), cornerWidth: 38, cornerHeight: 38)
+dumbbellPath.addRoundedRect(in: CGRect(x: 782, y: 392, width: 86, height: 240), cornerWidth: 34, cornerHeight: 34)
+
+context.saveGState()
+context.addPath(dumbbellPath)
+context.clip()
+context.drawLinearGradient(dumbbellGradient, start: CGPoint(x: 190, y: 690), end: CGPoint(x: 850, y: 330), options: [])
 context.restoreGState()
 
-context.setStrokeColor(NSColor.white.withAlphaComponent(0.20).cgColor)
-context.setLineWidth(6)
-context.addPath(glass.cgPath)
+context.setStrokeColor(NSColor.white.withAlphaComponent(0.26).cgColor)
+context.setLineWidth(8)
+context.addPath(dumbbellPath)
 context.strokePath()
+
+context.setFillColor(NSColor.white.withAlphaComponent(0.20).cgColor)
+context.fillEllipse(in: CGRect(x: 382, y: 536, width: 96, height: 22))
+
+context.restoreGState()
 
 image.unlockFocus()
 

@@ -9,6 +9,7 @@ It focuses on:
 - session tracking for weight, reps, RPE, completion, and notes
 - workout history, exercise progress, recommendations, and body weight check-ins
 - weekly and monthly calendar activity with completion percentages
+- session photos and shareable workout cards for completed sessions
 - local persistence between launches
 
 ## Project

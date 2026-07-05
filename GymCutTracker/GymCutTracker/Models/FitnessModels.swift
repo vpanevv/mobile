@@ -71,6 +71,10 @@ struct WorkoutSession: Identifiable, Codable, Hashable {
     var durationMinutes: Int
     var notes: String
     var personalRecords: [String]
+    var sessionPhotoURL: URL?
+    var shareCardTemplate: ShareCardTemplate?
+    var generatedShareCardURL: URL?
+    var sharedAt: Date?
 
     init(
         id: UUID = UUID(),
@@ -79,7 +83,11 @@ struct WorkoutSession: Identifiable, Codable, Hashable {
         exerciseLogs: [ExerciseLog],
         durationMinutes: Int,
         notes: String = "",
-        personalRecords: [String] = []
+        personalRecords: [String] = [],
+        sessionPhotoURL: URL? = nil,
+        shareCardTemplate: ShareCardTemplate? = nil,
+        generatedShareCardURL: URL? = nil,
+        sharedAt: Date? = nil
     ) {
         self.id = id
         self.date = date
@@ -88,7 +96,19 @@ struct WorkoutSession: Identifiable, Codable, Hashable {
         self.durationMinutes = durationMinutes
         self.notes = notes
         self.personalRecords = personalRecords
+        self.sessionPhotoURL = sessionPhotoURL
+        self.shareCardTemplate = shareCardTemplate
+        self.generatedShareCardURL = generatedShareCardURL
+        self.sharedAt = sharedAt
     }
+}
+
+enum ShareCardTemplate: String, Codable, CaseIterable, Identifiable, Hashable {
+    case fullPhotoHero = "Full Photo Hero"
+    case premiumStats = "Premium Stats Card"
+    case minimalProgress = "Minimal Progress Card"
+
+    var id: String { rawValue }
 }
 
 struct ExerciseLog: Identifiable, Codable, Hashable {

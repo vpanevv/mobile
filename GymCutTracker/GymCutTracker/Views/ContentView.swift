@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 
 struct ContentView: View {
     @EnvironmentObject private var store: FitnessStore
@@ -428,7 +429,7 @@ struct WorkoutSessionView: View {
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showingSummary) {
             if let savedSession {
-                WorkoutSummaryView(session: savedSession)
+                WorkoutSummaryView(sessionID: savedSession.id)
             }
         }
     }
@@ -788,26 +789,465 @@ private struct ExerciseEditorView: View {
 
 private struct WorkoutSummaryView: View {
     @EnvironmentObject private var store: FitnessStore
-    let session: WorkoutSession
+    let sessionID: UUID
+
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var showingCamera = false
+    @State private var shareCardURL: URL?
+    @State private var sharingItems: [Any] = []
+    @State private var showingShareSheet = false
+    @State private var statusMessage = ""
+
+    private var session: WorkoutSession? {
+        store.session(id: sessionID)
+    }
 
     var body: some View {
-        PremiumScreen(title: "Workout Saved", subtitle: session.day.rawValue) {
-            VStack(spacing: 16) {
-                MetricTile(title: "Duration", value: "\(session.durationMinutes) min", detail: "session")
-                MetricTile(title: "Volume", value: "\(session.exerciseLogs.flatMap(\.setLogs).reduce(0) { $0 + ($1.weight * Double($1.reps)) }.clean) kg", detail: "total")
-                PremiumCard {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Next time")
-                            .sectionTitle()
-                        ForEach(session.exerciseLogs) { log in
-                            Text("\(log.exerciseName): \(store.recommendation(for: log))")
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(Color.secondaryText)
-                        }
+        Group {
+            if let session {
+                PremiumScreen(title: "Workout Saved", subtitle: session.day.rawValue) {
+                    VStack(spacing: 16) {
+                        summaryGrid(session)
+                        sessionPhotoCard(session)
+                        shareCardActions(session)
+                        recommendationsCard(session)
+                    }
+                }
+            } else {
+                PremiumScreen(title: "Workout Saved", subtitle: "Session not found") {
+                    PremiumCard {
+                        Text("This workout session is no longer available.")
+                            .foregroundStyle(Color.secondaryText)
                     }
                 }
             }
         }
+        .onChange(of: selectedPhotoItem) { _, item in
+            Task { await loadSelectedPhoto(item) }
+        }
+        .sheet(isPresented: $showingCamera) {
+            CameraPicker { image in
+                store.attachSessionPhoto(image, to: sessionID)
+                statusMessage = "Session photo attached."
+            }
+        }
+        .sheet(isPresented: $showingShareSheet) {
+            ShareSheet(activityItems: sharingItems)
+        }
+    }
+
+    private func summaryGrid(_ session: WorkoutSession) -> some View {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+            MetricTile(title: "Duration", value: "\(session.durationMinutes) min", detail: "session")
+            MetricTile(title: "Volume", value: "\(session.totalVolume.clean) kg", detail: "total")
+            MetricTile(title: "Exercises", value: "\(session.exerciseLogs.count)", detail: "completed")
+            MetricTile(title: "Sets", value: "\(session.completedSets)", detail: "completed")
+        }
+    }
+
+    private func sessionPhotoCard(_ session: WorkoutSession) -> some View {
+        PremiumCard {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    Text("Session photo")
+                        .sectionTitle()
+                    Spacer()
+                    if session.sessionPhotoURL != nil {
+                        Button(role: .destructive) {
+                            store.removeSessionPhoto(from: session.id)
+                            statusMessage = "Session photo removed."
+                        } label: {
+                            Image(systemName: "trash")
+                                .iconButtonStyle()
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
+                SessionPhotoPreview(url: session.sessionPhotoURL)
+
+                HStack(spacing: 10) {
+                    Button { showingCamera = true } label: {
+                        Label("Camera", systemImage: "camera.fill")
+                            .secondaryButtonStyle()
+                    }
+                    .buttonStyle(.plain)
+
+                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                        Label(session.sessionPhotoURL == nil ? "Upload" : "Replace", systemImage: "photo.fill")
+                            .secondaryButtonStyle()
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                if statusMessage.isEmpty == false {
+                    Text(statusMessage)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Color.cutAccent)
+                }
+            }
+        }
+    }
+
+    private func shareCardActions(_ session: WorkoutSession) -> some View {
+        PremiumCard {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Share card")
+                    .sectionTitle()
+
+                if let image = shareCardPreviewImage(for: session) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.black)
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                        )
+                } else {
+                    Text("Attach a session photo to generate a premium vertical progress card.")
+                        .foregroundStyle(Color.secondaryText)
+                }
+
+                Button { createShareCard(session) } label: {
+                    Label("Create Share Card", systemImage: "sparkles")
+                        .primaryButtonStyle()
+                }
+                .buttonStyle(.plain)
+                .disabled(session.sessionPhotoURL == nil)
+
+                HStack(spacing: 10) {
+                    Button { saveGeneratedCard(session) } label: {
+                        Label("Save to Photos", systemImage: "square.and.arrow.down.fill")
+                            .secondaryButtonStyle()
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(activeShareURL(for: session) == nil)
+
+                    Button { shareGeneratedCard(session) } label: {
+                        Label("Share", systemImage: "square.and.arrow.up.fill")
+                            .secondaryButtonStyle()
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(activeShareURL(for: session) == nil)
+                }
+            }
+        }
+    }
+
+    private func recommendationsCard(_ session: WorkoutSession) -> some View {
+        PremiumCard {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Next time")
+                    .sectionTitle()
+                ForEach(session.exerciseLogs) { log in
+                    Text("\(log.exerciseName): \(store.recommendation(for: log))")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Color.secondaryText)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func loadSelectedPhoto(_ item: PhotosPickerItem?) async {
+        guard let item,
+              let data = try? await item.loadTransferable(type: Data.self),
+              let image = UIImage(data: data)
+        else { return }
+        store.attachSessionPhoto(image, to: sessionID)
+        selectedPhotoItem = nil
+        statusMessage = "Session photo attached."
+    }
+
+    private func createShareCard(_ session: WorkoutSession) {
+        guard let image = renderShareCard(for: session),
+              let url = store.updateShareCard(for: session.id, image: image, template: .fullPhotoHero)
+        else {
+            statusMessage = "Add a session photo first."
+            return
+        }
+
+        shareCardURL = url
+        statusMessage = "Share card created."
+    }
+
+    private func saveGeneratedCard(_ session: WorkoutSession) {
+        guard let url = activeShareURL(for: session),
+              let image = UIImage(contentsOfFile: url.path)
+        else {
+            statusMessage = "Create a share card first."
+            return
+        }
+
+        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+        statusMessage = "Saved to Photos."
+    }
+
+    private func shareGeneratedCard(_ session: WorkoutSession) {
+        guard let url = activeShareURL(for: session) else {
+            statusMessage = "Create a share card first."
+            return
+        }
+
+        store.markSessionShared(session.id)
+        sharingItems = [url]
+        showingShareSheet = true
+    }
+
+    private func activeShareURL(for session: WorkoutSession) -> URL? {
+        shareCardURL ?? session.generatedShareCardURL
+    }
+
+    private func shareCardPreviewImage(for session: WorkoutSession) -> UIImage? {
+        guard let url = activeShareURL(for: session) else { return nil }
+        return UIImage(contentsOfFile: url.path)
+    }
+
+    private func renderShareCard(for session: WorkoutSession) -> UIImage? {
+        guard let photoURL = session.sessionPhotoURL,
+              let photo = UIImage(contentsOfFile: photoURL.path)
+        else { return nil }
+
+        let renderer = ImageRenderer(
+            content: SessionShareCardView(session: session, photo: photo)
+                .frame(width: 1080, height: 1920)
+        )
+        renderer.scale = 1
+        return renderer.uiImage
+    }
+}
+
+private struct SessionPhotoPreview: View {
+    let url: URL?
+
+    var body: some View {
+        Group {
+            if let url, let image = UIImage(contentsOfFile: url.path) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                VStack(spacing: 10) {
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundStyle(Color.cutAccent)
+                    Text("Add one photo from this session.")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.secondaryText)
+                }
+                .frame(maxWidth: .infinity)
+                .background(Color.tileFill)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .aspectRatio(4.0 / 3.0, contentMode: .fit)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+}
+
+private struct SessionShareCardView: View {
+    let session: WorkoutSession
+    let photo: UIImage
+
+    var body: some View {
+        ZStack {
+            Image(uiImage: photo)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 1080, height: 1920)
+                .clipped()
+
+            LinearGradient(
+                colors: [
+                    Color.black.opacity(0.10),
+                    Color.black.opacity(0.40),
+                    Color.black.opacity(0.88)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+
+            LinearGradient(
+                colors: [Color.cutAccent.opacity(0.26), Color.clear, Color.neonBlue.opacity(0.22)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    HStack(spacing: 16) {
+                        DumbbellLogoMark(size: 62)
+                        Text("Gym Cut Tracker")
+                            .font(.system(size: 34, weight: .black, design: .rounded))
+                            .foregroundStyle(.white)
+                    }
+                    Spacer()
+                    Text(session.date.formatted(.dateTime.month(.abbreviated).day().year()))
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.82))
+                }
+
+                Spacer()
+
+                VStack(alignment: .leading, spacing: 22) {
+                    Text("Workout Complete")
+                        .font(.system(size: 76, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.62)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Text("\(session.day.rawValue) - \(session.day.programTitle)")
+                        .font(.system(size: 38, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.cutAccent)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.76)
+
+                    HStack(spacing: 18) {
+                        ShareCardStat(title: "Duration", value: "\(session.durationMinutes)m")
+                        ShareCardStat(title: "Volume", value: "\(session.totalVolume.clean) kg")
+                    }
+
+                    HStack(spacing: 18) {
+                        ShareCardStat(title: "Exercises", value: "\(session.exerciseLogs.count)")
+                        ShareCardStat(title: "Sets", value: "\(session.completedSets)")
+                    }
+
+                    if session.personalRecords.isEmpty == false {
+                        Text("PR \(session.personalRecords.joined(separator: " / "))")
+                            .font(.system(size: 30, weight: .black, design: .rounded))
+                            .foregroundStyle(.black)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 14)
+                            .background(Color.cutAccent, in: Capsule())
+                    }
+                }
+                .padding(34)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 42, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 42, style: .continuous)
+                        .stroke(Color.white.opacity(0.20), lineWidth: 2)
+                )
+            }
+            .padding(66)
+        }
+        .frame(width: 1080, height: 1920)
+        .background(Color.black)
+    }
+}
+
+private struct DumbbellLogoMark: View {
+    let size: CGFloat
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.26, style: .continuous)
+                .fill(Color.black.opacity(0.42))
+                .overlay(
+                    RoundedRectangle(cornerRadius: size * 0.26, style: .continuous)
+                        .stroke(Color.cutAccent.opacity(0.32), lineWidth: max(1, size * 0.035))
+                )
+
+            Circle()
+                .fill(Color.cutAccent.opacity(0.18))
+                .blur(radius: size * 0.09)
+                .frame(width: size * 0.74, height: size * 0.74)
+
+            Image(systemName: "dumbbell.fill")
+                .font(.system(size: size * 0.48, weight: .black))
+                .foregroundStyle(Color.cutAccent)
+                .rotationEffect(.degrees(-10))
+                .shadow(color: Color.cutAccent.opacity(0.55), radius: size * 0.10)
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+private struct ShareCardStat: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title.uppercased())
+                .font(.system(size: 22, weight: .black, design: .rounded))
+                .foregroundStyle(.white.opacity(0.58))
+            Text(value)
+                .font(.system(size: 38, weight: .black, design: .rounded))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.70)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(24)
+        .background(Color.black.opacity(0.32), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+        )
+    }
+}
+
+private struct CameraPicker: UIViewControllerRepresentable {
+    let onImagePicked: (UIImage) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = UIImagePickerController.isSourceTypeAvailable(.camera) ? .camera : .photoLibrary
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onImagePicked: onImagePicked, dismiss: dismiss)
+    }
+
+    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let onImagePicked: (UIImage) -> Void
+        let dismiss: DismissAction
+
+        init(onImagePicked: @escaping (UIImage) -> Void, dismiss: DismissAction) {
+            self.onImagePicked = onImagePicked
+            self.dismiss = dismiss
+        }
+
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            if let image = info[.originalImage] as? UIImage {
+                onImagePicked(image)
+            }
+            dismiss()
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            dismiss()
+        }
+    }
+}
+
+private struct ShareSheet: UIViewControllerRepresentable {
+    let activityItems: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+
+private extension WorkoutSession {
+    var completedSets: Int {
+        exerciseLogs.flatMap(\.setLogs).filter(\.completed).count
+    }
+
+    var totalVolume: Double {
+        exerciseLogs.flatMap(\.setLogs).filter(\.completed).reduce(0) { $0 + ($1.weight * Double($1.reps)) }
     }
 }
 
@@ -1186,6 +1626,19 @@ private extension View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 15)
             .background(Color.cutAccent, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    func secondaryButtonStyle() -> some View {
+        self
+            .font(.subheadline.weight(.bold))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 13)
+            .background(Color.tileFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(Color.white.opacity(0.10), lineWidth: 1)
+            )
     }
 
     func iconButtonStyle() -> some View {
