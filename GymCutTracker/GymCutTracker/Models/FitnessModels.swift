@@ -201,11 +201,17 @@ enum WorkoutMusicItemType: String, Codable, CaseIterable, Identifiable, Hashable
     }
 }
 
+enum WorkoutMusicSource: String, Codable, Hashable {
+    case catalog
+    case library
+}
+
 struct WorkoutMusicSelection: Identifiable, Codable, Hashable {
     var id: UUID
     var workoutDayId: TrainingDay
     var musicItemId: String
     var musicItemType: WorkoutMusicItemType
+    var source: WorkoutMusicSource?
     var title: String
     var subtitle: String
     var artworkURL: URL?
@@ -216,6 +222,7 @@ struct WorkoutMusicSelection: Identifiable, Codable, Hashable {
         workoutDayId: TrainingDay,
         musicItemId: String,
         musicItemType: WorkoutMusicItemType,
+        source: WorkoutMusicSource = .catalog,
         title: String,
         subtitle: String,
         artworkURL: URL? = nil,
@@ -225,6 +232,7 @@ struct WorkoutMusicSelection: Identifiable, Codable, Hashable {
         self.workoutDayId = workoutDayId
         self.musicItemId = musicItemId
         self.musicItemType = musicItemType
+        self.source = source
         self.title = title
         self.subtitle = subtitle
         self.artworkURL = artworkURL
@@ -236,6 +244,7 @@ struct WorkoutMusicSearchResult: Identifiable, Hashable {
     var id: String
     var musicItemId: String
     var musicItemType: WorkoutMusicItemType
+    var source: WorkoutMusicSource
     var title: String
     var subtitle: String
     var artworkURL: URL?

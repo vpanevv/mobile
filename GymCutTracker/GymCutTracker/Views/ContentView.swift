@@ -2351,6 +2351,7 @@ private struct MusicResultRow: View {
                     workoutDayId: selectedDay,
                     musicItemId: result.musicItemId,
                     musicItemType: result.musicItemType,
+                    source: result.source,
                     title: result.title,
                     subtitle: result.subtitle,
                     artworkURL: result.artworkURL
@@ -3050,28 +3051,34 @@ private struct MeasurementStepper: View {
     let step: Double
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 12) {
             Text(title)
                 .font(.headline.weight(.semibold))
                 .foregroundStyle(.white)
 
-            Spacer(minLength: 8)
+            Spacer(minLength: 6)
 
             HStack(spacing: 6) {
                 TextField("0", value: clampedValue, format: .number.precision(.fractionLength(0...1)))
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.trailing)
-                    .font(.headline.monospacedDigit().weight(.black))
+                    .font(.title3.monospacedDigit().weight(.black))
                     .foregroundStyle(Color.cutAccent)
-                    .frame(width: 78)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                    .frame(minWidth: 76, maxWidth: 92, alignment: .trailing)
 
                 Text(suffix)
-                    .font(.subheadline.weight(.bold))
+                    .font(.headline.weight(.black))
                     .foregroundStyle(Color.cutAccent)
+                    .lineLimit(1)
+                    .fixedSize()
             }
             .padding(.vertical, 10)
             .padding(.horizontal, 12)
+            .frame(width: 144, alignment: .trailing)
             .background(Color.black.opacity(0.24), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .layoutPriority(1)
 
             HStack(spacing: 0) {
                 Button {

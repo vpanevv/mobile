@@ -115,6 +115,7 @@ final class AppleMusicManager: ObservableObject {
                     id: playlist.id.rawValue,
                     musicItemId: playlist.id.rawValue,
                     musicItemType: .playlist,
+                    source: .library,
                     title: playlist.name,
                     subtitle: "Library Playlist",
                     artworkURL: playlist.artwork?.url(width: 160, height: 160)
@@ -131,10 +132,17 @@ final class AppleMusicManager: ObservableObject {
             return
         }
 
-        await checkSubscription()
-        guard subscriptionAllowsPlayback else { return }
+        errorMessage = nil
 
         do {
+            let source = resolvedSource(for: selection)
+            if source == .catalog {
+                await checkSubscription()
+                guard subscriptionAllowsPlayback else { return }
+            } else {
+                errorMessage = nil
+            }
+
             var didPrepareQueue = false
 
             switch selection.musicItemType {
@@ -149,7 +157,10 @@ final class AppleMusicManager: ObservableObject {
                     didPrepareQueue = true
                 }
             case .playlist:
-                if let playlist = try await fetchPlaylist(id: selection.musicItemId) {
+                let playlist = source == .library
+                    ? try await fetchLibraryPlaylist(id: selection.musicItemId)
+                    : try await fetchPlaylist(id: selection.musicItemId)
+                if let playlist {
                     player.queue = [playlist]
                     didPrepareQueue = true
                 }
@@ -169,7 +180,9 @@ final class AppleMusicManager: ObservableObject {
             isPlaying = true
             errorMessage = nil
         } catch {
-            errorMessage = "Could not play this Apple Music item."
+            hasPlayableQueue = false
+            isPlaying = false
+            errorMessage = "Could not play this Apple Music item. \(error.localizedDescription)"
         }
     }
 
@@ -246,6 +259,16 @@ final class AppleMusicManager: ObservableObject {
         return try await request.response().items.first
     }
 
+    private func resolvedSource(for selection: WorkoutMusicSelection) -> WorkoutMusicSource {
+        if let source = selection.source {
+            return source
+        }
+        if selection.musicItemType == .playlist && selection.subtitle == "Library Playlist" {
+            return .library
+        }
+        return .catalog
+    }
+
     private func fetchAlbum(id: String) async throws -> Album? {
         var request = MusicCatalogResourceRequest<Album>(matching: \.id, equalTo: MusicItemID(id))
         request.limit = 1
@@ -258,12 +281,20 @@ final class AppleMusicManager: ObservableObject {
         return try await request.response().items.first
     }
 
+    private func fetchLibraryPlaylist(id: String) async throws -> Playlist? {
+        var request = MusicLibraryRequest<Playlist>()
+        request.filter(matching: \.id, equalTo: MusicItemID(id))
+        request.limit = 1
+        return try await request.response().items.first
+    }
+
     private static func results(from response: MusicCatalogSearchResponse) -> [WorkoutMusicSearchResult] {
         let songs = response.songs.map { song in
             WorkoutMusicSearchResult(
                 id: "song-\(song.id.rawValue)",
                 musicItemId: song.id.rawValue,
                 musicItemType: .song,
+                source: .catalog,
                 title: song.title,
                 subtitle: song.artistName,
                 artworkURL: song.artwork?.url(width: 160, height: 160)
@@ -275,6 +306,7 @@ final class AppleMusicManager: ObservableObject {
                 id: "album-\(album.id.rawValue)",
                 musicItemId: album.id.rawValue,
                 musicItemType: .album,
+                source: .catalog,
                 title: album.title,
                 subtitle: album.artistName,
                 artworkURL: album.artwork?.url(width: 160, height: 160)
@@ -286,6 +318,7 @@ final class AppleMusicManager: ObservableObject {
                 id: "playlist-\(playlist.id.rawValue)",
                 musicItemId: playlist.id.rawValue,
                 musicItemType: .playlist,
+                source: .catalog,
                 title: playlist.name,
                 subtitle: playlist.curatorName ?? "Apple Music Playlist",
                 artworkURL: playlist.artwork?.url(width: 160, height: 160)
