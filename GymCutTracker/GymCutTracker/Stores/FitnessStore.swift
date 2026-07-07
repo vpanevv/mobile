@@ -21,10 +21,15 @@ final class FitnessStore: ObservableObject {
         didSet { saveMusicSelections() }
     }
 
+    @Published private(set) var weightCheckIns: [WeightCheckIn] = [] {
+        didSet { saveWeightCheckIns() }
+    }
+
     private let workoutDaysKey = "gym-cut.workout-days"
     private let sessionsKey = "gym-cut.sessions"
     private let bodyKey = "gym-cut.body-progress"
     private let musicSelectionsKey = "gym-cut.music-selections"
+    private let weightCheckInsKey = "gym-cut.weight-check-ins"
     private let defaults: UserDefaults
     private let calendar: Calendar
 
@@ -43,6 +48,10 @@ final class FitnessStore: ObservableObject {
         }
     }
 
+    var scheduledTrainingDayToday: TrainingDay? {
+        trainingDay(for: .now)
+    }
+
     var nextTrainingDay: TrainingDay {
         let weekday = calendar.component(.weekday, from: .now)
         if weekday <= 2 || weekday == 1 { return .monday }
@@ -51,8 +60,8 @@ final class FitnessStore: ObservableObject {
         return .monday
     }
 
-    var todayWorkout: WorkoutDay {
-        workout(for: todayTrainingDay)
+    var todayWorkout: WorkoutDay? {
+        scheduledTrainingDayToday.map { workout(for: $0) }
     }
 
     var totalWorkoutsCompleted: Int {
@@ -75,8 +84,16 @@ final class FitnessStore: ObservableObject {
         bodyEntries.sorted { $0.date > $1.date }
     }
 
+    var sortedWeightCheckIns: [WeightCheckIn] {
+        weightCheckIns.sorted { $0.date > $1.date }
+    }
+
+    var completedWorkoutSessions: [WorkoutSession] {
+        sessions.filter(isCompletedWorkout).sorted { $0.date > $1.date }
+    }
+
     var weeklyCompletedDays: Set<TrainingDay> {
-        Set(sessions.filter { calendar.isDate($0.date, equalTo: .now, toGranularity: .weekOfYear) }.map(\.day))
+        Set(completedWorkoutSessions.filter { calendar.isDate($0.date, equalTo: .now, toGranularity: .weekOfYear) }.map(\.day))
     }
 
     var currentWeekActivity: ActivitySummary {
@@ -107,6 +124,10 @@ final class FitnessStore: ObservableObject {
                 }
                 return ExerciseProgress(exercise: exercise, logs: logs, sessions: relatedSessions)
             }
+    }
+
+    var exercisePersonalBests: [ExercisePersonalBest] {
+        calculatePersonalBests()
     }
 
     func workout(for day: TrainingDay) -> WorkoutDay {
@@ -148,6 +169,15 @@ final class FitnessStore: ObservableObject {
         sessions.first { $0.id == id }
     }
 
+    func completedSession(on date: Date) -> WorkoutSession? {
+        completedWorkoutSessions.first { calendar.isDate($0.date, inSameDayAs: date) }
+    }
+
+    func updateSessionBodyWeight(_ weight: Double?, for sessionID: UUID) {
+        guard let index = sessions.firstIndex(where: { $0.id == sessionID }) else { return }
+        sessions[index].bodyWeightKg = weight
+    }
+
     func attachSessionPhoto(_ image: UIImage, to sessionID: UUID) {
         guard let index = sessions.firstIndex(where: { $0.id == sessionID }),
               let url = saveImage(image, name: "session-\(sessionID.uuidString).jpg")
@@ -181,6 +211,10 @@ final class FitnessStore: ObservableObject {
 
     func addBodyEntry(_ entry: BodyProgress) {
         bodyEntries.append(entry)
+    }
+
+    func addWeightCheckIn(_ checkIn: WeightCheckIn) {
+        weightCheckIns.append(checkIn)
     }
 
     func musicSelection(for day: TrainingDay) -> WorkoutMusicSelection? {
@@ -272,6 +306,93 @@ final class FitnessStore: ObservableObject {
         return rows
     }
 
+    func historyWeekSummary(containing date: Date = .now) -> HistoryWeekSummary {
+        guard let interval = calendar.dateInterval(of: .weekOfYear, for: date) else {
+            return HistoryWeekSummary(startDate: date, endDate: date, rows: [], completedCount: 0, targetCount: 0, status: "No week data yet")
+        }
+
+        let rows = weekRows(containing: date)
+        let completedCount = rows.filter(\.completed).count
+        let targetCount = rows.count
+        let today = calendar.startOfDay(for: date)
+        let missedScheduled = rows.contains { row in
+            row.completed == false && calendar.startOfDay(for: row.date) < today
+        }
+
+        let status: String
+        if targetCount > 0 && completedCount == targetCount {
+            status = "Perfect week completed"
+        } else if missedScheduled {
+            status = "Get back on track"
+        } else {
+            status = "On track this week"
+        }
+
+        return HistoryWeekSummary(
+            startDate: interval.start,
+            endDate: calendar.date(byAdding: .day, value: -1, to: interval.end) ?? interval.end,
+            rows: rows,
+            completedCount: completedCount,
+            targetCount: targetCount,
+            status: status
+        )
+    }
+
+    func historyMonthSummary(containing date: Date = .now) -> HistoryMonthSummary {
+        guard let interval = calendar.dateInterval(of: .month, for: date) else {
+            return HistoryMonthSummary(monthDate: date, completedCount: 0, expectedCount: 0, perfectWeeks: 0, completedWeeks: 0, missedCount: 0, consistency: 0, bestTrainingWeekCount: 0, currentTrainingStreak: 0, bestMonthlyStreak: 0)
+        }
+
+        let scheduledDates = scheduledTrainingDates(in: interval)
+        let completedDates = completedTrainingDates(in: interval)
+        let completedScheduledDates = scheduledDates.filter { scheduledDate in
+            completedDates.contains { calendar.isDate($0, inSameDayAs: scheduledDate) }
+        }
+
+        var perfectWeeks = 0
+        var completedWeeks = 0
+        var bestWeekCount = 0
+        var weekCursor = interval.start
+
+        while weekCursor < interval.end {
+            guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: weekCursor) else { break }
+            let boundedInterval = DateInterval(start: maxDate(weekInterval.start, interval.start), end: minDate(weekInterval.end, interval.end))
+            let weekScheduled = scheduledTrainingDates(in: boundedInterval)
+            let weekCompleted = weekScheduled.filter { scheduledDate in
+                completedDates.contains { calendar.isDate($0, inSameDayAs: scheduledDate) }
+            }
+
+            if weekCompleted.isEmpty == false {
+                completedWeeks += 1
+            }
+            if weekScheduled.isEmpty == false && weekCompleted.count == weekScheduled.count {
+                perfectWeeks += 1
+            }
+            bestWeekCount = max(bestWeekCount, weekCompleted.count)
+
+            guard let nextWeek = calendar.date(byAdding: .weekOfYear, value: 1, to: weekInterval.start) else { break }
+            weekCursor = nextWeek
+        }
+
+        let completedCount = completedScheduledDates.count
+        let expectedCount = scheduledDates.count
+        let missedCount = max(expectedCount - completedCount, 0)
+        let consistency = expectedCount > 0 ? Int((Double(completedCount) / Double(expectedCount) * 100).rounded()) : 0
+
+        return HistoryMonthSummary(
+            monthDate: date,
+            completedCount: completedCount,
+            expectedCount: expectedCount,
+            perfectWeeks: perfectWeeks,
+            completedWeeks: completedWeeks,
+            missedCount: missedCount,
+            consistency: consistency,
+            bestTrainingWeekCount: bestWeekCount,
+            currentTrainingStreak: currentTrainingStreak(asOf: date),
+            bestMonthlyStreak: bestTrainingStreak(in: interval)
+        )
+    }
+
     func recommendation(for log: ExerciseLog) -> String {
         let completedSets = log.setLogs.filter(\.completed)
         guard completedSets.isEmpty == false else { return "Log at least one completed set next time." }
@@ -324,11 +445,112 @@ final class FitnessStore: ObservableObject {
     }
 
     private func completedTrainingDates(in interval: DateInterval) -> [Date] {
-        let matchingDates = sessions
+        let matchingDates = completedWorkoutSessions
             .filter { interval.contains($0.date) }
             .map { calendar.startOfDay(for: $0.date) }
 
         return Array(Set(matchingDates)).sorted()
+    }
+
+    private func isCompletedWorkout(_ session: WorkoutSession) -> Bool {
+        session.completedAt != nil &&
+        session.durationSeconds > 0 &&
+        session.exerciseLogs.flatMap(\.setLogs).contains { $0.completed }
+    }
+
+    private func calculatePersonalBests() -> [ExercisePersonalBest] {
+        let completedSessions = completedWorkoutSessions
+        let exerciseLookup = Dictionary(uniqueKeysWithValues: workoutDays.flatMap(\.exercises).map { ($0.id, $0) })
+        var bestsByExercise: [UUID: ExercisePersonalBest] = [:]
+
+        for session in completedSessions {
+            for log in session.exerciseLogs {
+                let completedSets = log.setLogs.filter(\.completed)
+                guard completedSets.isEmpty == false else { continue }
+
+                let bestWeightSet = completedSets.max { lhs, rhs in
+                    if lhs.weight == rhs.weight { return lhs.reps < rhs.reps }
+                    return lhs.weight < rhs.weight
+                }
+                let bestSetVolume = completedSets.map { $0.weight * Double($0.reps) }.max() ?? 0
+                let sessionVolume = completedSets.reduce(0) { $0 + ($1.weight * Double($1.reps)) }
+                guard let bestWeightSet else { continue }
+
+                let candidate = ExercisePersonalBest(
+                    exerciseId: log.exerciseID,
+                    exerciseName: log.exerciseName,
+                    muscleGroup: exerciseLookup[log.exerciseID]?.muscleGroup ?? log.muscleGroup,
+                    bestWeight: bestWeightSet.weight,
+                    bestReps: bestWeightSet.reps,
+                    bestSetVolume: bestSetVolume,
+                    bestSessionVolume: sessionVolume,
+                    achievedAt: session.completedAt ?? session.date,
+                    workoutSessionId: session.id
+                )
+
+                if let current = bestsByExercise[log.exerciseID] {
+                    if isBetterPersonalBest(candidate, than: current) {
+                        bestsByExercise[log.exerciseID] = candidate
+                    }
+                } else {
+                    bestsByExercise[log.exerciseID] = candidate
+                }
+            }
+        }
+
+        return bestsByExercise.values.sorted { $0.exerciseName.localizedCaseInsensitiveCompare($1.exerciseName) == .orderedAscending }
+    }
+
+    private func isBetterPersonalBest(_ candidate: ExercisePersonalBest, than current: ExercisePersonalBest) -> Bool {
+        if candidate.bestWeight != current.bestWeight { return candidate.bestWeight > current.bestWeight }
+        if candidate.bestReps != current.bestReps { return candidate.bestReps > current.bestReps }
+        if candidate.bestSetVolume != current.bestSetVolume { return candidate.bestSetVolume > current.bestSetVolume }
+        if candidate.bestSessionVolume != current.bestSessionVolume { return candidate.bestSessionVolume > current.bestSessionVolume }
+        return candidate.achievedAt > current.achievedAt
+    }
+
+    private func currentTrainingStreak(asOf date: Date) -> Int {
+        guard let start = calendar.date(byAdding: .month, value: -6, to: date) else { return 0 }
+        let interval = DateInterval(start: start, end: date.addingTimeInterval(1))
+        let scheduledDates = scheduledTrainingDates(in: interval).filter { $0 <= calendar.startOfDay(for: date) }.reversed()
+        let completedDates = completedTrainingDates(in: interval)
+        var streak = 0
+
+        for scheduledDate in scheduledDates {
+            if completedDates.contains(where: { calendar.isDate($0, inSameDayAs: scheduledDate) }) {
+                streak += 1
+            } else {
+                break
+            }
+        }
+
+        return streak
+    }
+
+    private func bestTrainingStreak(in interval: DateInterval) -> Int {
+        let scheduledDates = scheduledTrainingDates(in: interval)
+        let completedDates = completedTrainingDates(in: interval)
+        var current = 0
+        var best = 0
+
+        for scheduledDate in scheduledDates {
+            if completedDates.contains(where: { calendar.isDate($0, inSameDayAs: scheduledDate) }) {
+                current += 1
+                best = max(best, current)
+            } else {
+                current = 0
+            }
+        }
+
+        return best
+    }
+
+    private func minDate(_ lhs: Date, _ rhs: Date) -> Date {
+        lhs < rhs ? lhs : rhs
+    }
+
+    private func maxDate(_ lhs: Date, _ rhs: Date) -> Date {
+        lhs > rhs ? lhs : rhs
     }
 
     private func trainingDay(for date: Date) -> TrainingDay? {
@@ -344,6 +566,7 @@ final class FitnessStore: ObservableObject {
         workoutDays = decode([WorkoutDay].self, key: workoutDaysKey) ?? Self.seedWorkouts
         sessions = decode([WorkoutSession].self, key: sessionsKey) ?? []
         musicSelections = decode([WorkoutMusicSelection].self, key: musicSelectionsKey) ?? []
+        weightCheckIns = decode([WeightCheckIn].self, key: weightCheckInsKey) ?? []
         bodyEntries = decode([BodyProgress].self, key: bodyKey) ?? [
             BodyProgress(weightKg: 86, waistCm: 92, goalWeightKg: 80, notes: "Starting cut")
         ]
@@ -368,6 +591,10 @@ final class FitnessStore: ObservableObject {
 
     private func saveMusicSelections() {
         encode(musicSelections, key: musicSelectionsKey)
+    }
+
+    private func saveWeightCheckIns() {
+        encode(weightCheckIns, key: weightCheckInsKey)
     }
 
     private func encode<T: Encodable>(_ value: T, key: String) {
@@ -436,6 +663,28 @@ struct TrainingCalendarDay: Identifiable, Hashable {
     let isInDisplayedMonth: Bool
 
     var id: Date { date }
+}
+
+struct HistoryWeekSummary: Hashable {
+    let startDate: Date
+    let endDate: Date
+    let rows: [TrainingCalendarDay]
+    let completedCount: Int
+    let targetCount: Int
+    let status: String
+}
+
+struct HistoryMonthSummary: Hashable {
+    let monthDate: Date
+    let completedCount: Int
+    let expectedCount: Int
+    let perfectWeeks: Int
+    let completedWeeks: Int
+    let missedCount: Int
+    let consistency: Int
+    let bestTrainingWeekCount: Int
+    let currentTrainingStreak: Int
+    let bestMonthlyStreak: Int
 }
 
 extension FitnessStore {

@@ -76,6 +76,7 @@ struct WorkoutSession: Identifiable, Codable, Hashable {
     var isPaused: Bool
     var pausedAt: Date?
     var completedAt: Date?
+    var bodyWeightKg: Double?
     var motivationalQuote: String?
     var notes: String
     var personalRecords: [String]
@@ -97,6 +98,7 @@ struct WorkoutSession: Identifiable, Codable, Hashable {
         isPaused: Bool = false,
         pausedAt: Date? = nil,
         completedAt: Date? = nil,
+        bodyWeightKg: Double? = nil,
         motivationalQuote: String? = nil,
         notes: String = "",
         personalRecords: [String] = [],
@@ -117,6 +119,7 @@ struct WorkoutSession: Identifiable, Codable, Hashable {
         self.isPaused = isPaused
         self.pausedAt = pausedAt
         self.completedAt = completedAt ?? finishedAt ?? date
+        self.bodyWeightKg = bodyWeightKg
         self.motivationalQuote = motivationalQuote
         self.notes = notes
         self.personalRecords = personalRecords
@@ -139,6 +142,7 @@ struct WorkoutSession: Identifiable, Codable, Hashable {
         case isPaused
         case pausedAt
         case completedAt
+        case bodyWeightKg
         case motivationalQuote
         case notes
         case personalRecords
@@ -162,6 +166,7 @@ struct WorkoutSession: Identifiable, Codable, Hashable {
         isPaused = try container.decodeIfPresent(Bool.self, forKey: .isPaused) ?? false
         pausedAt = try container.decodeIfPresent(Date.self, forKey: .pausedAt)
         completedAt = try container.decodeIfPresent(Date.self, forKey: .completedAt) ?? finishedAt ?? date
+        bodyWeightKg = try container.decodeIfPresent(Double.self, forKey: .bodyWeightKg)
         motivationalQuote = try container.decodeIfPresent(String.self, forKey: .motivationalQuote)
         notes = try container.decodeIfPresent(String.self, forKey: .notes) ?? ""
         personalRecords = try container.decodeIfPresent([String].self, forKey: .personalRecords) ?? []
@@ -399,6 +404,78 @@ struct BodyProgress: Identifiable, Codable, Hashable {
         self.goalWeightKg = goalWeightKg
         self.notes = notes
         self.photos = photos
+    }
+}
+
+enum WeightCheckInType: String, Codable, CaseIterable, Identifiable, Hashable {
+    case weekly = "Weekly"
+    case monthly = "Monthly"
+
+    var id: String { rawValue }
+}
+
+struct WeightCheckIn: Identifiable, Codable, Hashable {
+    var id: UUID
+    var date: Date
+    var weightKg: Double
+    var waistCm: Double?
+    var note: String?
+    var type: WeightCheckInType
+    var createdAt: Date
+
+    init(
+        id: UUID = UUID(),
+        date: Date = .now,
+        weightKg: Double,
+        waistCm: Double? = nil,
+        note: String? = nil,
+        type: WeightCheckInType,
+        createdAt: Date = .now
+    ) {
+        self.id = id
+        self.date = date
+        self.weightKg = weightKg
+        self.waistCm = waistCm
+        self.note = note
+        self.type = type
+        self.createdAt = createdAt
+    }
+}
+
+struct ExercisePersonalBest: Identifiable, Codable, Hashable {
+    let id: UUID
+    let exerciseId: UUID
+    let exerciseName: String
+    let muscleGroup: String?
+    let bestWeight: Double
+    let bestReps: Int
+    let bestSetVolume: Double
+    let bestSessionVolume: Double
+    let achievedAt: Date
+    let workoutSessionId: UUID
+
+    init(
+        id: UUID = UUID(),
+        exerciseId: UUID,
+        exerciseName: String,
+        muscleGroup: String?,
+        bestWeight: Double,
+        bestReps: Int,
+        bestSetVolume: Double,
+        bestSessionVolume: Double,
+        achievedAt: Date,
+        workoutSessionId: UUID
+    ) {
+        self.id = id
+        self.exerciseId = exerciseId
+        self.exerciseName = exerciseName
+        self.muscleGroup = muscleGroup
+        self.bestWeight = bestWeight
+        self.bestReps = bestReps
+        self.bestSetVolume = bestSetVolume
+        self.bestSessionVolume = bestSessionVolume
+        self.achievedAt = achievedAt
+        self.workoutSessionId = workoutSessionId
     }
 }
 

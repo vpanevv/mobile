@@ -21,6 +21,9 @@ struct ContentView: View {
             ExerciseProgressListView()
                 .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
 
+            HistoryView()
+                .tabItem { Label("History", systemImage: "clock.badge.checkmark") }
+
             BodyView()
                 .tabItem { Label("Body", systemImage: "person.crop.rectangle.stack") }
 
@@ -50,9 +53,17 @@ struct DashboardView: View {
         }
     }
 
+    @ViewBuilder
     private var todayCard: some View {
-        let workout = store.todayWorkout
-        return PremiumCard {
+        if let workout = store.todayWorkout {
+            workoutTodayCard(workout)
+        } else {
+            restDayCard
+        }
+    }
+
+    private func workoutTodayCard(_ workout: WorkoutDay) -> some View {
+        PremiumCard {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 6) {
@@ -88,6 +99,57 @@ struct DashboardView: View {
                         .primaryButtonStyle()
                 }
                 .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private var restDayCard: some View {
+        let nextWorkout = store.workout(for: store.nextTrainingDay)
+
+        return PremiumCard {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Today")
+                            .metricLabel()
+                        Text("Rest day")
+                            .font(.title2.weight(.bold))
+                        Text("Recover, walk, hydrate, and come back strong.")
+                            .foregroundStyle(Color.secondaryText)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "moon.stars.fill")
+                        .font(.title2)
+                        .foregroundStyle(Color.cutAccent)
+                        .frame(width: 44, height: 44)
+                        .background(Color.cutAccent.opacity(0.14), in: Circle())
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "calendar")
+                            .foregroundStyle(Color.cutAccent)
+                        Text("Next: \(nextWorkout.id.rawValue) - Full body workout")
+                            .font(.subheadline.weight(.bold))
+                    }
+
+                    HStack(spacing: 8) {
+                        Image(systemName: "figure.walk")
+                            .foregroundStyle(Color.cutAccent)
+                        Text("Keep steps light and let strength recover.")
+                            .font(.subheadline.weight(.semibold))
+                    }
+                }
+                .foregroundStyle(Color.secondaryText)
+
+                Text("No workout scheduled today")
+                    .font(.headline.weight(.bold))
+                    .foregroundStyle(Color.cutAccent)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 15)
+                    .background(Color.cutAccent.opacity(0.12), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
         }
     }
@@ -222,26 +284,44 @@ struct ActivityCalendarView: View {
                         .sectionTitle()
 
                     ForEach(store.weekRows(containing: .now)) { item in
-                        HStack(spacing: 12) {
-                            CalendarStatusIcon(completed: item.completed, scheduled: item.trainingDay != nil)
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(item.trainingDay?.rawValue ?? "Training")
-                                    .font(.headline.weight(.bold))
-                                Text(item.date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(Color.secondaryText)
+                        if let session = store.completedSession(on: item.date) {
+                            NavigationLink {
+                                WorkoutSummaryView(sessionID: session.id)
+                            } label: {
+                                calendarWeekRow(item, session: session)
                             }
-                            Spacer()
-                            Text(item.completed ? "Done" : "Planned")
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(item.completed ? Color.cutAccent : Color.secondaryText)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 7)
-                                .background(Color.tileFill, in: Capsule())
+                            .buttonStyle(.plain)
+                        } else {
+                            calendarWeekRow(item, session: nil)
                         }
                     }
                 }
             }
+        }
+    }
+
+    private func calendarWeekRow(_ item: TrainingCalendarDay, session: WorkoutSession?) -> some View {
+        HStack(spacing: 12) {
+            CalendarStatusIcon(completed: item.completed, scheduled: item.trainingDay != nil)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(item.trainingDay?.rawValue ?? "Training")
+                    .font(.headline.weight(.bold))
+                Text(item.date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Color.secondaryText)
+                if let weight = session?.bodyWeightKg {
+                    Text("Body weight: \(weight.clean) kg")
+                        .font(.caption.weight(.black))
+                        .foregroundStyle(Color.cutAccent)
+                }
+            }
+            Spacer()
+            Text(item.completed ? "Done" : "Planned")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(item.completed ? Color.cutAccent : Color.secondaryText)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(Color.tileFill, in: Capsule())
         }
     }
 
@@ -281,7 +361,16 @@ struct ActivityCalendarView: View {
 
                     LazyVGrid(columns: columns, spacing: 8) {
                         ForEach(store.calendarDays(forMonthContaining: displayedMonth)) { item in
-                            MonthDayCell(item: item)
+                            if let session = store.completedSession(on: item.date) {
+                                NavigationLink {
+                                    WorkoutSummaryView(sessionID: session.id)
+                                } label: {
+                                    MonthDayCell(item: item, session: session)
+                                }
+                                .buttonStyle(.plain)
+                            } else {
+                                MonthDayCell(item: item)
+                            }
                         }
                     }
                 }
@@ -479,7 +568,7 @@ struct WorkoutSessionView: View {
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showingSummary) {
             if let savedSession {
-                WorkoutSummaryView(sessionID: savedSession.id)
+                WorkoutSummaryView(sessionID: savedSession.id, promptForWeight: true)
             }
         }
         .sheet(isPresented: $showingMusicPlayer) {
@@ -799,6 +888,524 @@ struct ExerciseProgressDetailView: View {
                 }
             }
         }
+    }
+}
+
+struct HistoryView: View {
+    @EnvironmentObject private var store: FitnessStore
+    @State private var searchText = ""
+    @State private var sortOption: PersonalBestSortOption = .latestPR
+    @State private var checkInType: WeightCheckInType?
+
+    private var filteredPersonalBests: [ExercisePersonalBest] {
+        let searched = store.exercisePersonalBests.filter { best in
+            searchText.isEmpty ||
+            best.exerciseName.localizedCaseInsensitiveContains(searchText) ||
+            (best.muscleGroup ?? "").localizedCaseInsensitiveContains(searchText)
+        }
+
+        switch sortOption {
+        case .exerciseName:
+            return searched.sorted { $0.exerciseName.localizedCaseInsensitiveCompare($1.exerciseName) == .orderedAscending }
+        case .latestPR:
+            return searched.sorted { $0.achievedAt > $1.achievedAt }
+        case .highestWeight:
+            return searched.sorted { $0.bestWeight > $1.bestWeight }
+        case .muscleGroup:
+            return searched.sorted {
+                ($0.muscleGroup ?? "").localizedCaseInsensitiveCompare($1.muscleGroup ?? "") == .orderedAscending
+            }
+        }
+    }
+
+    var body: some View {
+        PremiumScreen(title: "History", subtitle: "Track your consistency, strength, and cut progress") {
+            VStack(spacing: 16) {
+                currentWeekCard
+                currentMonthCard
+                personalBestsCard
+                weightCheckInsCard
+                workoutHistoryCard
+            }
+        }
+        .sheet(item: $checkInType) { type in
+            WeightCheckInSheet(type: type)
+                .environmentObject(store)
+                .presentationDetents([.medium])
+        }
+    }
+
+    private var currentWeekCard: some View {
+        let summary = store.historyWeekSummary()
+
+        return PremiumCard {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Current Week")
+                            .sectionTitle()
+                        Text("\(summary.startDate.formatted(.dateTime.month(.abbreviated).day())) - \(summary.endDate.formatted(.dateTime.month(.abbreviated).day()))")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.secondaryText)
+                    }
+
+                    Spacer()
+
+                    Text("\(summary.completedCount)/\(summary.targetCount)")
+                        .font(.title2.weight(.black))
+                        .foregroundStyle(Color.cutAccent)
+                }
+
+                Text("\(summary.completedCount) / \(summary.targetCount) workouts completed")
+                    .font(.headline.weight(.bold))
+
+                HStack(spacing: 10) {
+                    ForEach(summary.rows) { row in
+                        VStack(spacing: 8) {
+                            Text(row.trainingDay?.shortTitle ?? "")
+                                .font(.caption.weight(.black))
+                            Image(systemName: row.completed ? "checkmark.circle.fill" : "circle")
+                                .font(.title2.weight(.bold))
+                                .foregroundStyle(row.completed ? Color.cutAccent : Color.secondaryText)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.tileFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+                }
+
+                Text(summary.status)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Color.cutAccent)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(12)
+                    .background(Color.cutAccent.opacity(0.10), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+        }
+    }
+
+    private var currentMonthCard: some View {
+        let summary = store.historyMonthSummary()
+
+        return PremiumCard {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Current Month")
+                            .sectionTitle()
+                        Text(summary.monthDate.formatted(.dateTime.month(.wide).year()))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.secondaryText)
+                    }
+
+                    Spacer()
+
+                    Text("\(summary.consistency)%")
+                        .font(.title2.weight(.black))
+                        .foregroundStyle(Color.cutAccent)
+                }
+
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                    MetricTile(title: "Workouts", value: "\(summary.completedCount)/\(summary.expectedCount)", detail: "completed")
+                    MetricTile(title: "Perfect weeks", value: "\(summary.perfectWeeks)", detail: "\(summary.completedWeeks) active weeks")
+                    MetricTile(title: "Missed", value: "\(summary.missedCount)", detail: "scheduled sessions")
+                    MetricTile(title: "Streak", value: "\(summary.currentTrainingStreak)", detail: "sessions")
+                }
+
+                HStack(spacing: 10) {
+                    HistoryMiniStat(title: "Best week", value: "\(summary.bestTrainingWeekCount) workouts")
+                    HistoryMiniStat(title: "Best streak", value: "\(summary.bestMonthlyStreak) sessions")
+                }
+            }
+        }
+    }
+
+    private var personalBestsCard: some View {
+        PremiumCard {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Personal Bests")
+                    .sectionTitle()
+
+                TextField("Search exercise", text: $searchText)
+                    .textFieldStyle(.plain)
+                    .foregroundStyle(.white)
+                    .padding(12)
+                    .background(Color.tileFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+                Picker("Sort", selection: $sortOption) {
+                    ForEach(PersonalBestSortOption.allCases) { option in
+                        Text(option.rawValue).tag(option)
+                    }
+                }
+                .pickerStyle(.menu)
+                .tint(Color.cutAccent)
+
+                if filteredPersonalBests.isEmpty {
+                    Text("No personal bests yet. Complete workouts with logged sets to build this list.")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Color.secondaryText)
+                } else {
+                    ForEach(filteredPersonalBests) { best in
+                        PersonalBestCard(best: best)
+                    }
+                }
+            }
+        }
+    }
+
+    private var weightCheckInsCard: some View {
+        let checkIns = store.sortedWeightCheckIns
+        let latest = checkIns.first
+        let previous = checkIns.dropFirst().first
+        let weekly = checkIns.first { $0.type == .weekly }
+        let monthly = checkIns.first { $0.type == .monthly }
+        let startWeight = checkIns.last?.weightKg ?? store.sortedBodyEntries.last?.weightKg ?? store.currentBodyWeight
+        let currentWeight = latest?.weightKg ?? store.currentBodyWeight
+        let lost = currentWeight > 0 && startWeight > 0 ? currentWeight - startWeight : 0
+        let change = latest.flatMap { latest in previous.map { latest.weightKg - $0.weightKg } }
+
+        return PremiumCard {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Weight Check-ins")
+                    .sectionTitle()
+
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                    MetricTile(title: "Current", value: currentWeight > 0 ? "\(currentWeight.clean) kg" : "--", detail: "latest")
+                    MetricTile(title: "Goal", value: "\(store.goalBodyWeight.clean) kg", detail: "cut target")
+                    MetricTile(title: "Lost", value: "\(lost.clean) kg", detail: "from start")
+                    MetricTile(title: "This check-in", value: change.map { "\($0.clean) kg" } ?? "--", detail: "change")
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(weightTrendText(change: change))
+                        .font(.headline.weight(.bold))
+                        .foregroundStyle(weightTrendColor(change: change))
+                    Text("Weekly: \(weekly.map { "\($0.weightKg.clean) kg" } ?? "--")  •  Monthly: \(monthly.map { "\($0.weightKg.clean) kg" } ?? "--")")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.secondaryText)
+                }
+
+                HStack(spacing: 10) {
+                    Button { checkInType = .weekly } label: {
+                        Label("Add Weekly", systemImage: "calendar.badge.plus")
+                            .secondaryButtonStyle()
+                    }
+                    .buttonStyle(.plain)
+
+                    Button { checkInType = .monthly } label: {
+                        Label("Add Monthly", systemImage: "calendar")
+                            .secondaryButtonStyle()
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private var workoutHistoryCard: some View {
+        PremiumCard {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Workout History")
+                    .sectionTitle()
+
+                if store.completedWorkoutSessions.isEmpty {
+                    Text("No completed workouts yet. Finished sessions will appear here with duration, volume, sets, and share-card quote.")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Color.secondaryText)
+                } else {
+                    ForEach(store.completedWorkoutSessions) { session in
+                        NavigationLink {
+                            WorkoutSummaryView(sessionID: session.id)
+                        } label: {
+                            WorkoutHistoryRow(session: session)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    private func weightTrendText(change: Double?) -> String {
+        guard let change else { return "No check-ins yet" }
+        if change < -0.05 { return "Down \(abs(change).clean) kg since last check-in" }
+        if change > 0.05 { return "Up \(change.clean) kg since last check-in" }
+        return "Weight stayed steady since last check-in"
+    }
+
+    private func weightTrendColor(change: Double?) -> Color {
+        guard let change else { return Color.secondaryText }
+        if change < -0.05 { return Color.cutAccent }
+        if change > 0.05 { return Color.orange }
+        return Color.secondaryText
+    }
+}
+
+private enum PersonalBestSortOption: String, CaseIterable, Identifiable {
+    case latestPR = "Latest PR"
+    case exerciseName = "Exercise"
+    case highestWeight = "Weight"
+    case muscleGroup = "Muscle"
+
+    var id: String { rawValue }
+}
+
+private struct WeightCheckInSheet: View {
+    @EnvironmentObject private var store: FitnessStore
+    @Environment(\.dismiss) private var dismiss
+    let type: WeightCheckInType
+
+    @State private var date = Date()
+    @State private var weight = 0.0
+    @State private var waistText = ""
+    @State private var note = ""
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color.cutBlack.ignoresSafeArea()
+
+                VStack(spacing: 16) {
+                    DatePicker("Date", selection: $date, displayedComponents: .date)
+                        .foregroundStyle(.white)
+                        .tint(Color.cutAccent)
+
+                    NumberField(title: "kg", value: $weight)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    TextField("Waist cm optional", text: $waistText)
+                        .keyboardType(.decimalPad)
+                        .textFieldStyle(.plain)
+                        .foregroundStyle(.white)
+                        .padding(12)
+                        .background(Color.tileFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+                    TextField("Note optional", text: $note, axis: .vertical)
+                        .textFieldStyle(.plain)
+                        .foregroundStyle(.white)
+                        .padding(12)
+                        .background(Color.tileFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+                    Button { save() } label: {
+                        Label("Save \(type.rawValue) Check-in", systemImage: "checkmark.circle.fill")
+                            .primaryButtonStyle()
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(weight <= 0)
+                }
+                .padding(20)
+            }
+            .navigationTitle("\(type.rawValue) Check-in")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+        .onAppear {
+            weight = store.currentBodyWeight > 0 ? store.currentBodyWeight : 0
+        }
+        .dismissKeyboardOnTap()
+    }
+
+    private func save() {
+        let waist = Double(waistText.replacingOccurrences(of: ",", with: "."))
+        store.addWeightCheckIn(
+            WeightCheckIn(
+                date: date,
+                weightKg: weight,
+                waistCm: waist,
+                note: note.isEmpty ? nil : note,
+                type: type
+            )
+        )
+        dismiss()
+    }
+}
+
+private struct PostWorkoutWeightSheet: View {
+    @EnvironmentObject private var store: FitnessStore
+    @Environment(\.dismiss) private var dismiss
+    let sessionID: UUID
+    let sessionDate: Date
+
+    @State private var weight = 0.0
+    @State private var note = ""
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color.cutBlack.ignoresSafeArea()
+
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Post-workout weight")
+                            .font(.title2.weight(.black))
+                        Text("Save today’s body weight with this gym session.")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(Color.secondaryText)
+                    }
+
+                    NumberField(title: "kg", value: $weight)
+
+                    TextField("Optional note", text: $note, axis: .vertical)
+                        .textFieldStyle(.plain)
+                        .foregroundStyle(.white)
+                        .padding(12)
+                        .background(Color.tileFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+                    Button { save() } label: {
+                        Label("Save Weight", systemImage: "scalemass.fill")
+                            .primaryButtonStyle()
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(weight <= 0)
+
+                    Button("Skip for this session") {
+                        dismiss()
+                    }
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Color.secondaryText)
+                    .frame(maxWidth: .infinity)
+                }
+                .padding(20)
+            }
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .onAppear {
+            if let existing = store.session(id: sessionID)?.bodyWeightKg {
+                weight = existing
+            } else if store.currentBodyWeight > 0 {
+                weight = store.currentBodyWeight
+            }
+        }
+        .dismissKeyboardOnTap()
+    }
+
+    private func save() {
+        store.updateSessionBodyWeight(weight, for: sessionID)
+        store.addBodyEntry(
+            BodyProgress(
+                date: sessionDate,
+                weightKg: weight,
+                goalWeightKg: store.goalBodyWeight,
+                notes: note.isEmpty ? "Post-workout check-in" : note
+            )
+        )
+        dismiss()
+    }
+}
+
+private struct PersonalBestCard: View {
+    let best: ExercisePersonalBest
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(best.exerciseName)
+                        .font(.headline.weight(.black))
+                    Text(best.muscleGroup ?? "Exercise")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color.secondaryText)
+                }
+                Spacer()
+                Text(best.achievedAt.formatted(date: .abbreviated, time: .omitted))
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Color.cutAccent)
+            }
+
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                HistoryMiniStat(title: "Best weight", value: "\(best.bestWeight.clean) kg x \(best.bestReps)")
+                HistoryMiniStat(title: "Set volume", value: "\(best.bestSetVolume.clean) kg")
+                HistoryMiniStat(title: "Session volume", value: "\(best.bestSessionVolume.clean) kg")
+                HistoryMiniStat(title: "Last PR", value: best.achievedAt.formatted(.dateTime.month(.abbreviated).day()))
+            }
+        }
+        .padding(12)
+        .background(Color.tileFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+}
+
+private struct WorkoutHistoryRow: View {
+    let session: WorkoutSession
+
+    var body: some View {
+        HStack(spacing: 12) {
+            sessionThumbnail
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text("\(session.day.rawValue) - \(session.day.programTitle)")
+                    .font(.headline.weight(.bold))
+                    .foregroundStyle(.white)
+                Text(session.date.formatted(date: .abbreviated, time: .omitted))
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Color.cutAccent)
+                Text("\(session.formattedDuration) • \(session.exerciseLogs.count) exercises • \(session.completedSets) sets • \(session.totalVolume.clean) kg")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.secondaryText)
+                    .lineLimit(2)
+                if let bodyWeight = session.bodyWeightKg {
+                    Text("Body weight: \(bodyWeight.clean) kg")
+                        .font(.caption.weight(.black))
+                        .foregroundStyle(Color.cutAccent)
+                }
+                if let quote = session.motivationalQuote {
+                    Text("\"\(quote)\"")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(Color.secondaryText)
+                        .lineLimit(1)
+                }
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.black))
+                .foregroundStyle(Color.secondaryText)
+        }
+        .padding(12)
+        .background(Color.tileFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private var sessionThumbnail: some View {
+        Group {
+            if let url = session.sessionPhotoURL, let image = UIImage(contentsOfFile: url.path) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Image(systemName: "figure.strengthtraining.traditional")
+                    .font(.title3.weight(.black))
+                    .foregroundStyle(Color.cutAccent)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.cutAccent.opacity(0.12))
+            }
+        }
+        .frame(width: 54, height: 54)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+private struct HistoryMiniStat: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title.uppercased())
+                .font(.caption2.weight(.black))
+                .foregroundStyle(Color.secondaryText)
+            Text(value)
+                .font(.subheadline.weight(.black))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(Color.black.opacity(0.24), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
 
@@ -1334,6 +1941,7 @@ private struct ExerciseEditorView: View {
 private struct WorkoutSummaryView: View {
     @EnvironmentObject private var store: FitnessStore
     let sessionID: UUID
+    var promptForWeight = false
 
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var showingCamera = false
@@ -1341,6 +1949,7 @@ private struct WorkoutSummaryView: View {
     @State private var sharingItems: [Any] = []
     @State private var showingShareSheet = false
     @State private var statusMessage = ""
+    @State private var showingWeightEntry = false
 
     private var session: WorkoutSession? {
         store.session(id: sessionID)
@@ -1352,6 +1961,7 @@ private struct WorkoutSummaryView: View {
                 PremiumScreen(title: "Workout Saved", subtitle: session.day.rawValue) {
                     VStack(spacing: 16) {
                         summaryGrid(session)
+                        sessionWeightCard(session)
                         sessionPhotoCard(session)
                         shareCardActions(session)
                         recommendationsCard(session)
@@ -1369,6 +1979,11 @@ private struct WorkoutSummaryView: View {
         .onChange(of: selectedPhotoItem) { _, item in
             Task { await loadSelectedPhoto(item) }
         }
+        .onAppear {
+            if promptForWeight, session?.bodyWeightKg == nil {
+                showingWeightEntry = true
+            }
+        }
         .sheet(isPresented: $showingCamera) {
             CameraPicker { image in
                 store.attachSessionPhoto(image, to: sessionID)
@@ -1378,14 +1993,55 @@ private struct WorkoutSummaryView: View {
         .sheet(isPresented: $showingShareSheet) {
             ShareSheet(activityItems: sharingItems)
         }
+        .sheet(isPresented: $showingWeightEntry) {
+            if let session {
+                PostWorkoutWeightSheet(sessionID: session.id, sessionDate: session.date)
+                    .environmentObject(store)
+                    .presentationDetents([.medium])
+            }
+        }
     }
 
     private func summaryGrid(_ session: WorkoutSession) -> some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
             MetricTile(title: "Duration", value: session.formattedDuration, detail: "active time")
-            MetricTile(title: "Volume", value: "\(session.totalVolume.clean) kg", detail: "total")
+            MetricTile(title: "Body weight", value: session.bodyWeightKg.map { "\($0.clean) kg" } ?? "--", detail: "after workout")
             MetricTile(title: "Exercises", value: "\(session.exerciseLogs.count)", detail: "completed")
             MetricTile(title: "Sets", value: "\(session.completedSets)", detail: "completed")
+        }
+    }
+
+    private func sessionWeightCard(_ session: WorkoutSession) -> some View {
+        PremiumCard {
+            HStack(spacing: 12) {
+                Image(systemName: "scalemass.fill")
+                    .font(.title3.weight(.black))
+                    .foregroundStyle(Color.cutAccent)
+                    .frame(width: 42, height: 42)
+                    .background(Color.cutAccent.opacity(0.12), in: Circle())
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Session weight")
+                        .font(.headline.weight(.bold))
+                    Text(session.bodyWeightKg.map { "\($0.clean) kg saved for this workout" } ?? "No weight saved for this session yet.")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Color.secondaryText)
+                }
+
+                Spacer()
+
+                Button {
+                    showingWeightEntry = true
+                } label: {
+                    Text(session.bodyWeightKg == nil ? "Add" : "Edit")
+                        .font(.caption.weight(.black))
+                        .foregroundStyle(.black)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 9)
+                        .background(Color.cutAccent, in: Capsule())
+                }
+                .buttonStyle(.plain)
+            }
         }
     }
 
@@ -2294,6 +2950,7 @@ private struct ActivityRing: View {
 
 private struct MonthDayCell: View {
     let item: TrainingCalendarDay
+    var session: WorkoutSession?
 
     var body: some View {
         VStack(spacing: 5) {
@@ -2309,6 +2966,14 @@ private struct MonthDayCell: View {
                 Circle()
                     .fill(Color.white.opacity(0.10))
                     .frame(width: 6, height: 6)
+            }
+
+            if let weight = session?.bodyWeightKg {
+                Text("\(weight.clean)kg")
+                    .font(.system(size: 8, weight: .black))
+                    .foregroundStyle(Color.cutAccent)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
         }
         .foregroundStyle(item.isInDisplayedMonth ? Color.white : Color.white.opacity(0.25))
