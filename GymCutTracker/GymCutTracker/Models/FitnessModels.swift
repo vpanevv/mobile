@@ -69,6 +69,14 @@ struct WorkoutSession: Identifiable, Codable, Hashable {
     var day: TrainingDay
     var exerciseLogs: [ExerciseLog]
     var durationMinutes: Int
+    var startedAt: Date
+    var finishedAt: Date?
+    var durationSeconds: Int
+    var totalPausedSeconds: Int
+    var isPaused: Bool
+    var pausedAt: Date?
+    var completedAt: Date?
+    var motivationalQuote: String?
     var notes: String
     var personalRecords: [String]
     var sessionPhotoURL: URL?
@@ -82,6 +90,14 @@ struct WorkoutSession: Identifiable, Codable, Hashable {
         day: TrainingDay,
         exerciseLogs: [ExerciseLog],
         durationMinutes: Int,
+        startedAt: Date? = nil,
+        finishedAt: Date? = nil,
+        durationSeconds: Int? = nil,
+        totalPausedSeconds: Int = 0,
+        isPaused: Bool = false,
+        pausedAt: Date? = nil,
+        completedAt: Date? = nil,
+        motivationalQuote: String? = nil,
         notes: String = "",
         personalRecords: [String] = [],
         sessionPhotoURL: URL? = nil,
@@ -94,12 +110,65 @@ struct WorkoutSession: Identifiable, Codable, Hashable {
         self.day = day
         self.exerciseLogs = exerciseLogs
         self.durationMinutes = durationMinutes
+        self.startedAt = startedAt ?? date.addingTimeInterval(-TimeInterval(durationMinutes * 60))
+        self.finishedAt = finishedAt
+        self.durationSeconds = durationSeconds ?? max(durationMinutes * 60, 0)
+        self.totalPausedSeconds = totalPausedSeconds
+        self.isPaused = isPaused
+        self.pausedAt = pausedAt
+        self.completedAt = completedAt ?? finishedAt ?? date
+        self.motivationalQuote = motivationalQuote
         self.notes = notes
         self.personalRecords = personalRecords
         self.sessionPhotoURL = sessionPhotoURL
         self.shareCardTemplate = shareCardTemplate
         self.generatedShareCardURL = generatedShareCardURL
         self.sharedAt = sharedAt
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case date
+        case day
+        case exerciseLogs
+        case durationMinutes
+        case startedAt
+        case finishedAt
+        case durationSeconds
+        case totalPausedSeconds
+        case isPaused
+        case pausedAt
+        case completedAt
+        case motivationalQuote
+        case notes
+        case personalRecords
+        case sessionPhotoURL
+        case shareCardTemplate
+        case generatedShareCardURL
+        case sharedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        date = try container.decode(Date.self, forKey: .date)
+        day = try container.decode(TrainingDay.self, forKey: .day)
+        exerciseLogs = try container.decode([ExerciseLog].self, forKey: .exerciseLogs)
+        durationMinutes = try container.decode(Int.self, forKey: .durationMinutes)
+        startedAt = try container.decodeIfPresent(Date.self, forKey: .startedAt) ?? date.addingTimeInterval(-TimeInterval(durationMinutes * 60))
+        finishedAt = try container.decodeIfPresent(Date.self, forKey: .finishedAt)
+        durationSeconds = try container.decodeIfPresent(Int.self, forKey: .durationSeconds) ?? max(durationMinutes * 60, 0)
+        totalPausedSeconds = try container.decodeIfPresent(Int.self, forKey: .totalPausedSeconds) ?? 0
+        isPaused = try container.decodeIfPresent(Bool.self, forKey: .isPaused) ?? false
+        pausedAt = try container.decodeIfPresent(Date.self, forKey: .pausedAt)
+        completedAt = try container.decodeIfPresent(Date.self, forKey: .completedAt) ?? finishedAt ?? date
+        motivationalQuote = try container.decodeIfPresent(String.self, forKey: .motivationalQuote)
+        notes = try container.decodeIfPresent(String.self, forKey: .notes) ?? ""
+        personalRecords = try container.decodeIfPresent([String].self, forKey: .personalRecords) ?? []
+        sessionPhotoURL = try container.decodeIfPresent(URL.self, forKey: .sessionPhotoURL)
+        shareCardTemplate = try container.decodeIfPresent(ShareCardTemplate.self, forKey: .shareCardTemplate)
+        generatedShareCardURL = try container.decodeIfPresent(URL.self, forKey: .generatedShareCardURL)
+        sharedAt = try container.decodeIfPresent(Date.self, forKey: .sharedAt)
     }
 }
 
@@ -109,6 +178,132 @@ enum ShareCardTemplate: String, Codable, CaseIterable, Identifiable, Hashable {
     case minimalProgress = "Minimal Progress Card"
 
     var id: String { rawValue }
+}
+
+enum WorkoutMusicItemType: String, Codable, CaseIterable, Identifiable, Hashable {
+    case song
+    case album
+    case playlist
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .song: "Song"
+        case .album: "Album"
+        case .playlist: "Playlist"
+        }
+    }
+}
+
+struct WorkoutMusicSelection: Identifiable, Codable, Hashable {
+    var id: UUID
+    var workoutDayId: TrainingDay
+    var musicItemId: String
+    var musicItemType: WorkoutMusicItemType
+    var title: String
+    var subtitle: String
+    var artworkURL: URL?
+    var selectedAt: Date
+
+    init(
+        id: UUID = UUID(),
+        workoutDayId: TrainingDay,
+        musicItemId: String,
+        musicItemType: WorkoutMusicItemType,
+        title: String,
+        subtitle: String,
+        artworkURL: URL? = nil,
+        selectedAt: Date = .now
+    ) {
+        self.id = id
+        self.workoutDayId = workoutDayId
+        self.musicItemId = musicItemId
+        self.musicItemType = musicItemType
+        self.title = title
+        self.subtitle = subtitle
+        self.artworkURL = artworkURL
+        self.selectedAt = selectedAt
+    }
+}
+
+struct WorkoutMusicSearchResult: Identifiable, Hashable {
+    var id: String
+    var musicItemId: String
+    var musicItemType: WorkoutMusicItemType
+    var title: String
+    var subtitle: String
+    var artworkURL: URL?
+}
+
+struct MotivationalQuote: Identifiable, Codable, Hashable {
+    let id: UUID
+    let text: String
+
+    init(id: UUID = UUID(), text: String) {
+        self.id = id
+        self.text = text
+    }
+}
+
+enum MotivationalQuoteLibrary {
+    static let fallback = "Discipline beats motivation."
+
+    static let quotes: [MotivationalQuote] = [
+        MotivationalQuote(text: "Discipline beats motivation."),
+        MotivationalQuote(text: "Small wins build strong bodies."),
+        MotivationalQuote(text: "You showed up. That counts."),
+        MotivationalQuote(text: "Strength is built one set at a time."),
+        MotivationalQuote(text: "The cut continues."),
+        MotivationalQuote(text: "Earned, not given."),
+        MotivationalQuote(text: "Progress is never random."),
+        MotivationalQuote(text: "Keep strength while the scale moves down."),
+        MotivationalQuote(text: "Another session closer."),
+        MotivationalQuote(text: "Consistency creates results."),
+        MotivationalQuote(text: "Your future self is watching."),
+        MotivationalQuote(text: "No excuses, just reps."),
+        MotivationalQuote(text: "Built by discipline."),
+        MotivationalQuote(text: "The work is the reward."),
+        MotivationalQuote(text: "One workout at a time."),
+        MotivationalQuote(text: "Stay locked in."),
+        MotivationalQuote(text: "Cut hard. Train harder."),
+        MotivationalQuote(text: "The body follows the standard."),
+        MotivationalQuote(text: "You did what most skip."),
+        MotivationalQuote(text: "Momentum starts with action."),
+        MotivationalQuote(text: "Strong mind. Strong body."),
+        MotivationalQuote(text: "Today's effort becomes tomorrow's shape."),
+        MotivationalQuote(text: "Reps today. Results tomorrow."),
+        MotivationalQuote(text: "Quiet work. Loud results."),
+        MotivationalQuote(text: "You are building proof."),
+        MotivationalQuote(text: "Stay patient. Stay dangerous."),
+        MotivationalQuote(text: "The session is done. The mission continues."),
+        MotivationalQuote(text: "Respect the grind."),
+        MotivationalQuote(text: "Fat drops. Strength stays."),
+        MotivationalQuote(text: "Another brick in the physique.")
+    ]
+
+    static func randomQuote() -> MotivationalQuote {
+        quotes.randomElement() ?? MotivationalQuote(text: fallback)
+    }
+}
+
+extension WorkoutSession {
+    var formattedDuration: String {
+        formatDuration(durationSeconds)
+    }
+
+    private func formatDuration(_ seconds: Int) -> String {
+        let safeSeconds = max(seconds, 0)
+        let hours = safeSeconds / 3600
+        let minutes = (safeSeconds % 3600) / 60
+        let seconds = safeSeconds % 60
+
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
+        }
+
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
 }
 
 struct ExerciseLog: Identifiable, Codable, Hashable {

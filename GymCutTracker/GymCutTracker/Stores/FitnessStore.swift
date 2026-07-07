@@ -17,9 +17,14 @@ final class FitnessStore: ObservableObject {
         didSet { saveBodyEntries() }
     }
 
+    @Published private(set) var musicSelections: [WorkoutMusicSelection] = [] {
+        didSet { saveMusicSelections() }
+    }
+
     private let workoutDaysKey = "gym-cut.workout-days"
     private let sessionsKey = "gym-cut.sessions"
     private let bodyKey = "gym-cut.body-progress"
+    private let musicSelectionsKey = "gym-cut.music-selections"
     private let defaults: UserDefaults
     private let calendar: Calendar
 
@@ -133,6 +138,9 @@ final class FitnessStore: ObservableObject {
     func saveSession(_ session: WorkoutSession) {
         var completedSession = session
         completedSession.personalRecords = personalRecords(for: session)
+        if completedSession.motivationalQuote == nil {
+            completedSession.motivationalQuote = MotivationalQuoteLibrary.randomQuote().text
+        }
         sessions.append(completedSession)
     }
 
@@ -173,6 +181,22 @@ final class FitnessStore: ObservableObject {
 
     func addBodyEntry(_ entry: BodyProgress) {
         bodyEntries.append(entry)
+    }
+
+    func musicSelection(for day: TrainingDay) -> WorkoutMusicSelection? {
+        musicSelections.first { $0.workoutDayId == day }
+    }
+
+    func saveMusicSelection(_ selection: WorkoutMusicSelection) {
+        if let index = musicSelections.firstIndex(where: { $0.workoutDayId == selection.workoutDayId }) {
+            musicSelections[index] = selection
+        } else {
+            musicSelections.append(selection)
+        }
+    }
+
+    func deleteMusicSelection(for day: TrainingDay) {
+        musicSelections.removeAll { $0.workoutDayId == day }
     }
 
     func activitySummary(for component: Calendar.Component, containing date: Date) -> ActivitySummary {
@@ -319,6 +343,7 @@ final class FitnessStore: ObservableObject {
     private func load() {
         workoutDays = decode([WorkoutDay].self, key: workoutDaysKey) ?? Self.seedWorkouts
         sessions = decode([WorkoutSession].self, key: sessionsKey) ?? []
+        musicSelections = decode([WorkoutMusicSelection].self, key: musicSelectionsKey) ?? []
         bodyEntries = decode([BodyProgress].self, key: bodyKey) ?? [
             BodyProgress(weightKg: 86, waistCm: 92, goalWeightKg: 80, notes: "Starting cut")
         ]
@@ -339,6 +364,10 @@ final class FitnessStore: ObservableObject {
 
     private func saveBodyEntries() {
         encode(bodyEntries, key: bodyKey)
+    }
+
+    private func saveMusicSelections() {
+        encode(musicSelections, key: musicSelectionsKey)
     }
 
     private func encode<T: Encodable>(_ value: T, key: String) {

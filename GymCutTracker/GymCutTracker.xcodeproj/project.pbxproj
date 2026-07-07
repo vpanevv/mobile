@@ -6,12 +6,48 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		BEEF00000000000000000003 /* GymCutTrackerLiveActivity.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = BEEF00000000000000000002 /* GymCutTrackerLiveActivity.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		BEEF00000000000000000014 /* GymWorkoutActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEEF00000000000000000010 /* GymWorkoutActivityAttributes.swift */; };
+		BEEF00000000000000000015 /* GymCutTrackerLiveActivityBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEEF00000000000000000011 /* GymCutTrackerLiveActivityBundle.swift */; };
+		BEEF00000000000000000016 /* GymWorkoutLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEEF00000000000000000012 /* GymWorkoutLiveActivityWidget.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		BEEF00000000000000000005 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 68997B432F3675AC00DE4C9C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BEEF00000000000000000007;
+			remoteInfo = GymCutTrackerLiveActivity;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		BEEF00000000000000000004 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				BEEF00000000000000000003 /* GymCutTrackerLiveActivity.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		68997B4B2F3675AC00DE4C9C /* Gym Cut Tracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = "Gym Cut Tracker.app"; path = "Gym Cut Tracker.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		68997B4B2F3675AC00DE4C9C /* Gym Cut Tracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Gym Cut Tracker.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		BEEF00000000000000000002 /* GymCutTrackerLiveActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GymCutTrackerLiveActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BEEF00000000000000000010 /* GymWorkoutActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymWorkoutActivityAttributes.swift; sourceTree = "<group>"; };
+		BEEF00000000000000000011 /* GymCutTrackerLiveActivityBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymCutTrackerLiveActivityBundle.swift; sourceTree = "<group>"; };
+		BEEF00000000000000000012 /* GymWorkoutLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymWorkoutLiveActivityWidget.swift; sourceTree = "<group>"; };
+		BEEF00000000000000000013 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		68997B4D2F3675AC00DE4C9C /* Gym Cut Tracker */ = {
+		68997B4D2F3675AC00DE4C9C /* GymCutTracker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = GymCutTracker;
 			sourceTree = "<group>";
@@ -26,13 +62,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BEEF0000000000000000000C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		68997B422F3675AC00DE4C9C = {
 			isa = PBXGroup;
 			children = (
-				68997B4D2F3675AC00DE4C9C /* Gym Cut Tracker */,
+				68997B4D2F3675AC00DE4C9C /* GymCutTracker */,
+				BEEF00000000000000000001 /* GymCutTrackerLiveActivity */,
 				68997B4C2F3675AC00DE4C9C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,8 +85,20 @@
 			isa = PBXGroup;
 			children = (
 				68997B4B2F3675AC00DE4C9C /* Gym Cut Tracker.app */,
+				BEEF00000000000000000002 /* GymCutTrackerLiveActivity.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		BEEF00000000000000000001 /* GymCutTrackerLiveActivity */ = {
+			isa = PBXGroup;
+			children = (
+				BEEF00000000000000000010 /* GymWorkoutActivityAttributes.swift */,
+				BEEF00000000000000000011 /* GymCutTrackerLiveActivityBundle.swift */,
+				BEEF00000000000000000012 /* GymWorkoutLiveActivityWidget.swift */,
+				BEEF00000000000000000013 /* Info.plist */,
+			);
+			path = GymCutTrackerLiveActivity;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -55,13 +111,15 @@
 				68997B472F3675AC00DE4C9C /* Sources */,
 				68997B482F3675AC00DE4C9C /* Frameworks */,
 				68997B492F3675AC00DE4C9C /* Resources */,
+				BEEF00000000000000000004 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				BEEF00000000000000000006 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				68997B4D2F3675AC00DE4C9C /* Gym Cut Tracker */,
+				68997B4D2F3675AC00DE4C9C /* GymCutTracker */,
 			);
 			name = "Gym Cut Tracker";
 			packageProductDependencies = (
@@ -69,6 +127,25 @@
 			productName = "Gym Cut Tracker";
 			productReference = 68997B4B2F3675AC00DE4C9C /* Gym Cut Tracker.app */;
 			productType = "com.apple.product-type.application";
+		};
+		BEEF00000000000000000007 /* GymCutTrackerLiveActivity */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BEEF0000000000000000000E /* Build configuration list for PBXNativeTarget "GymCutTrackerLiveActivity" */;
+			buildPhases = (
+				BEEF0000000000000000000B /* Sources */,
+				BEEF0000000000000000000C /* Frameworks */,
+				BEEF0000000000000000000D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GymCutTrackerLiveActivity;
+			packageProductDependencies = (
+			);
+			productName = GymCutTrackerLiveActivity;
+			productReference = BEEF00000000000000000002 /* GymCutTrackerLiveActivity.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -83,9 +160,12 @@
 					68997B4A2F3675AC00DE4C9C = {
 						CreatedOnToolsVersion = 26.2;
 					};
+					BEEF00000000000000000007 = {
+						CreatedOnToolsVersion = 26.2;
+					};
 				};
 			};
-			buildConfigurationList = 68997B462F3675AC00DE4C9C /* Build configuration list for PBXProject "Gym Cut Tracker" */;
+			buildConfigurationList = 68997B462F3675AC00DE4C9C /* Build configuration list for PBXProject "GymCutTracker" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -100,12 +180,20 @@
 			projectRoot = "";
 			targets = (
 				68997B4A2F3675AC00DE4C9C /* Gym Cut Tracker */,
+				BEEF00000000000000000007 /* GymCutTrackerLiveActivity */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		68997B492F3675AC00DE4C9C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BEEF0000000000000000000D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +210,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BEEF0000000000000000000B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BEEF00000000000000000014 /* GymWorkoutActivityAttributes.swift in Sources */,
+				BEEF00000000000000000015 /* GymCutTrackerLiveActivityBundle.swift in Sources */,
+				BEEF00000000000000000016 /* GymWorkoutLiveActivityWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		BEEF00000000000000000006 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BEEF00000000000000000007 /* GymCutTrackerLiveActivity */;
+			targetProxy = BEEF00000000000000000005 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		68997B5A2F3675AD00DE4C9C /* Debug */ = {
@@ -133,15 +239,18 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = DP5G9GAZQJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Gym Cut Tracker";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_LSApplicationQueriesSchemes = "instagram-stories";
+				INFOPLIST_KEY_NSAppleMusicUsageDescription = "Connect Apple Music to search and play workout music during gym sessions.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Add a gym session photo to your workout summary and share card.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save generated workout share cards to Photos.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Choose a gym session photo for your workout summary and share card.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -174,15 +283,18 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = DP5G9GAZQJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Gym Cut Tracker";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_LSApplicationQueriesSchemes = "instagram-stories";
+				INFOPLIST_KEY_NSAppleMusicUsageDescription = "Connect Apple Music to search and play workout music during gym sessions.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Add a gym session photo to your workout summary and share card.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save generated workout share cards to Photos.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Choose a gym session photo for your workout summary and share card.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -328,10 +440,74 @@
 			};
 			name = Release;
 		};
+		BEEF00000000000000000008 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DP5G9GAZQJ;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GymCutTrackerLiveActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Gym Cut Tracker";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vpanev.gymcuttracker.liveactivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		BEEF00000000000000000009 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DP5G9GAZQJ;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GymCutTrackerLiveActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Gym Cut Tracker";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vpanev.gymcuttracker.liveactivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		68997B462F3675AC00DE4C9C /* Build configuration list for PBXProject "Gym Cut Tracker" */ = {
+		68997B462F3675AC00DE4C9C /* Build configuration list for PBXProject "GymCutTracker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				68997B5C2F3675AD00DE4C9C /* Debug */,
@@ -345,6 +521,15 @@
 			buildConfigurations = (
 				68997B5A2F3675AD00DE4C9C /* Debug */,
 				68997B5B2F3675AD00DE4C9C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BEEF0000000000000000000E /* Build configuration list for PBXNativeTarget "GymCutTrackerLiveActivity" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BEEF00000000000000000008 /* Debug */,
+				BEEF00000000000000000009 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

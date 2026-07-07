@@ -1,5 +1,8 @@
 import SwiftUI
 import PhotosUI
+import Combine
+import MusicKit
+import UIKit
 
 struct ContentView: View {
     @EnvironmentObject private var store: FitnessStore
@@ -20,6 +23,9 @@ struct ContentView: View {
 
             BodyView()
                 .tabItem { Label("Body", systemImage: "person.crop.rectangle.stack") }
+
+            MusicView()
+                .tabItem { Label("Music", systemImage: "music.note.list") }
 
             SettingsView()
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
@@ -158,7 +164,7 @@ struct DashboardView: View {
                 if let last = store.lastWorkout {
                     Text("\(last.day.rawValue) - \(last.date.formatted(date: .abbreviated, time: .omitted))")
                         .font(.headline.weight(.bold))
-                    Text("\(last.exerciseLogs.count) exercises, \(last.exerciseLogs.flatMap(\.setLogs).filter(\.completed).count) completed sets, \(sessionVolume(last).clean) kg volume")
+                    Text("\(last.formattedDuration) • \(last.exerciseLogs.count) exercises • \(last.exerciseLogs.flatMap(\.setLogs).filter(\.completed).count) sets • \(sessionVolume(last).clean) kg")
                         .foregroundStyle(Color.secondaryText)
                     if last.personalRecords.isEmpty == false {
                         Text("PRs: \(last.personalRecords.joined(separator: ", "))")
@@ -396,18 +402,44 @@ struct WorkoutsView: View {
 
 struct WorkoutSessionView: View {
     @EnvironmentObject private var store: FitnessStore
+    @EnvironmentObject private var music: AppleMusicManager
     @Environment(\.dismiss) private var dismiss
+    @AppStorage("gym-cut.live-activities-enabled") private var liveActivitiesEnabled = true
+    @AppStorage("gym-cut.auto-start-workout-music") private var autoStartWorkoutMusic = false
     let day: TrainingDay
 
+    @StateObject private var sessionTimer = WorkoutSessionTimerManager()
     @State private var logs: [ExerciseLog] = []
     @State private var notes = ""
-    @State private var startDate = Date()
     @State private var showingSummary = false
     @State private var savedSession: WorkoutSession?
+    @State private var restEndDate: Date?
+    @State private var pausedRestRemaining: TimeInterval?
+    @State private var previousCompletedSetCount = 0
+    @State private var didFinishWorkout = false
+    @State private var showingMusicPrompt = false
+    @State private var showingMusicPlayer = false
+    @State private var showingKeepMusicPrompt = false
+    @State private var pendingFinishedSession: WorkoutSession?
+    @State private var showingFinishConfirmation = false
+
+    private let liveActivityTimer = Timer.publish(every: 15, on: .main, in: .common).autoconnect()
 
     var body: some View {
         PremiumScreen(title: store.workout(for: day).title, subtitle: "Log each set, then finish") {
             VStack(spacing: 16) {
+                SessionTimerCard(
+                    timer: sessionTimer,
+                    onPauseResume: toggleSessionTimerPause,
+                    onFinish: requestFinishWorkout
+                )
+
+                WorkoutMusicPlayerCard(workoutDay: day)
+                    .environmentObject(music)
+                    .onTapGesture {
+                        showingMusicPlayer = true
+                    }
+
                 ForEach($logs) { $log in
                     ExerciseLogCard(log: $log)
                 }
@@ -418,7 +450,7 @@ struct WorkoutSessionView: View {
                         .foregroundStyle(.white)
                 }
 
-                Button { finishWorkout() } label: {
+                Button { requestFinishWorkout() } label: {
                     Label("Finish Workout", systemImage: "checkmark.circle.fill")
                         .primaryButtonStyle()
                 }
@@ -426,17 +458,66 @@ struct WorkoutSessionView: View {
             }
         }
         .onAppear(perform: buildLogsIfNeeded)
+        .onAppear {
+            sessionTimer.startIfNeeded()
+        }
+        .task {
+            await prepareWorkoutMusicIfNeeded()
+        }
+        .onChange(of: logs) { _, _ in
+            handleLoggedSetsChanged()
+        }
+        .onReceive(liveActivityTimer) { _ in
+            sessionTimer.updateDisplayedDuration()
+            updateLiveActivity(status: liveStatusText)
+        }
+        .onDisappear {
+            if didFinishWorkout == false {
+                GymWorkoutLiveActivityManager.shared.cancel()
+            }
+        }
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showingSummary) {
             if let savedSession {
                 WorkoutSummaryView(sessionID: savedSession.id)
             }
         }
+        .sheet(isPresented: $showingMusicPlayer) {
+            ExpandedMusicPlayerSheet()
+                .environmentObject(music)
+                .presentationDetents([.medium, .large])
+        }
+        .confirmationDialog("Start workout music?", isPresented: $showingMusicPrompt, titleVisibility: .visible) {
+            Button("Play") {
+                Task { await playWorkoutMusic() }
+            }
+            Button("Not now", role: .cancel) {}
+        } message: {
+            if let selection = store.musicSelection(for: day) {
+                Text(selection.title)
+            }
+        }
+        .confirmationDialog("Keep music playing?", isPresented: $showingKeepMusicPrompt, titleVisibility: .visible) {
+            Button("Keep Playing") {
+                savePendingFinishedSession(stopMusic: false)
+            }
+            Button("Stop Music", role: .destructive) {
+                savePendingFinishedSession(stopMusic: true)
+            }
+        }
+        .confirmationDialog("Finish workout?", isPresented: $showingFinishConfirmation, titleVisibility: .visible) {
+            Button("Finish Workout") {
+                finishWorkout()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Your workout session will be saved with the current duration.")
+        }
+        .dismissKeyboardOnTap()
     }
 
     private func buildLogsIfNeeded() {
         guard logs.isEmpty else { return }
-        startDate = .now
         logs = store.workout(for: day).exercises.map { exercise in
             ExerciseLog(
                 exerciseID: exercise.id,
@@ -446,14 +527,212 @@ struct WorkoutSessionView: View {
                 setLogs: (1...exercise.sets).map { SetLog(setNumber: $0) }
             )
         }
+        previousCompletedSetCount = completedSetCount
+        startLiveActivityIfNeeded()
+    }
+
+    private func requestFinishWorkout() {
+        showingFinishConfirmation = true
+    }
+
+    private func toggleSessionTimerPause() {
+        if sessionTimer.isPaused {
+            sessionTimer.resume()
+            if let pausedRestRemaining, pausedRestRemaining > 0 {
+                restEndDate = Date().addingTimeInterval(pausedRestRemaining)
+            }
+            self.pausedRestRemaining = nil
+        } else {
+            if let restEndDate, restEndDate > .now {
+                pausedRestRemaining = restEndDate.timeIntervalSince(.now)
+            }
+            sessionTimer.pause()
+        }
+
+        updateLiveActivity(status: liveStatusText)
     }
 
     private func finishWorkout() {
-        let duration = max(Int(Date().timeIntervalSince(startDate) / 60), 1)
-        let session = WorkoutSession(day: day, exerciseLogs: logs, durationMinutes: duration, notes: notes)
+        let timing = sessionTimer.stop()
+        let session = WorkoutSession(
+            date: timing.finishedAt,
+            day: day,
+            exerciseLogs: logs,
+            durationMinutes: max(Int(ceil(Double(timing.durationSeconds) / 60)), 1),
+            startedAt: timing.startedAt,
+            finishedAt: timing.finishedAt,
+            durationSeconds: timing.durationSeconds,
+            totalPausedSeconds: timing.totalPausedSeconds,
+            isPaused: false,
+            pausedAt: nil,
+            completedAt: timing.finishedAt,
+            notes: notes
+        )
+        if music.isPlaying {
+            pendingFinishedSession = session
+            showingKeepMusicPrompt = true
+            return
+        }
+
+        completeWorkout(with: session)
+    }
+
+    private func completeWorkout(with session: WorkoutSession) {
         store.saveSession(session)
         savedSession = store.lastWorkout
+        didFinishWorkout = true
+        endLiveActivity(with: store.lastWorkout ?? session)
         showingSummary = true
+    }
+
+    private func savePendingFinishedSession(stopMusic: Bool) {
+        guard let pendingFinishedSession else { return }
+        if stopMusic {
+            music.stop()
+        }
+        self.pendingFinishedSession = nil
+        completeWorkout(with: pendingFinishedSession)
+    }
+
+    private func prepareWorkoutMusicIfNeeded() async {
+        await music.requestPermissionIfNeeded()
+        guard store.musicSelection(for: day) != nil else { return }
+        if autoStartWorkoutMusic {
+            await playWorkoutMusic()
+        } else if music.authorizationStatus == .authorized {
+            showingMusicPrompt = true
+        }
+    }
+
+    private func playWorkoutMusic() async {
+        guard let selection = store.musicSelection(for: day) else { return }
+        await music.play(selection: selection)
+    }
+
+    private func startLiveActivityIfNeeded() {
+        guard liveActivitiesEnabled else { return }
+        let workout = store.workout(for: day)
+        let attributes = GymWorkoutActivityAttributes(
+            workoutSessionId: UUID().uuidString,
+            workoutDayName: day.rawValue,
+            workoutName: workout.title
+        )
+        GymWorkoutLiveActivityManager.shared.start(attributes: attributes, state: liveActivityState(status: "Workout started"))
+    }
+
+    private func handleLoggedSetsChanged() {
+        let completed = completedSetCount
+
+        if completed > previousCompletedSetCount {
+            startRestAfterLatestSet()
+        }
+
+        previousCompletedSetCount = completed
+        updateLiveActivity(status: liveStatusText)
+    }
+
+    private func startRestAfterLatestSet() {
+        guard let latest = latestCompletedSetContext else { return }
+        let workout = store.workout(for: day)
+        guard latest.exerciseIndex < workout.exercises.count else { return }
+        let restSeconds = workout.exercises[latest.exerciseIndex].restSeconds
+        restEndDate = Date().addingTimeInterval(TimeInterval(restSeconds))
+    }
+
+    private func updateLiveActivity(status: String) {
+        guard liveActivitiesEnabled else { return }
+        GymWorkoutLiveActivityManager.shared.update(liveActivityState(status: status))
+    }
+
+    private func endLiveActivity(with session: WorkoutSession) {
+        guard liveActivitiesEnabled else { return }
+        let finalState = liveActivityState(
+            status: "Workout Complete",
+            isComplete: true,
+            personalRecordCount: session.personalRecords.count
+        )
+        GymWorkoutLiveActivityManager.shared.end(finalState: finalState)
+    }
+
+    private var liveStatusText: String {
+        if sessionTimer.isPaused {
+            return "Paused"
+        }
+        if isResting {
+            return "Resting"
+        }
+        if restEndDate != nil {
+            return "Ready for next set"
+        }
+        return "Keep the pace"
+    }
+
+    private var isResting: Bool {
+        if sessionTimer.isPaused { return false }
+        guard let restEndDate else { return false }
+        return restEndDate > .now
+    }
+
+    private var completedSetCount: Int {
+        logs.flatMap(\.setLogs).filter(\.completed).count
+    }
+
+    private var totalVolumeSoFar: Double {
+        logs.flatMap(\.setLogs).filter(\.completed).reduce(0) { $0 + ($1.weight * Double($1.reps)) }
+    }
+
+    private var latestCompletedSetContext: (exerciseIndex: Int, set: SetLog)? {
+        for exerciseIndex in logs.indices.reversed() {
+            if let set = logs[exerciseIndex].setLogs.last(where: { $0.completed }) {
+                return (exerciseIndex, set)
+            }
+        }
+        return nil
+    }
+
+    private var currentExerciseContext: (exerciseIndex: Int, exerciseLog: ExerciseLog, setNumber: Int) {
+        for exerciseIndex in logs.indices {
+            if let nextSet = logs[exerciseIndex].setLogs.first(where: { $0.completed == false }) {
+                return (exerciseIndex, logs[exerciseIndex], nextSet.setNumber)
+            }
+        }
+
+        let fallbackIndex = max(logs.count - 1, 0)
+        let fallbackLog = logs.isEmpty
+            ? ExerciseLog(exerciseID: UUID(), exerciseName: "Workout", muscleGroup: "", targetReps: "", setLogs: [SetLog(setNumber: 1)])
+            : logs[fallbackIndex]
+        return (fallbackIndex, fallbackLog, fallbackLog.setLogs.count)
+    }
+
+    private func liveActivityState(
+        status: String,
+        isComplete: Bool = false,
+        personalRecordCount: Int = 0
+    ) -> GymWorkoutActivityAttributes.ContentState {
+        let current = currentExerciseContext
+        let latestSet = latestCompletedSetContext?.set
+
+        return GymWorkoutActivityAttributes.ContentState(
+            currentExerciseName: current.exerciseLog.exerciseName,
+            currentExerciseIndex: current.exerciseIndex + 1,
+            totalExercises: max(logs.count, 1),
+            currentSetNumber: current.setNumber,
+            totalSetsForExercise: current.exerciseLog.setLogs.count,
+            targetWeight: latestSet?.weight ?? 0,
+            targetReps: current.exerciseLog.targetReps,
+            lastSetWeight: latestSet?.weight ?? 0,
+            lastSetReps: latestSet?.reps ?? 0,
+            completedSets: completedSetCount,
+            totalVolume: totalVolumeSoFar,
+            workoutStartTime: sessionTimer.startedAt ?? .now,
+            workoutDuration: TimeInterval(sessionTimer.activeDurationSeconds),
+            isPaused: sessionTimer.isPaused,
+            isResting: isResting,
+            restEndTime: isResting ? restEndDate : nil,
+            statusText: status,
+            isComplete: isComplete,
+            personalRecordCount: personalRecordCount
+        )
     }
 }
 
@@ -526,19 +805,17 @@ struct ExerciseProgressDetailView: View {
 struct BodyView: View {
     @EnvironmentObject private var store: FitnessStore
     @State private var weight = 86.0
-    @State private var waist = 92.0
     @State private var goal = 80.0
     @State private var notes = ""
 
     var body: some View {
-        PremiumScreen(title: "Body", subtitle: "Scale, measurements, weekly check-ins") {
+        PremiumScreen(title: "Body", subtitle: "Scale, goal, weekly check-ins") {
             VStack(spacing: 16) {
                 PremiumCard {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("New check-in")
                             .sectionTitle()
                         MeasurementStepper(title: "Weight", value: $weight, suffix: "kg", range: 40...180, step: 0.1)
-                        MeasurementStepper(title: "Waist", value: $waist, suffix: "cm", range: 40...180, step: 0.5)
                         MeasurementStepper(title: "Goal", value: $goal, suffix: "kg", range: 40...180, step: 0.1)
                         TextField("Weekly notes", text: $notes, axis: .vertical)
                             .textFieldStyle(.plain)
@@ -558,7 +835,7 @@ struct BodyView: View {
                         Text("Cutting progress")
                             .sectionTitle()
                         MiniBarChart(points: store.sortedBodyEntries.reversed().map(\.weightKg))
-                        Text("Progress photos are modeled and ready for the next iteration; this MVP focuses on body weight and measurements.")
+                        Text("Progress photos are modeled and ready for the next iteration; this MVP focuses on body weight and goal tracking.")
                             .font(.footnote.weight(.medium))
                             .foregroundStyle(Color.secondaryText)
                     }
@@ -590,22 +867,241 @@ struct BodyView: View {
         .onAppear {
             weight = store.currentBodyWeight > 0 ? store.currentBodyWeight : 86
             goal = store.goalBodyWeight
-            waist = store.sortedBodyEntries.first?.waistCm ?? 92
         }
+        .dismissKeyboardOnTap()
     }
 
     private func saveBodyEntry() {
-        store.addBodyEntry(BodyProgress(weightKg: weight, waistCm: waist, goalWeightKg: goal, notes: notes))
+        store.addBodyEntry(BodyProgress(weightKg: weight, goalWeightKg: goal, notes: notes))
         notes = ""
+    }
+}
+
+struct MusicView: View {
+    @EnvironmentObject private var store: FitnessStore
+    @EnvironmentObject private var music: AppleMusicManager
+    @AppStorage("gym-cut.auto-start-workout-music") private var autoStartWorkoutMusic = false
+    @State private var searchText = ""
+    @State private var selectedDay: TrainingDay = .monday
+    @State private var showingPlayer = false
+
+    var body: some View {
+        PremiumScreen(title: "Music", subtitle: "Apple Music for focused lifting") {
+            VStack(spacing: 16) {
+                authorizationContent
+            }
+        }
+        .task {
+            music.refreshAuthorization()
+            await music.checkSubscription()
+            await music.fetchLibraryPlaylists()
+        }
+        .task(id: searchText) {
+            try? await Task.sleep(for: .milliseconds(350))
+            await music.search(term: searchText)
+        }
+        .sheet(isPresented: $showingPlayer) {
+            ExpandedMusicPlayerSheet()
+                .environmentObject(music)
+                .presentationDetents([.medium, .large])
+        }
+    }
+
+    @ViewBuilder
+    private var authorizationContent: some View {
+        switch music.authorizationStatus {
+        case .notDetermined:
+            AppleMusicPermissionCard(
+                title: "Connect Apple Music",
+                message: "Allow Gym Cut Tracker to search Apple Music and play workout music inside your session.",
+                buttonTitle: "Connect Apple Music"
+            ) {
+                Task {
+                    await music.requestPermissionIfNeeded()
+                    await music.checkSubscription()
+                    await music.fetchLibraryPlaylists()
+                }
+            }
+        case .authorized:
+            connectedContent
+        case .denied, .restricted:
+            AppleMusicPermissionCard(
+                title: "Apple Music access is disabled",
+                message: "Enable Apple Music from Settings to use workout music.",
+                buttonTitle: "Open Settings"
+            ) {
+                music.openAppSettings()
+            }
+        @unknown default:
+            AppleMusicPermissionCard(
+                title: "Apple Music unavailable",
+                message: "Music access is not available on this device right now.",
+                buttonTitle: "Refresh"
+            ) {
+                music.refreshAuthorization()
+            }
+        }
+    }
+
+    private var connectedContent: some View {
+        VStack(spacing: 16) {
+            PremiumCard {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Apple Music Connected")
+                                .font(.headline.weight(.black))
+                            Text(music.subscriptionAllowsPlayback ? "Choose music for Monday, Wednesday, and Friday." : "Playback may require an Apple Music subscription.")
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(Color.secondaryText)
+                        }
+                        Spacer()
+                        Image(systemName: "music.note")
+                            .font(.title2.weight(.black))
+                            .foregroundStyle(Color.cutAccent)
+                    }
+
+                    Toggle("Auto-start workout music", isOn: $autoStartWorkoutMusic)
+                        .font(.subheadline.weight(.bold))
+                        .tint(Color.cutAccent)
+                }
+            }
+
+            workoutAssignments
+
+            PremiumCard {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Search Apple Music")
+                        .sectionTitle()
+
+                    HStack(spacing: 10) {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(Color.secondaryText)
+                        TextField("Songs, albums, playlists", text: $searchText)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                    }
+                    .padding(12)
+                    .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                    Picker("Assign to", selection: $selectedDay) {
+                        ForEach(TrainingDay.allCases) { day in
+                            Text(day.shortTitle).tag(day)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    if music.isSearching {
+                        ProgressView()
+                            .tint(Color.cutAccent)
+                    } else if searchText.trimmingCharacters(in: .whitespacesAndNewlines).count >= 2 && music.searchResults.isEmpty {
+                        EmptyMusicState(text: "No Apple Music results found.")
+                    } else {
+                        ForEach(music.searchResults) { result in
+                            MusicResultRow(result: result, selectedDay: selectedDay)
+                        }
+                    }
+                }
+            }
+
+            if music.libraryPlaylists.isEmpty == false {
+                PremiumCard {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("My Library")
+                            .sectionTitle()
+                        ForEach(music.libraryPlaylists) { result in
+                            MusicResultRow(result: result, selectedDay: selectedDay)
+                        }
+                    }
+                }
+            }
+
+            WorkoutMusicPlayerCard(workoutDay: selectedDay)
+                .onTapGesture {
+                    showingPlayer = true
+                }
+
+            if let error = music.errorMessage {
+                Text(error)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.orange)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    private var workoutAssignments: some View {
+        PremiumCard {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Workout Defaults")
+                    .sectionTitle()
+
+                ForEach(TrainingDay.allCases) { day in
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("\(day.rawValue) • \(day.programTitle)")
+                                .font(.subheadline.weight(.black))
+                            Text(store.musicSelection(for: day)?.title ?? "No music selected")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(Color.secondaryText)
+                                .lineLimit(1)
+                        }
+
+                        Spacer()
+
+                        if store.musicSelection(for: day) != nil {
+                            Button {
+                                store.deleteMusicSelection(for: day)
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                            }
+                            .foregroundStyle(Color.secondaryText)
+                        }
+                    }
+
+                    if day != TrainingDay.allCases.last {
+                        Divider().overlay(Color.white.opacity(0.08))
+                    }
+                }
+            }
+        }
     }
 }
 
 struct SettingsView: View {
     @EnvironmentObject private var store: FitnessStore
+    @AppStorage("gym-cut.live-activities-enabled") private var liveActivitiesEnabled = true
+    @AppStorage("gym-cut.auto-start-workout-music") private var autoStartWorkoutMusic = false
 
     var body: some View {
         PremiumScreen(title: "Settings", subtitle: "Program rules and cut targets") {
             VStack(spacing: 16) {
+                PremiumCard {
+                    Toggle(isOn: $liveActivitiesEnabled) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Enable Live Activity during workout")
+                                .font(.headline.weight(.bold))
+                            Text("Show the active gym session on the Lock Screen and Dynamic Island.")
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(Color.secondaryText)
+                        }
+                    }
+                    .tint(Color.cutAccent)
+                }
+
+                PremiumCard {
+                    Toggle(isOn: $autoStartWorkoutMusic) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Auto-start workout music")
+                                .font(.headline.weight(.bold))
+                            Text("Play the saved Apple Music selection when a workout starts.")
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(Color.secondaryText)
+                        }
+                    }
+                    .tint(Color.cutAccent)
+                }
+
                 PremiumCard {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Training rules")
@@ -685,6 +1181,54 @@ private struct ExerciseLogCard: View {
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color.cutAccent.opacity(0.10), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+        }
+    }
+}
+
+private struct SessionTimerCard: View {
+    @ObservedObject var timer: WorkoutSessionTimerManager
+    let onPauseResume: () -> Void
+    let onFinish: () -> Void
+
+    var body: some View {
+        PremiumCard {
+            HStack(alignment: .center, spacing: 14) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Session Time")
+                        .font(.caption.weight(.black))
+                        .foregroundStyle(Color.cutAccent)
+                    Text(timer.formattedTime)
+                        .font(.system(size: 36, weight: .black, design: .rounded))
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Text(timer.statusText)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(timer.isPaused ? Color.orange : Color.secondaryText)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                VStack(spacing: 10) {
+                    Button(action: onPauseResume) {
+                        Label(timer.isPaused ? "Resume" : "Pause", systemImage: timer.isPaused ? "play.fill" : "pause.fill")
+                            .font(.caption.weight(.black))
+                            .frame(width: 104)
+                            .padding(.vertical, 10)
+                            .background(Color.white.opacity(0.08), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+
+                    Button(action: onFinish) {
+                        Label("Finish", systemImage: "checkmark.circle.fill")
+                            .font(.caption.weight(.black))
+                            .frame(width: 104)
+                            .padding(.vertical, 10)
+                            .background(Color.cutAccent, in: Capsule())
+                            .foregroundStyle(.black)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         }
     }
@@ -838,7 +1382,7 @@ private struct WorkoutSummaryView: View {
 
     private func summaryGrid(_ session: WorkoutSession) -> some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-            MetricTile(title: "Duration", value: "\(session.durationMinutes) min", detail: "session")
+            MetricTile(title: "Duration", value: session.formattedDuration, detail: "active time")
             MetricTile(title: "Volume", value: "\(session.totalVolume.clean) kg", detail: "total")
             MetricTile(title: "Exercises", value: "\(session.exerciseLogs.count)", detail: "completed")
             MetricTile(title: "Sets", value: "\(session.completedSets)", detail: "completed")
@@ -933,6 +1477,13 @@ private struct WorkoutSummaryView: View {
                     .buttonStyle(.plain)
                     .disabled(activeShareURL(for: session) == nil)
                 }
+
+                Button { shareToInstagramStory(session) } label: {
+                    Label("Share to Instagram Story", systemImage: "camera.fill")
+                        .secondaryButtonStyle()
+                }
+                .buttonStyle(.plain)
+                .disabled(activeShareURL(for: session) == nil)
             }
         }
     }
@@ -997,6 +1548,38 @@ private struct WorkoutSummaryView: View {
         showingShareSheet = true
     }
 
+    private func shareToInstagramStory(_ session: WorkoutSession) {
+        guard let url = activeShareURL(for: session),
+              let image = UIImage(contentsOfFile: url.path),
+              let imageData = image.pngData()
+        else {
+            statusMessage = "Create a share card first."
+            return
+        }
+
+        guard let instagramURL = URL(string: "instagram-stories://share"),
+              UIApplication.shared.canOpenURL(instagramURL)
+        else {
+            statusMessage = "Instagram is not installed on this device."
+            return
+        }
+
+        let pasteboardItems: [[String: Any]] = [
+            [
+                "com.instagram.sharedSticker.backgroundImage": imageData,
+                "com.instagram.sharedSticker.appID": "com.vpanev.gymcuttracker"
+            ]
+        ]
+        let options: [UIPasteboard.OptionsKey: Any] = [
+            .expirationDate: Date().addingTimeInterval(300)
+        ]
+
+        UIPasteboard.general.setItems(pasteboardItems, options: options)
+        store.markSessionShared(session.id)
+        UIApplication.shared.open(instagramURL)
+        statusMessage = "Opening Instagram Story."
+    }
+
     private func activeShareURL(for session: WorkoutSession) -> URL? {
         shareCardURL ?? session.generatedShareCardURL
     }
@@ -1045,6 +1628,319 @@ private struct SessionPhotoPreview: View {
         .frame(maxWidth: .infinity)
         .aspectRatio(4.0 / 3.0, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+}
+
+private struct AppleMusicPermissionCard: View {
+    let title: String
+    let message: String
+    let buttonTitle: String
+    let action: () -> Void
+
+    var body: some View {
+        PremiumCard {
+            VStack(alignment: .leading, spacing: 16) {
+                Image(systemName: "music.note.house.fill")
+                    .font(.largeTitle.weight(.black))
+                    .foregroundStyle(Color.cutAccent)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(title)
+                        .font(.title3.weight(.black))
+                    Text(message)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Color.secondaryText)
+                }
+
+                Button(action: action) {
+                    Label(buttonTitle, systemImage: "music.note")
+                        .primaryButtonStyle()
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+}
+
+private struct MusicResultRow: View {
+    @EnvironmentObject private var store: FitnessStore
+    @EnvironmentObject private var music: AppleMusicManager
+    let result: WorkoutMusicSearchResult
+    let selectedDay: TrainingDay
+
+    var body: some View {
+        HStack(spacing: 12) {
+            MusicArtworkView(url: result.artworkURL, size: 48)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(result.title)
+                        .font(.subheadline.weight(.black))
+                        .lineLimit(1)
+                    Text(result.musicItemType.title.uppercased())
+                        .font(.caption2.weight(.black))
+                        .foregroundStyle(Color.cutAccent)
+                }
+
+                Text(result.subtitle)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.secondaryText)
+                    .lineLimit(1)
+            }
+
+            Spacer()
+
+            Button {
+                let selection = WorkoutMusicSelection(
+                    workoutDayId: selectedDay,
+                    musicItemId: result.musicItemId,
+                    musicItemType: result.musicItemType,
+                    title: result.title,
+                    subtitle: result.subtitle,
+                    artworkURL: result.artworkURL
+                )
+                store.saveMusicSelection(selection)
+                Task { await music.play(selection: selection) }
+            } label: {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title3.weight(.black))
+                    .foregroundStyle(Color.cutAccent)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(10)
+        .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+private struct WorkoutMusicPlayerCard: View {
+    @EnvironmentObject private var store: FitnessStore
+    @EnvironmentObject private var music: AppleMusicManager
+    let workoutDay: TrainingDay?
+
+    var body: some View {
+        PremiumCard {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 12) {
+                    MusicArtworkView(url: displayArtworkURL, size: 52)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Workout Music")
+                            .font(.caption.weight(.black))
+                            .foregroundStyle(Color.cutAccent)
+                        Text(displayTitle)
+                            .font(.subheadline.weight(.black))
+                            .lineLimit(1)
+                        Text(displaySubtitle)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color.secondaryText)
+                            .lineLimit(1)
+                    }
+
+                    Spacer()
+
+                    HStack(spacing: 14) {
+                        Button {
+                            Task { await music.skipToPrevious() }
+                        } label: {
+                            Image(systemName: "backward.fill")
+                        }
+                        .disabled(music.hasPlayableQueue == false)
+
+                        Button {
+                            Task { await playOrToggle() }
+                        } label: {
+                            Image(systemName: music.isPlaying ? "pause.fill" : "play.fill")
+                        }
+                        .disabled(savedSelection == nil && music.hasPlayableQueue == false)
+
+                        Button {
+                            Task { await music.skipToNext() }
+                        } label: {
+                            Image(systemName: "forward.fill")
+                        }
+                        .disabled(music.hasPlayableQueue == false)
+                    }
+                    .font(.headline.weight(.black))
+                    .foregroundStyle(Color.cutAccent)
+                    .buttonStyle(.plain)
+                }
+
+                if let message = music.errorMessage {
+                    Text(message)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(Color.orange)
+                        .lineLimit(2)
+                } else if savedSelection == nil && music.hasPlayableQueue == false {
+                    Text("Choose music in the Music tab for this workout day.")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(Color.secondaryText)
+                }
+            }
+        }
+    }
+
+    private var savedSelection: WorkoutMusicSelection? {
+        guard let workoutDay else { return nil }
+        return store.musicSelection(for: workoutDay)
+    }
+
+    private var displayTitle: String {
+        if music.hasPlayableQueue || music.isPlaying {
+            return music.nowPlayingTitle
+        }
+        return savedSelection?.title ?? "Not playing"
+    }
+
+    private var displaySubtitle: String {
+        if music.hasPlayableQueue || music.isPlaying {
+            return music.nowPlayingSubtitle
+        }
+        if let savedSelection {
+            return "\(savedSelection.musicItemType.title) • \(savedSelection.subtitle)"
+        }
+        return "Apple Music"
+    }
+
+    private var displayArtworkURL: URL? {
+        if music.hasPlayableQueue || music.isPlaying {
+            return music.nowPlayingArtworkURL
+        }
+        return savedSelection?.artworkURL
+    }
+
+    private func playOrToggle() async {
+        if music.hasPlayableQueue {
+            await music.togglePlayback()
+        } else if let savedSelection {
+            await music.play(selection: savedSelection)
+        }
+    }
+}
+
+private struct ExpandedMusicPlayerSheet: View {
+    @EnvironmentObject private var music: AppleMusicManager
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ZStack {
+            Color.cutBlack.ignoresSafeArea()
+
+            VStack(spacing: 22) {
+                Capsule()
+                    .fill(Color.white.opacity(0.2))
+                    .frame(width: 44, height: 5)
+
+                MusicArtworkView(url: music.nowPlayingArtworkURL, size: 220)
+                    .shadow(color: Color.cutAccent.opacity(0.22), radius: 28, x: 0, y: 18)
+
+                VStack(spacing: 6) {
+                    Text(music.nowPlayingTitle)
+                        .font(.title2.weight(.black))
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                    Text(music.nowPlayingSubtitle)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.secondaryText)
+                        .lineLimit(1)
+                }
+
+                ProgressView(value: music.isPlaying ? 0.45 : 0.05)
+                    .tint(Color.cutAccent)
+
+                HStack(spacing: 34) {
+                    Button {
+                        Task { await music.skipToPrevious() }
+                    } label: {
+                        Image(systemName: "backward.fill")
+                    }
+
+                    Button {
+                        Task { await music.togglePlayback() }
+                    } label: {
+                        Image(systemName: music.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                            .font(.system(size: 58, weight: .black))
+                    }
+
+                    Button {
+                        Task { await music.skipToNext() }
+                    } label: {
+                        Image(systemName: "forward.fill")
+                    }
+                }
+                .font(.title2.weight(.black))
+                .foregroundStyle(Color.cutAccent)
+                .buttonStyle(.plain)
+
+                HStack(spacing: 12) {
+                    Button {
+                        music.stop()
+                    } label: {
+                        Label("Stop Music", systemImage: "stop.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(Color.red)
+
+                    Button {
+                        dismiss()
+                    } label: {
+                        Text("Done")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color.cutAccent)
+                }
+            }
+            .padding(24)
+        }
+    }
+}
+
+private struct MusicArtworkView: View {
+    let url: URL?
+    let size: CGFloat
+
+    var body: some View {
+        Group {
+            if let url {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    default:
+                        placeholder
+                    }
+                }
+            } else {
+                placeholder
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(RoundedRectangle(cornerRadius: max(size * 0.18, 10), style: .continuous))
+    }
+
+    private var placeholder: some View {
+        ZStack {
+            LinearGradient(colors: [Color.cutAccent.opacity(0.8), Color.blue.opacity(0.45)], startPoint: .topLeading, endPoint: .bottomTrailing)
+            Image(systemName: "music.note")
+                .font(.title2.weight(.black))
+                .foregroundStyle(.black.opacity(0.78))
+        }
+    }
+}
+
+private struct EmptyMusicState: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Color.secondaryText)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, 8)
     }
 }
 
@@ -1100,30 +1996,29 @@ private struct SessionShareCardView: View {
                         .minimumScaleFactor(0.62)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
-                    Text("\(session.day.rawValue) - \(session.day.programTitle)")
+                    Text("\(session.day.rawValue) - Full body workout")
                         .font(.system(size: 38, weight: .bold, design: .rounded))
                         .foregroundStyle(Color.cutAccent)
                         .lineLimit(1)
                         .minimumScaleFactor(0.76)
 
                     HStack(spacing: 18) {
-                        ShareCardStat(title: "Duration", value: "\(session.durationMinutes)m")
-                        ShareCardStat(title: "Volume", value: "\(session.totalVolume.clean) kg")
-                    }
-
-                    HStack(spacing: 18) {
+                        ShareCardStat(title: "Duration", value: session.formattedDuration)
                         ShareCardStat(title: "Exercises", value: "\(session.exerciseLogs.count)")
                         ShareCardStat(title: "Sets", value: "\(session.completedSets)")
                     }
 
-                    if session.personalRecords.isEmpty == false {
-                        Text("PR \(session.personalRecords.joined(separator: " / "))")
-                            .font(.system(size: 30, weight: .black, design: .rounded))
-                            .foregroundStyle(.black)
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 14)
-                            .background(Color.cutAccent, in: Capsule())
-                    }
+                    Text("\"\(session.motivationalQuote ?? MotivationalQuoteLibrary.fallback)\"")
+                        .font(.system(size: 34, weight: .black, design: .rounded))
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(Color.cutAccent)
+                        .shadow(color: Color.cutAccent.opacity(0.85), radius: 8, x: 0, y: 0)
+                        .shadow(color: Color.cutAccent.opacity(0.42), radius: 18, x: 0, y: 0)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.72)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 8)
                 }
                 .padding(34)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -1490,15 +2385,67 @@ private struct MeasurementStepper: View {
     let step: Double
 
     var body: some View {
-        Stepper(value: $value, in: range, step: step) {
-            HStack {
-                Text(title)
-                Spacer()
-                Text("\(value.clean) \(suffix)")
+        HStack(spacing: 14) {
+            Text(title)
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(.white)
+
+            Spacer(minLength: 8)
+
+            HStack(spacing: 6) {
+                TextField("0", value: clampedValue, format: .number.precision(.fractionLength(0...1)))
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+                    .font(.headline.monospacedDigit().weight(.black))
+                    .foregroundStyle(Color.cutAccent)
+                    .frame(width: 78)
+
+                Text(suffix)
+                    .font(.subheadline.weight(.bold))
                     .foregroundStyle(Color.cutAccent)
             }
-            .font(.headline.weight(.semibold))
+            .padding(.vertical, 10)
+            .padding(.horizontal, 12)
+            .background(Color.black.opacity(0.24), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+            HStack(spacing: 0) {
+                Button {
+                    adjust(by: -step)
+                } label: {
+                    Image(systemName: "minus")
+                        .frame(width: 42, height: 42)
+                }
+                .disabled(value <= range.lowerBound)
+
+                Divider()
+                    .frame(height: 28)
+                    .overlay(Color.white.opacity(0.20))
+
+                Button {
+                    adjust(by: step)
+                } label: {
+                    Image(systemName: "plus")
+                        .frame(width: 42, height: 42)
+                }
+                .disabled(value >= range.upperBound)
+            }
+            .font(.title3.weight(.bold))
+            .foregroundStyle(.white)
+            .background(Color.white.opacity(0.10), in: Capsule())
+            .buttonStyle(.plain)
         }
+    }
+
+    private var clampedValue: Binding<Double> {
+        Binding {
+            value
+        } set: { newValue in
+            value = min(max(newValue, range.lowerBound), range.upperBound)
+        }
+    }
+
+    private func adjust(by amount: Double) {
+        value = min(max(value + amount, range.lowerBound), range.upperBound)
     }
 }
 
@@ -1596,6 +2543,7 @@ private struct PremiumScreen<Content: View>: View {
                     .padding(20)
                     .padding(.bottom, 24)
                 }
+                .scrollDismissesKeyboard(.interactively)
             }
             .toolbarBackground(Color.cutBlack, for: .navigationBar)
         }
@@ -1619,6 +2567,12 @@ private struct PremiumCard<Content: View>: View {
 }
 
 private extension View {
+    func dismissKeyboardOnTap() -> some View {
+        onTapGesture {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        }
+    }
+
     func primaryButtonStyle() -> some View {
         self
             .font(.headline.weight(.bold))
