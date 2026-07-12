@@ -6,35 +6,74 @@ import UIKit
 
 struct ContentView: View {
     @EnvironmentObject private var store: FitnessStore
+    @AppStorage("gym-cut.interface-style") private var interfaceStyle = InterfaceStyle.graphite.rawValue
 
     var body: some View {
         TabView {
-            DashboardView()
-                .tabItem { Label("Dashboard", systemImage: "gauge.with.dots.needle.67percent") }
+            NavigationStack { DashboardView() }
+                .tabItem { Label("Home", systemImage: "house.fill") }
 
-            WorkoutsView()
+            NavigationStack { WorkoutsView() }
                 .tabItem { Label("Workouts", systemImage: "figure.strengthtraining.traditional") }
 
-            ActivityCalendarView()
+            NavigationStack { ActivityCalendarView() }
                 .tabItem { Label("Calendar", systemImage: "calendar") }
 
-            ExerciseProgressListView()
+            NavigationStack { ExerciseProgressListView() }
                 .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
 
-            HistoryView()
-                .tabItem { Label("History", systemImage: "clock.badge.checkmark") }
-
-            BodyView()
-                .tabItem { Label("Body", systemImage: "person.crop.rectangle.stack") }
-
-            MusicView()
-                .tabItem { Label("Music", systemImage: "music.note.list") }
-
-            SettingsView()
-                .tabItem { Label("Settings", systemImage: "gearshape.fill") }
+            NavigationStack { MoreView() }
+                .tabItem { Label("More", systemImage: "square.grid.2x2.fill") }
         }
         .tint(.cutAccent)
         .background(Color.cutBlack)
+        .toolbarBackground(Color.cutBlack.opacity(0.96), for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
+        .animation(.easeInOut(duration: 0.2), value: interfaceStyle)
+    }
+}
+
+enum InterfaceStyle: String, CaseIterable, Identifiable {
+    case graphite
+    case electricBlue
+    case highContrast
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .graphite: "Graphite"
+        case .electricBlue: "Electric Blue"
+        case .highContrast: "High Contrast"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .graphite: "Balanced green accents"
+        case .electricBlue: "Cool blue performance look"
+        case .highContrast: "Sharper text and surfaces"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .graphite: "bolt.fill"
+        case .electricBlue: "waveform.path.ecg"
+        case .highContrast: "circle.lefthalf.filled"
+        }
+    }
+
+    static var current: InterfaceStyle {
+        InterfaceStyle(rawValue: UserDefaults.standard.string(forKey: "gym-cut.interface-style") ?? "") ?? .graphite
+    }
+
+    var accentColor: Color {
+        switch self {
+        case .graphite: Color(red: 0.31, green: 1.0, blue: 0.42)
+        case .electricBlue: Color(red: 0.20, green: 0.72, blue: 1.0)
+        case .highContrast: Color(red: 0.72, green: 1.0, blue: 0.18)
+        }
     }
 }
 
@@ -1675,14 +1714,145 @@ struct MusicView: View {
     }
 }
 
+struct MoreView: View {
+    var body: some View {
+        PremiumScreen(title: "More", subtitle: "Your training tools and preferences") {
+            VStack(spacing: 16) {
+                PremiumCard {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("YOUR TOOLKIT")
+                            .metricLabel()
+                        Text("Everything beyond today’s workout")
+                            .font(.title3.weight(.bold))
+                    }
+                }
+
+                VStack(spacing: 10) {
+                    MoreDestinationRow(
+                        title: "History",
+                        subtitle: "Sessions, streaks, and personal bests",
+                        icon: "clock.badge.checkmark",
+                        destination: HistoryView()
+                    )
+                    MoreDestinationRow(
+                        title: "Body",
+                        subtitle: "Weight, goal, and check-ins",
+                        icon: "figure.arms.open",
+                        destination: BodyView()
+                    )
+                    MoreDestinationRow(
+                        title: "Workout Music",
+                        subtitle: "Apple Music and saved selections",
+                        icon: "music.note.list",
+                        destination: MusicView()
+                    )
+                    MoreDestinationRow(
+                        title: "Settings",
+                        subtitle: "Appearance and workout preferences",
+                        icon: "gearshape.fill",
+                        destination: SettingsView()
+                    )
+                }
+            }
+        }
+    }
+}
+
+private struct MoreDestinationRow<Destination: View>: View {
+    let title: String
+    let subtitle: String
+    let icon: String
+    let destination: Destination
+
+    var body: some View {
+        NavigationLink {
+            destination
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: icon)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(Color.cutAccent)
+                    .frame(width: 46, height: 46)
+                    .background(Color.cutAccent.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title)
+                        .font(.headline.weight(.bold))
+                        .foregroundStyle(Color.primaryText)
+                    Text(subtitle)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.secondaryText)
+                        .multilineTextAlignment(.leading)
+                }
+
+                Spacer(minLength: 8)
+                Image(systemName: "chevron.right")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Color.secondaryText)
+            }
+            .padding(15)
+            .background(Color.cardFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Color.cardBorder, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 struct SettingsView: View {
     @EnvironmentObject private var store: FitnessStore
     @AppStorage("gym-cut.live-activities-enabled") private var liveActivitiesEnabled = true
     @AppStorage("gym-cut.auto-start-workout-music") private var autoStartWorkoutMusic = false
+    @AppStorage("gym-cut.interface-style") private var interfaceStyle = InterfaceStyle.graphite.rawValue
 
     var body: some View {
-        PremiumScreen(title: "Settings", subtitle: "Program rules and cut targets") {
+        PremiumScreen(title: "Settings", subtitle: "Make Gym Cut Tracker work your way") {
             VStack(spacing: 16) {
+                PremiumCard {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("Appearance")
+                            .sectionTitle()
+                        Text("Choose the visual style used throughout the app.")
+                            .font(.subheadline)
+                            .foregroundStyle(Color.secondaryText)
+
+                        ForEach(InterfaceStyle.allCases) { style in
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    interfaceStyle = style.rawValue
+                                }
+                            } label: {
+                                HStack(spacing: 12) {
+                                    Image(systemName: style.icon)
+                                        .font(.headline)
+                                        .foregroundStyle(style.accentColor)
+                                        .frame(width: 38, height: 38)
+                                        .background(style.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(style.title)
+                                            .font(.subheadline.weight(.bold))
+                                            .foregroundStyle(Color.primaryText)
+                                        Text(style.subtitle)
+                                            .font(.caption)
+                                            .foregroundStyle(Color.secondaryText)
+                                    }
+
+                                    Spacer()
+                                    Image(systemName: interfaceStyle == style.rawValue ? "checkmark.circle.fill" : "circle")
+                                        .font(.title3)
+                                        .foregroundStyle(interfaceStyle == style.rawValue ? style.accentColor : Color.secondaryText)
+                                }
+                                .padding(12)
+                                .background(Color.tileFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+
                 PremiumCard {
                     Toggle(isOn: $liveActivitiesEnabled) {
                         VStack(alignment: .leading, spacing: 4) {
@@ -3187,38 +3357,38 @@ private struct PremiumScreen<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.cutBlack.ignoresSafeArea()
-                LinearGradient(
-                    colors: [Color.cutAccent.opacity(0.18), Color.clear, Color.neonBlue.opacity(0.10)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+        ZStack {
+            Color.cutBlack.ignoresSafeArea()
+            LinearGradient(
+                colors: [Color.backgroundAccent, Color.clear, Color.backgroundSecondary],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(title)
-                                .font(.system(size: 34, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white)
-                            Text(subtitle)
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(Color.secondaryText)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, 8)
-
-                        content
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(title)
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                            .foregroundStyle(Color.primaryText)
+                        Text(subtitle)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(Color.secondaryText)
                     }
-                    .padding(20)
-                    .padding(.bottom, 24)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 6)
+
+                    content
                 }
-                .scrollDismissesKeyboard(.interactively)
+                .padding(.horizontal, 18)
+                .padding(.bottom, 28)
             }
-            .toolbarBackground(Color.cutBlack, for: .navigationBar)
+            .scrollDismissesKeyboard(.interactively)
         }
+        .toolbarBackground(Color.cutBlack.opacity(0.96), for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -3227,14 +3397,14 @@ private struct PremiumCard<Content: View>: View {
 
     var body: some View {
         content
-            .padding(18)
+            .padding(17)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.cardFill, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .background(Color.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(Color.cardBorder, lineWidth: 1)
             )
-            .shadow(color: .black.opacity(0.24), radius: 18, x: 0, y: 12)
+            .shadow(color: Color.cardShadow, radius: 12, x: 0, y: 7)
     }
 }
 
@@ -3278,7 +3448,7 @@ private extension View {
     func sectionTitle() -> some View {
         self
             .font(.headline.weight(.bold))
-            .foregroundStyle(.white)
+            .foregroundStyle(Color.primaryText)
     }
 
     func metricLabel() -> some View {
@@ -3289,12 +3459,37 @@ private extension View {
 }
 
 private extension Color {
-    static var cutBlack: Color { Color(red: 0.02, green: 0.025, blue: 0.03) }
-    static var cardFill: Color { Color(red: 0.075, green: 0.08, blue: 0.09) }
-    static var tileFill: Color { Color.white.opacity(0.055) }
-    static var cutAccent: Color { Color(red: 0.31, green: 1.0, blue: 0.42) }
+    static var cutBlack: Color {
+        switch InterfaceStyle.current {
+        case .graphite: Color(red: 0.025, green: 0.03, blue: 0.035)
+        case .electricBlue: Color(red: 0.015, green: 0.035, blue: 0.055)
+        case .highContrast: Color.black
+        }
+    }
+
+    static var cardFill: Color {
+        switch InterfaceStyle.current {
+        case .graphite: Color(red: 0.075, green: 0.085, blue: 0.09)
+        case .electricBlue: Color(red: 0.045, green: 0.075, blue: 0.105)
+        case .highContrast: Color(red: 0.09, green: 0.095, blue: 0.10)
+        }
+    }
+
+    static var tileFill: Color {
+        switch InterfaceStyle.current {
+        case .highContrast: Color.white.opacity(0.10)
+        default: Color.white.opacity(0.055)
+        }
+    }
+
+    static var cutAccent: Color { InterfaceStyle.current.accentColor }
     static var neonBlue: Color { Color(red: 0.15, green: 0.58, blue: 1.0) }
-    static var secondaryText: Color { Color.white.opacity(0.64) }
+    static var primaryText: Color { .white }
+    static var secondaryText: Color { Color.white.opacity(InterfaceStyle.current == .highContrast ? 0.78 : 0.64) }
+    static var cardBorder: Color { Color.white.opacity(InterfaceStyle.current == .highContrast ? 0.18 : 0.08) }
+    static var cardShadow: Color { InterfaceStyle.current == .highContrast ? .clear : .black.opacity(0.28) }
+    static var backgroundAccent: Color { cutAccent.opacity(InterfaceStyle.current == .highContrast ? 0.08 : 0.16) }
+    static var backgroundSecondary: Color { InterfaceStyle.current == .electricBlue ? neonBlue.opacity(0.12) : Color.clear }
 }
 
 #Preview {
