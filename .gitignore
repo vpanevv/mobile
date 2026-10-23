@@ -4,3 +4,6 @@
 # Agent tooling
 .claire/
 .claude/
+
+# Xcode build output
+ScreenshotManager/build/
